@@ -34,7 +34,7 @@ from scipy.optimize import curve_fit
 from scipy.special import gamma as _gamma
 from scipy.special import voigt_profile as _voigt
 
-from .fit import FrameFit, fit_variance as _fit_gaussian_variance
+from .fit import FrameFit, _unusable_frame, fit_variance as _fit_gaussian_variance
 from .simulate import Experiment, gaussian, noise_free_series as _gaussian_series
 
 
@@ -99,6 +99,8 @@ class VoigtModel:
     def fit_variance(self, x: np.ndarray, y: np.ndarray) -> FrameFit:
         x = np.asarray(x, float)
         y = np.asarray(y, float)
+        if (unusable := _unusable_frame(x, y)) is not None:
+            return unusable
         span = float(x[-1] - x[0])
         sg_min = span / x.size           # ~ one pixel
         sg_max = 0.45 * span
@@ -183,6 +185,8 @@ class GeneralizedGaussianModel:
     def fit_variance(self, x: np.ndarray, y: np.ndarray) -> FrameFit:
         x = np.asarray(x, float)
         y = np.asarray(y, float)
+        if (unusable := _unusable_frame(x, y)) is not None:
+            return unusable
         span = float(x[-1] - x[0])
         s_min = span / x.size
         s_max = 0.45 * span
@@ -324,6 +328,8 @@ class UnboundedGaussianModel:
     def fit_variance(self, x: np.ndarray, y: np.ndarray) -> FrameFit:
         x = np.asarray(x, float)
         y = np.asarray(y, float)
+        if (unusable := _unusable_frame(x, y)) is not None:
+            return unusable
         span = float(x[-1] - x[0])
 
         var_max = span ** 2

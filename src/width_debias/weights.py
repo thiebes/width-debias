@@ -141,6 +141,12 @@ def msd_and_weights(scheme: str, variance_row: np.ndarray,
     """
     variance_row = np.asarray(variance_row, float)
     cnr = np.asarray(cnr_frame, float)
+    if variance_row.ndim != 1 or cnr.shape != variance_row.shape:
+        # A 2-D batch would be differenced against its first row, not each
+        # realisation's own t = 0 frame.
+        raise ValueError("msd_and_weights takes one realisation: variance_row and "
+                         f"cnr_frame of shape (n_frames,), got {variance_row.shape} "
+                         f"and {cnr.shape}")
 
     # --- bias correction ------------------------------------------------
     corrected = corrected_variance(scheme, variance_row, cnr, model, key_variance)

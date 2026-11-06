@@ -39,6 +39,18 @@ class FrameFit:
     ok: bool              # True if the optimiser converged
 
 
+def _unusable_frame(x: np.ndarray, y: np.ndarray) -> FrameFit | None:
+    """NaN for a profile with a non-finite pixel, else ``None``.
+
+    Such a profile is unusable, not a failed fit: the broad fallback guess
+    would turn it into a finite variance that every downstream step trusts,
+    whereas NaN propagates and :func:`fit_D` drops the frame.
+    """
+    if np.all(np.isfinite(x)) and np.all(np.isfinite(y)):
+        return None
+    return FrameFit(variance=np.nan, amplitude=np.nan, at_wall=False, ok=False)
+
+
 def fit_variance(x: np.ndarray, y: np.ndarray,
                  max_var: float | None = None) -> FrameFit:
     """Fit a single noisy profile with a Gaussian; return its variance.
@@ -58,9 +70,13 @@ def fit_variance(x: np.ndarray, y: np.ndarray,
     wandering near the real width. The bound must be **identical** in the
     calibration and the application fit, or the ``var_bias`` subtraction is
     mismatched.
+
+    A profile with a non-finite pixel returns NaN (see :func:`_unusable_frame`).
     """
     x = np.asarray(x, float)
     y = np.asarray(y, float)
+    if (unusable := _unusable_frame(x, y)) is not None:
+        return unusable
     n = x.size
     span = float(x[-1] - x[0])
 

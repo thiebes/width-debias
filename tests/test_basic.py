@@ -751,3 +751,44 @@ def test_calibration_profile_and_fisher_terms_do_not_assume_a_centred_grid():
     a = leading_order_terms(GaussianModel(), centred, 1.0)
     b = leading_order_terms(GaussianModel(), shifted, 1.0)
     assert b.bias_coef == pytest.approx(a.bias_coef, rel=1e-6)
+
+
+# --------------------------------------------------------------------------
+# Invalid input
+# --------------------------------------------------------------------------
+@pytest.mark.parametrize("model", [
+    GaussianModel(), VoigtModel(), GeneralizedGaussianModel(shape=1.5),
+    MomentModel(), UnboundedGaussianModel(),
+])
+def test_profile_with_a_nan_pixel_is_unusable(model):
+    """A non-finite pixel gives a NaN variance, not the fallback guess, so the
+    frame drops out downstream instead of entering the fit as a finite width."""
+    x = Experiment().x
+    y = np.exp(-0.5 * x ** 2)
+    y[17] = np.nan
+    ff = model.fit_variance(x, y)
+    assert np.isnan(ff.variance)
+    assert not ff.ok
+
+
+def test_nan_frame_reaches_fit_D_as_nan_under_every_scheme(dfree_lookup):
+    from width_debias import msd_and_weights
+    exp = Experiment(D=0.02)
+    clean = noise_free_series(exp)
+    clean[5, 40] = np.nan
+    row = np.array([fit_variance(exp.x, p).variance for p in clean])
+    cnr = 20.0 * np.exp(-exp.times)
+    for scheme in ("ols", "inverse_variance", "subtract", "mas"):
+        msd, w = msd_and_weights(scheme, row, cnr, dfree_lookup)
+        assert np.isnan(msd[5]) and np.all(np.isfinite(np.delete(msd, 5)))
+        assert fit_D(exp.times, msd, w).ok
+
+
+def test_msd_and_weights_refuses_a_batch(dfree_lookup):
+    """A 2-D batch would be differenced against its first row."""
+    from width_debias import msd_and_weights
+    rows = np.ones((3, 12))
+    with pytest.raises(ValueError, match="one realisation"):
+        msd_and_weights("subtract", rows, np.full((3, 12), 10.0), dfree_lookup)
+    with pytest.raises(ValueError):
+        msd_and_weights("subtract", np.ones(12), np.full(11, 10.0), dfree_lookup)
