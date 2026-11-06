@@ -1,20 +1,18 @@
-"""Sanity tests for the width-debias POC.
+"""Sanity tests for width-debias.
 
-These are smoke tests, not a validation suite -- they keep the moving parts
-wired together.
+Most are smoke tests that keep the moving parts wired together. The tests under
+"Release guarantees" pin what the release notes promise: the subtraction itself,
+the saved lookup's weights, worker-count independence, and the failed-fit
+fallback. They import the installed package, not ``src/``, so CI tests what
+ships.
 """
-import os
-import sys
-
 import numpy as np
 import pytest
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from width_debias import (AnomalousExperiment, Experiment, GaussianModel,
                             GeneralizedGaussianModel, MomentModel,
                             MultiExpExperiment, UnboundedGaussianModel,
-                            VoigtModel, calibrate, evaluate,
+                            VoigtModel, calibrate_d_free, evaluate,
                             frame_stats, model_from_spec, run_ensemble,
                             spec_tag)
 from width_debias.fit import fit_D, fit_variance
@@ -257,7 +255,7 @@ def test_evaluate_runs_and_returns_all_schemes():
     """The end-to-end harness produces a bias curve for every scheme."""
     exp = Experiment(D=0.02)
     grid = np.array([3.0, 10.0, 30.0])
-    model = calibrate(exp, grid, n_runs=150, seed=1)
+    model = calibrate_d_free(grid, n_runs=150, seed=1)
     results = evaluate(exp, grid, model, n_runs=150, seed=5000)
     assert set(results) == {"ols", "inverse_variance", "subtract", "mas"}
     for r in results.values():
@@ -267,10 +265,11 @@ def test_evaluate_runs_and_returns_all_schemes():
 
 def test_subtract_beats_inverse_variance_at_low_cnr():
     """The derived scheme should leave less D-bias than inverse-variance in
-    the low-CNR regime where the truncation bias is large."""
+    the low-CNR regime where the noise bias is large, with the recommended
+    D-free calibration (built at D = 0, applied at D = 0.02)."""
     exp = Experiment(D=0.02)
     grid = np.array([6.0, 10.0, 18.0, 32.0])
-    model = calibrate(exp, grid, n_runs=300, seed=1)
+    model = calibrate_d_free(grid, n_runs=300, seed=1)
     results = evaluate(exp, grid, model, n_runs=300, seed=5000)
     iv = np.nanmean(np.abs(results["inverse_variance"].mean_bias - 1.0))
     fn = np.nanmean(np.abs(results["subtract"].mean_bias - 1.0))
@@ -536,7 +535,133 @@ def test_truncation_model_save_load_round_trip(tmp_path):
     assert loaded.var_bias(3.0, 4.0) == pytest.approx(scaled.var_bias(3.0, 4.0), rel=1e-15)
     trunc = calibrate_d_free(np.array([5.0, 20.0]), n_runs=60, seed=3)
     trunc.save(tmp_path / "plain.npz")
-    legacy = BiasLookup(**np.load(tmp_path / "plain.npz"))   # the experiments' loader
+    with np.load(tmp_path / "plain.npz") as archive:      # the experiments' loader
+        legacy = BiasLookup(**{k: archive[k] for k in archive.files})
     assert not legacy.is_2d and not legacy.is_width_scaled
     assert np.array_equal(legacy.var_bias(np.array([1.0, 4.0])),
                           trunc.var_bias(np.array([1.0, 4.0])))
+
+
+# --------------------------------------------------------------------------
+# Release guarantees
+# --------------------------------------------------------------------------
+@pytest.fixture(scope="module")
+def dfree_lookup():
+    """A small D-free calibration shared by the guarantee tests."""
+    return calibrate_d_free(np.array([5.0, 20.0]), n_runs=60, seed=3)
+
+
+def test_subtract_removes_exactly_the_looked_up_bias(dfree_lookup):
+    """``subtract`` is sigma_hat^2 - var_bias(CNR), with no rescaling, and the
+    MSD is the corrected widths less the corrected t = 0 width."""
+    from width_debias import corrected_variance, msd_and_weights
+    cnr = 15.0 * np.exp(-Experiment().times)
+    variance_row = 1.0 + 0.03 * Experiment().times
+    expected = variance_row - np.interp(cnr, dfree_lookup.cnr_grid,
+                                        dfree_lookup.varbias_grid)
+    corrected = corrected_variance("subtract", variance_row, cnr, dfree_lookup)
+    assert np.array_equal(corrected, expected)
+    msd, _ = msd_and_weights("subtract", variance_row, cnr, dfree_lookup)
+    assert np.array_equal(msd, expected - expected[0])
+    for scheme in ("ols", "inverse_variance"):
+        assert np.array_equal(
+            corrected_variance(scheme, variance_row, cnr, dfree_lookup), variance_row)
+
+
+def test_calibrated_bias_is_the_ensemble_mean_less_the_truth():
+    """The lookup stores E[sigma_hat^2] - sigma^2_true per calibration frame,
+    over every finite fit, with no rescaling.
+
+    A statistical check of the subtraction cannot resolve a wrong scale at a
+    unit-test budget (at CNR_0 5 the combined SE is about the size of the bias),
+    so the calibration side is pinned exactly here and the application side in
+    test_subtract_removes_exactly_the_looked_up_bias.
+    """
+    from width_debias import BiasLookup
+    exp = Experiment(D=0.0)
+    ens = run_ensemble(exp, 5.0, n_runs=30, seed=21)
+    expected = np.nanmean(ens.variance, axis=0) - exp.true_variance
+    stats = frame_stats(ens)
+    assert np.allclose(stats.var_bias, expected, rtol=0, atol=1e-15)
+    lookup = BiasLookup.from_stats([stats])
+    assert np.allclose(lookup.var_bias(ens.cnr_frame), expected, rtol=0, atol=1e-15)
+
+
+def test_saved_lookup_keeps_frame_variance_and_weights(tmp_path, dfree_lookup):
+    """A save/load round trip keeps framevar_grid, so the weights do not fall
+    back to the MSD-point variance."""
+    from width_debias import BiasLookup, msd_and_weights
+    dfree_lookup.save(tmp_path / "cal.npz")
+    loaded = BiasLookup.load(tmp_path / "cal.npz")
+    assert loaded.framevar_grid is not None
+    assert np.array_equal(loaded.framevar_grid, dfree_lookup.framevar_grid)
+    cnr = 12.0 * np.exp(-Experiment().times)
+    row = np.linspace(1.0, 1.1, cnr.size)
+    for scheme in ("subtract", "inverse_variance", "mas"):
+        msd_a, w_a = msd_and_weights(scheme, row, cnr, dfree_lookup)
+        msd_b, w_b = msd_and_weights(scheme, row, cnr, loaded)
+        assert np.array_equal(msd_a, msd_b)
+        assert np.array_equal(w_a, w_b)
+        assert w_b[0] > 0
+
+
+def test_results_do_not_depend_on_worker_count():
+    """Each realisation is seeded on its own, so serial and parallel agree."""
+    exp = Experiment(D=0.02, n_frames=6)
+    serial = run_ensemble(exp, 10.0, n_runs=6, seed=5, workers=1)
+    parallel = run_ensemble(exp, 10.0, n_runs=6, seed=5, workers=2)
+    assert np.array_equal(serial.variance, parallel.variance)
+    assert np.array_equal(serial.cnr_frame, parallel.cnr_frame)
+
+
+def test_failed_fit_falls_back_and_is_kept(monkeypatch):
+    """A fit that fails returns the broad initial guess, flagged not ok; it is
+    never dropped (dropping failures would delete the tail that carries the bias)."""
+    import width_debias.fit as fit_module
+
+    def fail(*args, **kwargs):
+        raise RuntimeError("no convergence")
+
+    monkeypatch.setattr(fit_module, "curve_fit", fail)
+    x = Experiment().x
+    ff = fit_module.fit_variance(x, np.exp(-0.5 * x ** 2))
+    span = x[-1] - x[0]
+    assert not ff.ok
+    assert ff.variance == pytest.approx((span / 4.0) ** 2)
+
+
+def test_fit_D_drops_nan_frames():
+    """NaN marks an unusable frame; fit_D leaves it out instead of failing."""
+    t = np.array([0.0, 1.0, 2.0, 3.0])
+    msd = np.array([0.0, 0.04, np.nan, 0.12])
+    d = fit_D(t, msd, np.ones(4))
+    assert d.ok
+    assert d.D == pytest.approx(0.02, rel=1e-9)
+
+
+def test_one_d_lookup_ignores_the_width_key(dfree_lookup):
+    """A 1-D lookup with no width table gives the same correction and weights
+    with or without a width key."""
+    from width_debias import msd_and_weights
+    cnr = 12.0 * np.exp(-Experiment().times)
+    row = np.linspace(1.0, 1.1, cnr.size)
+    key = np.full(cnr.size, 2.5)
+    msd_a, w_a = msd_and_weights("subtract", row, cnr, dfree_lookup)
+    msd_b, w_b = msd_and_weights("subtract", row, cnr, dfree_lookup, key_variance=key)
+    assert np.array_equal(msd_a, msd_b)
+    assert np.array_equal(w_a, w_b)
+
+
+def test_per_frame_cnr_estimates_one_cnr_per_frame():
+    """fft-cnr returns a finite CNR per profile, close to the true peak CNR."""
+    pytest.importorskip("fft_cnr")
+    from width_debias.cnr import per_frame_cnr
+    x = Experiment().x
+    rng = np.random.default_rng(0)
+    window = np.abs(x) <= 4.0
+    profiles = np.array([np.exp(-0.5 * x[window] ** 2) + rng.normal(0, 1 / 20.0, window.sum())
+                         for _ in range(4)])
+    cnr = per_frame_cnr(profiles)
+    assert cnr.shape == (4,)
+    assert np.all(np.isfinite(cnr))
+    assert 0.7 * 20.0 < np.median(cnr) < 1.4 * 20.0
