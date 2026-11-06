@@ -163,11 +163,14 @@ def cnr_sigma2_calibration(pixel_x: np.ndarray) -> BiasLookup:
         if grid.pixel_x is None or not np.allclose(grid.pixel_x, pixel_x):
             raise RuntimeError(f"{path.name} was built on a different pixel grid")
         return BiasLookup.from_calibration(grid)
+    # The recorded grids were built with the outlier filter the library applied
+    # before 0.4.1 (drop fits above 5x the largest grid variance); pass it so a
+    # rebuild reproduces them.
     grid = calibrate_cnr_sigma2(
         GaussianModel(max_var=MAX_VAR), pixel_x=pixel_x,
         sigma_grid=SIGMA_GRID_NM, cnr_grid=CAL2_CNR, n_runs=N_RUNS_CAL2,
-        seed=4242, model_kwargs={"max_var": MAX_VAR}, verbose=True,
-        n_workers=int(os.environ.get("WIDTH_DEBIAS_WORKERS") or 0) or None)
+        seed=4242, verbose=True,
+        filter_threshold=5.0 * float(np.max(SIGMA_GRID_NM)) ** 2)
     grid.save(path)
     return BiasLookup.from_calibration(grid)
 

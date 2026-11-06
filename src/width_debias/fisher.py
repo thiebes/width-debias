@@ -65,7 +65,7 @@ def profile_jacobian(model, x: np.ndarray, variance: float, *,
 
 def var_of_fitted_variance(model, x: np.ndarray, variance: float,
                            noise_var: float | np.ndarray, *,
-                           amplitude: float = 1.0,
+                           amplitude: float = 1.0, mean: float = 0.0,
                            estimator: str = "ls") -> float:
     """Leading-order Var(sigma_hat^2) of one frame's width fit.
 
@@ -75,7 +75,7 @@ def var_of_fitted_variance(model, x: np.ndarray, variance: float,
     (J J^T)^-1 J Sigma J^T (J J^T)^-1; under white noise the two coincide, and
     under shot noise only the sandwich describes the fit actually run.
     """
-    jac = profile_jacobian(model, x, variance, amplitude=amplitude)
+    jac = profile_jacobian(model, x, variance, amplitude=amplitude, mean=mean)
     noise = np.broadcast_to(np.asarray(noise_var, float), jac.shape[1:])
     if estimator == "ml":
         return float(np.linalg.inv((jac / noise) @ jac.T)[0, 0])
@@ -111,14 +111,17 @@ def leading_order_terms(model, x: np.ndarray, variance_cal: float,
     Evaluated at CNR 1 (unit peak, unit noise), so the coefficients carry the
     1/CNR^2 dependence implicitly. The width table uses the same pixel grid as
     the calibration, so it includes the window truncation a wide profile meets.
+    The profile sits at the grid's midpoint, as the calibration cells place it.
     """
-    framevar_cal = var_of_fitted_variance(model, x, variance_cal, 1.0)
+    x = np.asarray(x, float)
+    centre = 0.5 * float(x[0] + x[-1])
+    framevar_cal = var_of_fitted_variance(model, x, variance_cal, 1.0, mean=centre)
     bias_cal = framevar_cal / (4.0 * variance_cal)
     if variance_grid is None:
         return LeadingOrderTerms(variance_cal=float(variance_cal),
                                  bias_coef=bias_cal, framevar_coef=framevar_cal)
     variance_grid = np.asarray(variance_grid, float)
-    bias = np.array([var_of_fitted_variance(model, x, v, 1.0) / (4.0 * v)
+    bias = np.array([var_of_fitted_variance(model, x, v, 1.0, mean=centre) / (4.0 * v)
                      for v in variance_grid])
     return LeadingOrderTerms(variance_cal=float(variance_cal),
                              bias_coef=bias_cal, framevar_coef=framevar_cal,

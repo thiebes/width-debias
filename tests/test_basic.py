@@ -691,3 +691,63 @@ def test_per_frame_cnr_estimates_one_cnr_per_frame():
     assert cnr.shape == (4,)
     assert np.all(np.isfinite(cnr))
     assert 0.7 * 20.0 < np.median(cnr) < 1.4 * 20.0
+
+
+# --------------------------------------------------------------------------
+# Experimental calibrations
+# --------------------------------------------------------------------------
+def test_joint_calibration_fits_with_the_model_passed():
+    """Each cell fits with the instance passed, so the shape exponent is kept."""
+    from width_debias import calibrate_cnr_sigma2
+    kwargs = dict(cnr_grid=np.array([3.0]), variance_grid=np.array([1.0]),
+                  n_runs=40, seed=2, n_workers=1)
+    flat = calibrate_cnr_sigma2(GeneralizedGaussianModel(shape=4.0), **kwargs)
+    heavy = calibrate_cnr_sigma2(GeneralizedGaussianModel(shape=1.5), **kwargs)
+    assert flat.var_bias[0, 0] != heavy.var_bias[0, 0]
+
+
+def test_joint_calibration_keeps_every_fit_by_default():
+    """The default bias is the mean over every finite fit, as calibrate_cells
+    computes it; only an explicit threshold drops the high fits."""
+    from width_debias import calibrate_cnr_sigma2
+    from width_debias.calibration import _cell_fits
+    x = Experiment().x
+    model = GaussianModel()
+    fits = _cell_fits(model, x, 0.8, 1.0, 1.0, 60, np.random.SeedSequence(9).spawn(1)[0],
+                      "gaussian", 0.0, 0.0, 1.0)
+    grid = calibrate_cnr_sigma2(model, pixel_x=x, cnr_grid=np.array([0.8]),
+                                variance_grid=np.array([1.0]), n_runs=60, seed=9,
+                                n_workers=1)
+    assert grid.var_bias[0, 0] == pytest.approx(np.mean(fits[np.isfinite(fits)]) - 1.0,
+                                                rel=1e-12)
+    capped = calibrate_cnr_sigma2(model, pixel_x=x, cnr_grid=np.array([0.8]),
+                                  variance_grid=np.array([1.0]), n_runs=60, seed=9,
+                                  n_workers=1, filter_threshold=5.0)
+    assert capped.var_bias[0, 0] <= grid.var_bias[0, 0]
+
+
+@pytest.mark.parametrize("noise_model", ["shot", "white", None])
+def test_joint_calibration_refuses_unknown_noise_laws(noise_model):
+    from width_debias import calibrate_cnr_sigma2
+    from width_debias.noise import ShotNoise
+    with pytest.raises((ValueError, TypeError)):
+        calibrate_cnr_sigma2(cnr_grid=np.array([3.0]), variance_grid=np.array([1.0]),
+                             n_runs=2, n_workers=1, noise_model=noise_model)
+    with pytest.raises(TypeError):
+        calibrate_cnr_sigma2(cnr_grid=np.array([3.0]), variance_grid=np.array([1.0]),
+                             n_runs=2, n_workers=1, noise_model=ShotNoise())
+
+
+def test_calibration_profile_and_fisher_terms_do_not_assume_a_centred_grid():
+    """A pixel grid from 0 to 12 holds the profile at its midpoint: the clean
+    profile fits back to its true variance, and the Fisher terms match the
+    centred grid's (they are translation invariant)."""
+    from width_debias import leading_order_terms
+    from width_debias.calibration import _single_frame_profile
+    centred = Experiment().x
+    shifted = centred - centred[0]
+    clean = _single_frame_profile(GaussianModel(), shifted, 1.0, 1.0)
+    assert fit_variance(shifted, clean).variance == pytest.approx(1.0, rel=1e-3)
+    a = leading_order_terms(GaussianModel(), centred, 1.0)
+    b = leading_order_terms(GaussianModel(), shifted, 1.0)
+    assert b.bias_coef == pytest.approx(a.bias_coef, rel=1e-6)

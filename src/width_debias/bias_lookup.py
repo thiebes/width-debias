@@ -326,9 +326,10 @@ class BiasLookup:
         vb_1d = np.nanmean(vb2, axis=1)
         rv_1d = np.nanmean(rv2, axis=1)
         p_1d = np.zeros_like(cnr)
-        # Per-cell SE of the mean bias from the cell's sample variance. The
-        # bias mean drops fits above the calibration's filter threshold, so
-        # this (unfiltered) spread makes the SE slightly conservative.
+        # Per-cell SE of the mean bias from the cell's sample variance. A grid
+        # built with a filter threshold drops the fits above it from the bias
+        # mean, and this unfiltered spread then makes the SE slightly
+        # conservative.
         se2 = np.sqrt(rv2 / max(int(calib.n_runs), 1))
         n_var = np.sum(np.isfinite(se2), axis=1)
         se_1d = np.sqrt(np.nansum(se2 ** 2, axis=1)) / np.maximum(n_var, 1)

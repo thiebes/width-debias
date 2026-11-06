@@ -35,6 +35,7 @@ import numpy as np
 
 from .bias_lookup import _resolve_npz_path
 from .models import MODELS, GaussianModel
+from .montecarlo import _resolve_workers
 from .simulate import Experiment
 
 
@@ -112,25 +113,35 @@ class CalibrationGrid:
             )
 
 
+NOISE_MODELS = ("gaussian", "poisson")
+
+
+def _check_noise_model(noise_model) -> str:
+    """The calibration's noise law, refused unless it is one this module draws."""
+    if not isinstance(noise_model, str):
+        raise TypeError("noise_model takes 'gaussian' or 'poisson' here; the "
+                        "width_debias.noise objects drive run_ensemble, not this "
+                        f"calibration (got {noise_model!r})")
+    if noise_model not in NOISE_MODELS:
+        raise ValueError(f"unknown noise_model {noise_model!r}; expected one of "
+                         f"{NOISE_MODELS}")
+    return noise_model
+
+
 def _single_frame_profile(model, pixel_x: np.ndarray, variance: float,
                           amplitude: float) -> np.ndarray:
-    """A noise-free single-frame profile on the given pixel grid.
+    """A noise-free single-frame profile of true variance ``variance`` on ``pixel_x``.
 
-    Constructs a one-frame :class:`Experiment` whose `D=0`, `t_max=0`, and
-    `sigma0 = sqrt(variance)`, so ``true_variance[0] = variance`` exactly, then
-    asks the profile model for its noise-free series. The pixel grid is set by
-    inverting :attr:`Experiment.x` so that the experiment's x array matches
-    ``pixel_x``. ``pixel_x`` is assumed symmetric about zero.
+    The profile is evaluated on the given pixels and centred on the grid's
+    midpoint, so a grid that does not start at minus its end (one from 0 to 12,
+    say) still holds the whole profile in the middle of the window, where the
+    application's fits expect it.
     """
-    sigma0 = float(np.sqrt(variance))
-    x_max = float(np.max(np.abs(pixel_x)))
-    half_window = x_max / sigma0
-    exp = Experiment(
-        sigma0=sigma0, D=0.0, amplitude0=float(amplitude), mean=0.0,
-        half_window=half_window, n_pixels=int(pixel_x.size),
-        n_frames=1, t_max=0.0,
-    )
-    return model.noise_free_series(exp)[0]
+    from .fisher import _profile_stack
+
+    centre = 0.5 * float(pixel_x[0] + pixel_x[-1])
+    return _profile_stack(model, pixel_x, np.array([float(variance)]),
+                          np.array([float(amplitude)]), centre)[0]
 
 
 def _cell_fits(model, pixel_x: np.ndarray, cnr: float, variance: float,
@@ -171,11 +182,11 @@ def _cell_fits(model, pixel_x: np.ndarray, cnr: float, variance: float,
 def _cell_worker(args):
     """Top-level worker (picklable) for a single (CNR, variance) cell.
 
-    The bias estimate filters out broken-fit outliers (sigma_hat^2 above
-    ``filter_threshold``) before computing the mean. The rel_variance
-    estimate is computed over all finite fits -- broken cells should report
-    high rel_variance so the downstream slope fit can downweight frames
-    that land there.
+    The bias is the mean over every finite fit, a failed fit's fallback value
+    included, as the application keeps it. Only an explicit
+    ``filter_threshold`` drops fits above it from the mean (the behaviour of
+    grids built before width-debias 0.4.1). The rel_variance is computed over
+    all finite fits either way.
 
     Two noise models. ``gaussian`` adds zero-mean white noise of standard
     deviation ``amplitude / cnr`` to a clean profile of peak ``amplitude`` --
@@ -199,17 +210,14 @@ def _cell_worker(args):
     records matches the data's.
     """
     (i, j, cnr, variance, pixel_x, amplitude, n_runs, seed,
-     model_name, model_kwargs, filter_threshold, noise_model, background,
-     read_noise, gain) = args
-    model = MODELS[model_name](**(model_kwargs or {}))
+     model, filter_threshold, noise_model, background, read_noise, gain) = args
     fits = _cell_fits(model, pixel_x, cnr, variance, amplitude, n_runs, seed,
                       noise_model, background, read_noise, gain)
     good = np.isfinite(fits)
     if good.sum() > 1:
         # rel_variance uses all finite fits (broken fits should drive this up).
         rv = float(np.var(fits[good], ddof=1))
-        # var_bias filters out broken fits (sigma_hat^2 above threshold).
-        keep = good & (fits < filter_threshold)
+        keep = good if filter_threshold is None else good & (fits < filter_threshold)
         if keep.sum() > 1:
             vb = float(fits[keep].mean() - variance)
         else:
@@ -248,16 +256,18 @@ def calibrate_cnr_sigma2(model=None, *, pixel_x: np.ndarray | None = None,
     over the measurement; see :meth:`BiasLookup.var_bias` ("Choice of
     key") before applying this calibration to fast-spreading data.
 
-    Cells are evaluated in parallel via :class:`ProcessPoolExecutor`. Each
-    cell's RNG is seeded from a :class:`numpy.random.SeedSequence` spawn so
-    the calibration is reproducible irrespective of completion order.
+    Cells can run in parallel (``n_workers``). Each cell's RNG is seeded from
+    a :class:`numpy.random.SeedSequence` spawn, so the calibration is the same
+    for any worker count and completion order.
 
     Parameters
     ----------
     model : profile model instance (see :mod:`width_debias.models`).
-        Defaults to :class:`~width_debias.models.GaussianModel`. The
-        model's name is recorded; its class and ``model_kwargs`` are used to
-        reconstruct the model inside worker processes.
+        Defaults to :class:`~width_debias.models.GaussianModel`. Every cell
+        fits with this instance as passed, so its settings (the shape exponent
+        of :class:`GeneralizedGaussianModel`, the Voigt ``gamma``,
+        ``max_var``) are the ones calibrated. The grid records the model's
+        name only.
     pixel_x : the spatial axis on which the fit will run. Must match the
         application's pixel grid for the calibration to apply. Defaults to
         the standard :class:`Experiment` grid.
@@ -275,23 +285,27 @@ def calibrate_cnr_sigma2(model=None, *, pixel_x: np.ndarray | None = None,
         CNR) affects the bias, so the value is conventional; left at 1.0.
     n_runs : Monte-Carlo runs per grid cell.
     seed : root random seed; each cell gets an independent stream.
-    n_workers : number of worker processes. Defaults to ``os.cpu_count() - 1``.
-        Set to 1 to run serially.
-    model_kwargs : kwargs to reconstruct the model in every cell, serial or
-        parallel (e.g. ``{"gamma": 0.01}`` for :class:`VoigtModel`,
-        ``{"shape": 1.5}`` for :class:`GeneralizedGaussianModel`). Each cell
-        re-instantiates the model from its name and these kwargs, so the
-        passed instance's own settings (shape exponent, ``gamma``,
-        ``max_var``) are lost unless they are repeated here.
-    filter_threshold : per-cell, when computing the mean bias, discard any
-        individual fit whose sigma_hat^2 exceeds this threshold. These are
-        broken fits pegged at the fit's upper bound; their contribution to
-        the mean pollutes the bias estimate at low-CNR cells. Defaults to
-        ``5 * variance_grid.max()``, which catches anything near var_max
-        without touching legitimate fits inside the calibration's grid.
-        rel_variance is computed without the filter so broken cells
-        correctly report high spread (downstream slope fit then
-        downweights frames at those cells).
+    n_workers : number of worker processes. ``None`` (the default) reads
+        ``WIDTH_DEBIAS_WORKERS`` like :func:`~width_debias.montecarlo.run_ensemble`
+        (serial when unset); 0 or less uses every core.
+    model_kwargs : when given, the model is rebuilt once from its registered
+        name and these kwargs, and the instance's own settings are dropped.
+        Kept so scripts written for that behaviour reproduce their grids; pass
+        a configured instance instead.
+    filter_threshold : when given, the mean bias of each cell leaves out fits
+        whose sigma_hat^2 exceeds it. The default (``None``) keeps every fit,
+        failed fits' fallback values included, because the application keeps
+        them: dropping the high fits removes the upper tail that carries the
+        bias. Grids built before width-debias 0.4.1 used
+        ``5 * variance_grid.max()``; pass that to reproduce one.
+        rel_variance is computed over every finite fit either way.
+    noise_model : ``"gaussian"`` (additive white noise of standard deviation
+        ``amplitude / cnr``) or ``"poisson"`` (the photon-transfer model of
+        :func:`_cell_worker`). Any other value raises. The Poisson CNR here is
+        the peak over the baseline noise ``sqrt(gain * background +
+        read_noise^2)``; :class:`~width_debias.noise.ShotNoise` defines it as
+        the peak over the noise at the peak, so the two keys are not
+        interchangeable.
     verbose : print per-completion progress every ~10% of cells.
 
     Returns
@@ -312,15 +326,13 @@ def calibrate_cnr_sigma2(model=None, *, pixel_x: np.ndarray | None = None,
         variance_grid = np.linspace(0.6, 3.5, 12)
     if cnr_grid is None:
         cnr_grid = np.logspace(np.log10(0.15), np.log10(120.0), 22)
-    if n_workers is None:
-        n_workers = max(1, (os.cpu_count() or 4) - 1)
+    if model_kwargs is not None:
+        model = MODELS[model.name](**model_kwargs)
+    noise_model = _check_noise_model(noise_model)
 
     pixel_x = np.asarray(pixel_x, float)
     cnr_grid = np.asarray(cnr_grid, float)
     variance_grid = np.asarray(variance_grid, float)
-
-    if filter_threshold is None:
-        filter_threshold = 5.0 * float(variance_grid.max())
 
     n_cnr = cnr_grid.size
     n_var = variance_grid.size
@@ -336,12 +348,12 @@ def calibrate_cnr_sigma2(model=None, *, pixel_x: np.ndarray | None = None,
             args_list.append((
                 i, j, float(cnr), float(variance), pixel_x,
                 float(amplitude), int(n_runs), child_seeds[i * n_var + j],
-                model.name, model_kwargs or {},
-                float(filter_threshold), str(noise_model), float(background),
-                float(read_noise), float(gain),
+                model, None if filter_threshold is None else float(filter_threshold),
+                noise_model, float(background), float(read_noise), float(gain),
             ))
 
     total = len(args_list)
+    n_workers = _resolve_workers(n_workers, total)
     milestones = max(1, total // 10)
     done = 0
     t0 = time.time()
@@ -370,7 +382,7 @@ def calibrate_cnr_sigma2(model=None, *, pixel_x: np.ndarray | None = None,
         var_bias=var_bias, rel_variance=rel_var,
         n_runs=int(n_runs), model_name=model.name,
         pixel_x=pixel_x, amplitude=float(amplitude),
-        noise_model=str(noise_model), background=float(background),
+        noise_model=noise_model, background=float(background),
         read_noise=float(read_noise), gain=float(gain),
     )
 
@@ -452,8 +464,6 @@ def calibrate_cells(cnr_grid: np.ndarray, *, model=None,
     ``(seed, n_runs)``; ``workers`` follows ``WIDTH_DEBIAS_WORKERS`` like
     :func:`~width_debias.montecarlo.run_ensemble`.
     """
-    from .montecarlo import _resolve_workers
-
     if model is None:
         model = GaussianModel()
     if pixel_x is None:
