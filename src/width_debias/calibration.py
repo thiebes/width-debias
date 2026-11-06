@@ -33,6 +33,7 @@ from pathlib import Path
 
 import numpy as np
 
+from .bias_lookup import _resolve_npz_path
 from .models import MODELS, GaussianModel
 from .simulate import Experiment
 
@@ -90,25 +91,25 @@ class CalibrationGrid:
     @classmethod
     def load(cls, path: str | os.PathLike) -> "CalibrationGrid":
         """Load a calibration previously saved with :meth:`save`."""
-        z = np.load(str(path))
-        px = z["pixel_x"]
-        return cls(
-            cnr_grid=z["cnr_grid"],
-            variance_grid=z["variance_grid"],
-            var_bias=z["var_bias"],
-            rel_variance=z["rel_variance"],
-            n_runs=int(z["n_runs"][0]),
-            model_name=str(z["model_name"][0]),
-            pixel_x=px if px.size > 0 else None,
-            amplitude=float(z["amplitude"][0]),
-            noise_model=(str(z["noise_model"][0])
-                         if "noise_model" in z.files else "gaussian"),
-            background=(float(z["background"][0])
-                        if "background" in z.files else 0.0),
-            read_noise=(float(z["read_noise"][0])
-                        if "read_noise" in z.files else 0.0),
-            gain=(float(z["gain"][0]) if "gain" in z.files else 1.0),
-        )
+        with np.load(_resolve_npz_path(path)) as z:
+            px = z["pixel_x"]
+            return cls(
+                cnr_grid=z["cnr_grid"],
+                variance_grid=z["variance_grid"],
+                var_bias=z["var_bias"],
+                rel_variance=z["rel_variance"],
+                n_runs=int(z["n_runs"][0]),
+                model_name=str(z["model_name"][0]),
+                pixel_x=px if px.size > 0 else None,
+                amplitude=float(z["amplitude"][0]),
+                noise_model=(str(z["noise_model"][0])
+                             if "noise_model" in z.files else "gaussian"),
+                background=(float(z["background"][0])
+                            if "background" in z.files else 0.0),
+                read_noise=(float(z["read_noise"][0])
+                            if "read_noise" in z.files else 0.0),
+                gain=(float(z["gain"][0]) if "gain" in z.files else 1.0),
+            )
 
 
 def _single_frame_profile(model, pixel_x: np.ndarray, variance: float,
@@ -409,12 +410,12 @@ class CalibrationCells:
     @classmethod
     def load(cls, path: str | os.PathLike) -> "CalibrationCells":
         """Load cells previously saved with :meth:`save`."""
-        z = np.load(str(path))
-        return cls(cnr=z["cnr"], mean_bias=z["mean_bias"], bias_sd=z["bias_sd"],
-                   n_finite=z["n_finite"], n_runs=z["n_runs"],
-                   variance_cal=float(z["variance_cal"][0]),
-                   pixel_x=z["pixel_x"], model_spec=str(z["model_spec"][0]),
-                   noise_model=str(z["noise_model"][0]), seed=int(z["seed"][0]))
+        with np.load(_resolve_npz_path(path)) as z:
+            return cls(cnr=z["cnr"], mean_bias=z["mean_bias"], bias_sd=z["bias_sd"],
+                       n_finite=z["n_finite"], n_runs=z["n_runs"],
+                       variance_cal=float(z["variance_cal"][0]),
+                       pixel_x=z["pixel_x"], model_spec=str(z["model_spec"][0]),
+                       noise_model=str(z["noise_model"][0]), seed=int(z["seed"][0]))
 
 
 def _describe_model(model) -> str:

@@ -526,11 +526,12 @@ def test_new_fields_leave_old_lookups_unchanged():
                           np.interp(cnr, trunc.cnr_grid, trunc.framevar_grid))
 
 
-def test_truncation_model_save_load_round_trip(tmp_path):
+def test_bias_lookup_save_load_round_trip(tmp_path):
     from width_debias import BiasLookup, calibrate_d_free
     scaled = _synthetic_width_scaled_model()
     scaled.save(tmp_path / "scaled.npz")
-    loaded = BiasLookup.load(tmp_path / "scaled.npz")
+    with pytest.warns(UserWarning, match="framevar_grid"):
+        loaded = BiasLookup.load(tmp_path / "scaled.npz")
     assert loaded.calibration_variance == 1.0
     assert loaded.var_bias(3.0, 4.0) == pytest.approx(scaled.var_bias(3.0, 4.0), rel=1e-15)
     trunc = calibrate_d_free(np.array([5.0, 20.0]), n_runs=60, seed=3)
@@ -540,6 +541,31 @@ def test_truncation_model_save_load_round_trip(tmp_path):
     assert not legacy.is_2d and not legacy.is_width_scaled
     assert np.array_equal(legacy.var_bias(np.array([1.0, 4.0])),
                           trunc.var_bias(np.array([1.0, 4.0])))
+
+
+def test_load_accepts_the_path_given_to_save_and_releases_the_file(tmp_path, dfree_lookup):
+    """save("cal") writes cal.npz; load("cal") must find it, and must close the
+    archive so the file can be replaced or removed (Windows locks open files)."""
+    from width_debias import BiasLookup
+    from width_debias.bias_lookup import LOOKUP_FORMAT_VERSION
+    stem = tmp_path / "cal"
+    dfree_lookup.save(stem)
+    loaded = BiasLookup.load(stem)
+    assert loaded.format_version == LOOKUP_FORMAT_VERSION
+    assert np.array_equal(loaded.varbias_grid, dfree_lookup.varbias_grid)
+    (tmp_path / "cal.npz").unlink()
+
+
+def test_load_refuses_a_newer_archive_format(tmp_path, dfree_lookup):
+    from dataclasses import replace
+    from width_debias import BiasLookup
+    from width_debias.bias_lookup import LOOKUP_FORMAT_VERSION
+    path = tmp_path / "future.npz"
+    arrays = {k: v for k, v in vars(replace(dfree_lookup)).items() if v is not None}
+    arrays["format_version"] = LOOKUP_FORMAT_VERSION + 1
+    np.savez(path, **arrays)
+    with pytest.raises(ValueError, match="archive format"):
+        BiasLookup.load(path)
 
 
 # --------------------------------------------------------------------------

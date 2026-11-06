@@ -37,11 +37,26 @@ The selection between the two is automatic: pass a ``variance`` argument to
 """
 from __future__ import annotations
 
+import os
+import warnings
 from dataclasses import dataclass, field, fields
+from pathlib import Path
 
 import numpy as np
 
 from .montecarlo import Ensemble
+
+# Version of the archive layout :meth:`BiasLookup.save` writes. Version 1 is the
+# first versioned layout; archives without the key predate it.
+LOOKUP_FORMAT_VERSION = 1
+
+
+def _resolve_npz_path(path) -> Path:
+    """The file ``np.savez`` wrote for ``path``: it appends ``.npz`` when missing."""
+    given = Path(os.fspath(path))
+    if given.exists() or given.suffix == ".npz":
+        return given
+    return given.with_name(given.name + ".npz")
 
 
 @dataclass
@@ -244,6 +259,8 @@ class BiasLookup:
         provenance; an application must match both. Only :meth:`from_cells`
         records these three; :func:`~width_debias.validate.calibrate_d_free`
         leaves them ``None``, so the match is the caller's to keep.
+    format_version : the archive layout a loaded model was saved with
+        (``None`` for a model built in memory or saved before versioning).
     """
 
     cnr_grid: np.ndarray
@@ -265,6 +282,7 @@ class BiasLookup:
     cnr_floor: float | None = None
     pixel_x: np.ndarray | None = None
     model_spec: str | None = None
+    format_version: int | None = None
 
     # ------------------------------------------------------------------
     # Constructors
@@ -621,17 +639,36 @@ class BiasLookup:
 
         Unset fields are omitted rather than written empty: an empty
         ``variance_grid`` would read back as a 2-D model, and scripts that pass
-        an archive's keys straight to the constructor keep working.
+        an archive's keys straight to the constructor keep working. Like
+        ``np.savez``, a path without the ``.npz`` suffix gets one; :meth:`load`
+        accepts the path as given here.
         """
-        np.savez_compressed(str(path), **{
-            f.name: np.asarray(getattr(self, f.name)) for f in fields(self)
-            if getattr(self, f.name) is not None})
+        arrays = {f.name: np.asarray(getattr(self, f.name)) for f in fields(self)
+                  if getattr(self, f.name) is not None}
+        arrays["format_version"] = np.asarray(LOOKUP_FORMAT_VERSION)
+        np.savez_compressed(str(path), **arrays)
 
     @classmethod
     def load(cls, path) -> "BiasLookup":
-        """Load a model saved with :meth:`save` (or any archive of its fields)."""
-        archive = np.load(str(path))
+        """Load a model saved with :meth:`save` (or any archive of its fields).
+
+        A 1-D lookup saved without ``framevar_grid`` loads with a warning:
+        :func:`~width_debias.weights.msd_and_weights` then weights by the
+        MSD-point variance with frame 0 at weight 0, the weights a lookup
+        calibrated before per-frame variances were recorded used.
+        """
         known = {f.name for f in fields(cls)}
-        return cls(**{name: (archive[name].item() if archive[name].ndim == 0
+        with np.load(_resolve_npz_path(path)) as archive:
+            values = {name: (archive[name].item() if archive[name].ndim == 0
                              else archive[name])
-                      for name in archive.files if name in known})
+                      for name in archive.files if name in known}
+        version = values.get("format_version")
+        if version is not None and int(version) > LOOKUP_FORMAT_VERSION:
+            raise ValueError(f"{path} has archive format {version}; this version of "
+                             f"width-debias reads up to {LOOKUP_FORMAT_VERSION}")
+        model = cls(**values)
+        if not model.is_2d and model.framevar_grid is None:
+            warnings.warn(f"{path} has no framevar_grid, so msd_and_weights uses the "
+                          "MSD-point weights (frame 0 at weight 0) for this lookup",
+                          stacklevel=2)
+        return model
