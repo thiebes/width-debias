@@ -40,11 +40,33 @@ so the correction is width-aware.
 """
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
 
 from .bias_lookup import BiasLookup
 
 SCHEMES = ("ols", "inverse_variance", "subtract", "mas")
+
+
+class CalibrationRangeWarning(UserWarning):
+    """A frame's CNR lies outside the lookup's calibrated range.
+
+    The lookup takes its edge value there instead of extrapolating, so the
+    subtracted bias and the weight of that frame are the edge values. Extend
+    the calibration's CNR grid, or leave such frames out with ``min_cnr``.
+    """
+
+
+def _warn_outside_calibration(cnr: np.ndarray, model: BiasLookup) -> None:
+    lo, hi = float(model.cnr_grid[0]), float(model.cnr_grid[-1])
+    cnr = cnr[np.isfinite(cnr)]
+    if cnr.size and (cnr.min() < lo or cnr.max() > hi):
+        # The message names only the model's range, so a loop over many
+        # realisations warns once per lookup, not once per call.
+        warnings.warn(CalibrationRangeWarning(
+            f"per-frame CNR outside the calibrated range [{lo:.3g}, {hi:.3g}]; "
+            "the lookup takes its edge value there"), stacklevel=3)
 
 
 def corrected_variance(scheme: str, variance_row: np.ndarray,
@@ -96,7 +118,8 @@ def corrected_variance(scheme: str, variance_row: np.ndarray,
 
 def msd_and_weights(scheme: str, variance_row: np.ndarray,
                     cnr_frame: np.ndarray, model: BiasLookup,
-                    key_variance: np.ndarray | None = None):
+                    key_variance: np.ndarray | None = None,
+                    min_cnr: float | None = None):
     """Return ``(msd, weights)`` for one realisation's MSD-vs-t fit.
 
     Parameters
@@ -108,6 +131,13 @@ def msd_and_weights(scheme: str, variance_row: np.ndarray,
         Per-frame CNR (known in Monte Carlo; measured with ``fft-cnr`` on real
         data).
     model : calibrated :class:`~width_debias.bias_lookup.BiasLookup`.
+    min_cnr : optional per-frame CNR floor. Frames below it get weight 0, so
+        :func:`~width_debias.fit.fit_D` and :func:`calibration_D_se` leave
+        them out. Off by default; the validations use 1 (1.3 on measured data),
+        below which the correction no longer holds (README, "On real data").
+        A scheme that consults the lookup warns
+        (:class:`CalibrationRangeWarning`) when a frame it keeps lies outside
+        the calibrated CNR range.
 
     Notes
     -----
@@ -176,6 +206,10 @@ def msd_and_weights(scheme: str, variance_row: np.ndarray,
     w = np.asarray(w, float).copy()
     if not per_frame:
         w[0] = 0.0   # the MSD origin, which these weights cannot place
+    if min_cnr is not None:
+        w = np.where(cnr >= min_cnr, w, 0.0)
+    if scheme != "ols":
+        _warn_outside_calibration(cnr if min_cnr is None else cnr[cnr >= min_cnr], model)
     return msd, w
 
 

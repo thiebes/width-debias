@@ -85,8 +85,8 @@ n_pixels = profiles.shape[1]
 lookup = calibrate_d_free(cnr0, half_window=(n_pixels / 2) / sigma0_px,
                           n_pixels=n_pixels)     # the data's grid, in units of sigma_0
 cnr = per_frame_cnr(profiles)
-msd, w = msd_and_weights("subtract", variance / sigma0_px**2, cnr, lookup)
-w = np.where(cnr >= 1.3, w, 0.0)                 # drop frames below the floor
+msd, w = msd_and_weights("subtract", variance / sigma0_px**2, cnr, lookup,
+                         min_cnr=1.3)            # drop frames below the floor
 fit = fit_D(times, msd, w)
 D = fit.D * sigma0_px**2                         # px^2 per unit time
 se = np.hypot(fit.D_se, calibration_D_se(times, msd, w, cnr, lookup)) * sigma0_px**2
@@ -96,8 +96,8 @@ se = np.hypot(fit.D_se, calibration_D_se(times, msd, w, cnr, lookup)) * sigma0_p
 
 The validation keys the lookup on the exact per-frame CNR, uses a calibration
 built for the same geometry as the data, and drops frames below the floor. On a
-measurement each of these is a step for the user; the library does not check
-them.
+measurement each of these is a step for the user. The library records the
+calibration's geometry but does not check it against the data.
 
 - **Match the calibration to the data.** `var_bias` is a variance in the length
   unit of the calibration, and its size depends on the pixel grid, the profile
@@ -110,10 +110,12 @@ them.
   units of sigma_0 applied to widths in micrometres subtracts a bias that is
   off by the square of the unit ratio (16 for sigma_0 = 0.25 μm).
 - **Drop frames below the floor.** The correction holds above a per-frame CNR
-  of about 1 (0.7 to 1.5 depending on shape). `msd_and_weights` applies no
-  floor, and a CNR outside the calibrated grid takes the value at the nearest
-  grid edge. The validations set the weight of frames below a per-frame CNR of
-  1.0 or 1.3 to zero before `fit_D`, as in the example above.
+  of about 1 (0.7 to 1.5 depending on shape). The validations set the weight of
+  frames below a per-frame CNR of 1.0 or 1.3 to zero before `fit_D`;
+  `msd_and_weights(..., min_cnr=...)` does the same, and applies no floor
+  unless asked. A CNR outside the calibrated grid takes the value at the
+  nearest grid edge, and `msd_and_weights` then issues a
+  `CalibrationRangeWarning`.
 - **The estimated CNR holds over a narrower range.** With the CNR estimated
   from each frame by `fft-cnr` instead of known, the corrected mean D holds in
   simulation only where every fitted frame stays well above the floor: from an

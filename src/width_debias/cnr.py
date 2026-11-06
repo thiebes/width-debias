@@ -38,8 +38,13 @@ except ImportError:  # pragma: no cover - exercised only without the package
 
 
 def per_frame_cnr(profiles: np.ndarray,
-                  fit_model: str = "generalized_gaussian") -> np.ndarray:
+                  fit_model: str = "generalized_gaussian",
+                  **fft_cnr_kwargs) -> np.ndarray:
     """Estimate the CNR of every row of ``profiles`` with ``fft-cnr``.
+
+    The rows are passed as given: window them to about +/-4 sigma_0 around the
+    spot first (slice the stack, or pass fft-cnr's ``roi``), as the validated
+    real-data path does (module docstring).
 
     Parameters
     ----------
@@ -61,6 +66,9 @@ def per_frame_cnr(profiles: np.ndarray,
         shape-robust estimator matters here. The generalized-Gaussian fit
         returns a finite confidence interval (it falls back to the peak method
         if the fit fails), so there is no missing-CI pathology.
+    **fft_cnr_kwargs
+        Passed to ``fft_cnr.fft_cnr`` for every row (for example ``roi``,
+        ``window`` or ``rng``).
 
     Returns
     -------
@@ -79,4 +87,5 @@ def per_frame_cnr(profiles: np.ndarray,
         )
     profiles = np.atleast_2d(np.asarray(profiles, float))
     return np.array(
-        [float(_fft_cnr(row, fit_model=fit_model).cnr) for row in profiles])
+        [float(_fft_cnr(row, fit_model=fit_model, **fft_cnr_kwargs).cnr)
+         for row in profiles])

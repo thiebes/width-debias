@@ -89,13 +89,22 @@ def calibrate_d_free(cnr0_grid: np.ndarray, *, sigma0: float = 1.0,
     (pixel grid, frame count, lifetime); the calibration must match the
     geometry of the data it will be applied to. Lengths are in the unit of
     ``sigma0``: with the default ``sigma0 = 1``, the fitted variances passed to
-    the lookup must be in units of sigma_0^2.
+    the lookup must be in units of sigma_0^2. The lookup records the pixel grid
+    (``pixel_x``), the profile model (``model_spec``) and the lowest calibrated
+    CNR (``cnr_floor``), so an application can check its data against them.
     """
+    from .calibration import _describe_model
+    from .models import GaussianModel
+
     cal_exp = Experiment(sigma0=sigma0, D=0.0, tau=tau, amplitude0=amplitude0,
                          half_window=half_window, n_pixels=n_pixels,
                          n_frames=n_frames, t_max=t_max)
-    return calibrate(cal_exp, cnr0_grid, n_runs=n_runs, seed=seed, model=model,
-                     noise_model=noise_model)
+    lookup = calibrate(cal_exp, cnr0_grid, n_runs=n_runs, seed=seed, model=model,
+                       noise_model=noise_model)
+    lookup.pixel_x = cal_exp.x
+    lookup.model_spec = _describe_model(GaussianModel() if model is None else model)
+    lookup.cnr_floor = float(lookup.cnr_grid[0])
+    return lookup
 
 
 def calibrate_fisher(cnr_grid: np.ndarray | None = None, *, sigma0: float = 1.0,

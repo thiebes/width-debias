@@ -792,3 +792,57 @@ def test_msd_and_weights_refuses_a_batch(dfree_lookup):
         msd_and_weights("subtract", rows, np.full((3, 12), 10.0), dfree_lookup)
     with pytest.raises(ValueError):
         msd_and_weights("subtract", np.ones(12), np.full(11, 10.0), dfree_lookup)
+
+
+# --------------------------------------------------------------------------
+# Real-data guards
+# --------------------------------------------------------------------------
+def test_dfree_lookup_records_its_geometry(tmp_path, dfree_lookup):
+    from width_debias import BiasLookup
+    assert np.array_equal(dfree_lookup.pixel_x, Experiment().x)
+    assert dfree_lookup.model_spec.startswith("GaussianModel")
+    assert dfree_lookup.cnr_floor == dfree_lookup.cnr_grid[0]
+    dfree_lookup.save(tmp_path / "cal.npz")
+    loaded = BiasLookup.load(tmp_path / "cal.npz")
+    assert np.array_equal(loaded.pixel_x, dfree_lookup.pixel_x)
+    assert loaded.model_spec == dfree_lookup.model_spec
+
+
+def test_min_cnr_drops_only_the_frames_below_it(dfree_lookup):
+    from width_debias import msd_and_weights
+    cnr = 12.0 * np.exp(-Experiment().times)
+    row = np.linspace(1.0, 1.1, cnr.size)
+    msd, w_all = msd_and_weights("subtract", row, cnr, dfree_lookup)
+    msd_cut, w_cut = msd_and_weights("subtract", row, cnr, dfree_lookup, min_cnr=1.0)
+    assert np.array_equal(msd, msd_cut)
+    assert np.all(w_cut[cnr < 1.0] == 0.0)
+    assert np.array_equal(w_cut[cnr >= 1.0], w_all[cnr >= 1.0])
+
+
+def test_cnr_outside_the_calibration_warns(dfree_lookup):
+    import warnings
+    from width_debias import CalibrationRangeWarning, msd_and_weights
+    row = np.linspace(1.0, 1.1, 12)
+    inside = np.geomspace(15.0, 0.5, 12)
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", CalibrationRangeWarning)
+        msd_and_weights("subtract", row, inside, dfree_lookup)
+        msd_and_weights("ols", row, np.geomspace(80.0, 0.01, 12), dfree_lookup)
+    with pytest.warns(CalibrationRangeWarning, match="calibrated range"):
+        msd_and_weights("subtract", row, np.geomspace(80.0, 0.5, 12), dfree_lookup)
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", CalibrationRangeWarning)
+        low = np.geomspace(15.0, 0.01, 12)
+        msd_and_weights("subtract", row, low, dfree_lookup, min_cnr=0.5)
+
+
+def test_per_frame_cnr_passes_options_to_fft_cnr():
+    pytest.importorskip("fft_cnr")
+    from width_debias.cnr import per_frame_cnr
+    x = Experiment().x[np.abs(Experiment().x) <= 4.0]
+    rng = np.random.default_rng(1)
+    profiles = np.exp(-0.5 * x ** 2) + rng.normal(0, 0.05, (2, x.size))
+    default = per_frame_cnr(profiles)
+    assert np.array_equal(per_frame_cnr(profiles, tukey_alpha=0.25), default)
+    with pytest.raises(TypeError):
+        per_frame_cnr(profiles, not_an_fft_cnr_option=1)

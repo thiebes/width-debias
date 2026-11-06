@@ -29,8 +29,8 @@ Typical use::
     results = evaluate(Experiment(D=0.02), cnr0, lookup)
 
     # A measurement: fitted widths in units of sigma_0^2 and per-frame CNR
-    msd, w = msd_and_weights("subtract", variance, cnr, lookup)
-    w = np.where(cnr >= 1.3, w, 0.0)         # drop frames below the floor
+    msd, w = msd_and_weights("subtract", variance, cnr, lookup,
+                             min_cnr=1.3)    # drop frames below the floor
     D = fit_D(times, msd, w).D
 
 ``subtract`` is the recommended scheme and :func:`calibrate_d_free` the
@@ -45,8 +45,8 @@ from .models import (GaussianModel, GeneralizedGaussianModel, MODELS,
                      model_from_spec, spec_tag)
 from .montecarlo import Ensemble, run_ensemble
 from .bias_lookup import FrameStats, BiasLookup, frame_stats
-from .weights import (SCHEMES, calibration_D_se, corrected_variance,
-                      msd_and_weights)
+from .weights import (SCHEMES, CalibrationRangeWarning, calibration_D_se,
+                      corrected_variance, msd_and_weights)
 from .validate import (FrameDiagnostic, SchemeResult, calibrate,
                        calibrate_d_free, calibrate_fisher, evaluate,
                        per_frame_diagnostic, sweep_stats)
@@ -64,6 +64,7 @@ __all__ = [
     "Ensemble", "run_ensemble",
     "FrameStats", "BiasLookup", "frame_stats",
     "SCHEMES", "msd_and_weights", "corrected_variance", "calibration_D_se",
+    "CalibrationRangeWarning",
     "SchemeResult", "calibrate", "calibrate_d_free", "calibrate_fisher",
     "evaluate", "sweep_stats",
     "FrameDiagnostic", "per_frame_diagnostic",

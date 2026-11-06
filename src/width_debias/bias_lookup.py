@@ -256,9 +256,10 @@ class BiasLookup:
     cnr_floor : the lowest calibrated CNR, for provenance. Every lookup takes
         the edge value outside ``cnr_grid``.
     pixel_x, model_spec : the calibration's pixel grid and profile model, for
-        provenance; an application must match both. Only :meth:`from_cells`
-        records these three; :func:`~width_debias.validate.calibrate_d_free`
-        leaves them ``None``, so the match is the caller's to keep.
+        provenance; an application must match both. :meth:`from_cells` and
+        :func:`~width_debias.validate.calibrate_d_free` record these and
+        ``cnr_floor``; other constructors leave them ``None``, and the match is
+        then the caller's to keep. Nothing checks them automatically.
     format_version : the archive layout a loaded model was saved with
         (``None`` for a model built in memory or saved before versioning).
     """
