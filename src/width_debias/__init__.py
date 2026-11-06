@@ -17,9 +17,8 @@ the ``fft-cnr`` package) is the input.
 Typical use::
 
     import numpy as np
-    from width_debias import Experiment, calibrate_d_free, evaluate
-    from width_debias.fit import fit_D
-    from width_debias.weights import msd_and_weights
+    from width_debias import (Experiment, calibrate_d_free, evaluate, fit_D,
+                              msd_and_weights)
 
     cnr0 = np.array([5, 8, 13, 21, 34, 55, 90])
     lookup = calibrate_d_free(cnr0)          # D-free lookup var_bias(CNR)
@@ -40,9 +39,11 @@ floor.
 """
 from .simulate import (AnomalousExperiment, Experiment, MultiExpExperiment,
                        cnr_per_frame, noisy_series)
+from .noise import ShotNoise, WhiteNoise
 from .models import (GaussianModel, GeneralizedGaussianModel, MODELS,
                      MomentModel, UnboundedGaussianModel, VoigtModel,
                      model_from_spec, spec_tag)
+from .fit import DFit, fit_D
 from .montecarlo import Ensemble, run_ensemble
 from .bias_lookup import FrameStats, BiasLookup, frame_stats
 from .weights import (SCHEMES, CalibrationRangeWarning, calibration_D_se,
@@ -53,15 +54,16 @@ from .validate import (FrameDiagnostic, SchemeResult, calibrate,
 from .calibration import (CalibrationCells, CalibrationGrid, calibrate_cells,
                           calibrate_cnr_sigma2)
 from .fisher import LeadingOrderTerms, leading_order_terms
+from .cnr import per_frame_cnr
 
 __version__ = "0.4.0"
 
 __all__ = [
     "Experiment", "AnomalousExperiment", "MultiExpExperiment",
-    "cnr_per_frame", "noisy_series",
+    "cnr_per_frame", "noisy_series", "WhiteNoise", "ShotNoise",
     "GaussianModel", "VoigtModel", "GeneralizedGaussianModel", "MomentModel",
     "UnboundedGaussianModel", "MODELS", "model_from_spec", "spec_tag",
-    "Ensemble", "run_ensemble",
+    "Ensemble", "run_ensemble", "fit_D", "DFit", "per_frame_cnr",
     "FrameStats", "BiasLookup", "frame_stats",
     "SCHEMES", "msd_and_weights", "corrected_variance", "calibration_D_se",
     "CalibrationRangeWarning",

@@ -453,10 +453,10 @@ class BiasLookup:
     def var_bias(self, cnr, variance=None, n_iter: int = 4):
         """Interpolated additive variance bias.
 
-        ``E[sigma_hat^2] - sigma^2_true``. The folded-normal model
-        (DERIVATION.md) identifies this as the estimation-noise variance s^2;
-        subtracting it per frame removes the bias the MSD slope would
-        otherwise inherit.
+        ``E[sigma_hat^2] - sigma^2_true``. To leading order it is the width's
+        estimation variance Var(sigma_hat) (``docs/DERIVATION.md``,
+        :mod:`width_debias.fisher`); subtracting it per frame removes the bias
+        the MSD slope would otherwise inherit.
 
         With a 2-D calibration **and** a ``variance`` argument (the observed
         raw fitted variance), looks up the bias at (CNR, sigma^2_true)
@@ -591,11 +591,13 @@ class BiasLookup:
     def frame_variance(self, cnr, variance=None):
         """Interpolated per-frame ``Var(sigma_hat^2)`` at the given CNR (1-D).
 
-        With a width table and an explicit ``variance`` key, the lookup is
-        rescaled to that width (Var(sigma_hat^2) = 4 v Var(sigma_hat) to leading
-        order, so the same table serves). Pass a measurement-level key, not each
-        frame's own fitted variance: a weight that depends on its own point's
-        noise biases the slope at the order being corrected.
+        With a width table and an explicit ``variance`` (a true width), the
+        lookup is rescaled to that width (Var(sigma_hat^2) = 4 v Var(sigma_hat)
+        to leading order, so the same table serves).
+        :func:`~width_debias.weights.msd_and_weights` passes the true width a
+        measurement-level key implies, never a frame's own fitted variance: a
+        weight that depends on its own point's noise biases the slope at the
+        order being corrected.
 
         The slope weights are ``1 / Var(sigma_hat_i^2)`` at the application's
         own frame CNR, frame 0 included (see
@@ -622,9 +624,11 @@ class BiasLookup:
         With a 1-D calibration from :meth:`from_stats` this is the MSD-point
         variance ``Var(sigma_hat^2(t) - sigma_hat^2(0))`` empirically measured
         per CNR; from :meth:`from_cells` it is the per-frame ``Var(sigma_hat^2)``
-        (a copy of ``framevar_grid``). With a 2-D calibration it is the
-        per-frame ``Var(sigma_hat^2)``, which :mod:`width_debias.weights` uses
-        directly as each frame's weight.
+        (a copy of ``framevar_grid``). With a 2-D calibration and a
+        ``variance`` (a true width) it is the per-frame ``Var(sigma_hat^2)`` at
+        that width; without one, its average over the variance grid.
+        :func:`~width_debias.weights.msd_and_weights` weights by it, read at a
+        key's true width or averaged, never at a frame's own fitted variance.
         """
         if variance is None or not self.is_2d:
             return np.interp(cnr, self.cnr_grid, self.relvar_grid,

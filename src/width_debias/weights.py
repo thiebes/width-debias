@@ -162,12 +162,18 @@ def msd_and_weights(scheme: str, variance_row: np.ndarray,
     0 at weight 0, and a 1-D model saved without a ``framevar_grid`` uses the
     MSD-point weights (it has no per-frame variance to weight by).
 
-    ``key_variance`` (a measurement-level estimate of each frame's true width)
-    keys both the bias and, for a 1-D model with a width table, the weights.
-    Without it the bias is keyed on each frame's own fitted variance and the
-    weights are not width-scaled: a weight that depends on its own point's
-    noise would bias the slope at O(1/CNR^2), the order being corrected,
-    whereas a bias keyed that way errs only at O(1/CNR^4).
+    ``key_variance`` is a measurement-level stand-in for each frame's fitted
+    width, smoothed across the measurement (for example a robust line through
+    sigma_hat^2(t)). For a width-aware lookup (2-D, or 1-D with a width table)
+    it keys the bias, and the weights are read at the true width it implies,
+    ``key - var_bias(CNR, key)``, the point the bias is read at. Without it
+    the bias is keyed on each frame's own fitted variance and the weights do
+    not depend on width (a 2-D lookup uses its width-averaged 1-D
+    ``rel_variance``). A weight read at a frame's own noisy width would
+    correlate with that frame's error and bias the slope at O(1/CNR^2), the
+    order being corrected; on a synthetic joint lookup it left D/D_true at
+    0.73 at CNR_0 30 (D = 0.02), against 1.00 for a width-free weight. A bias
+    keyed on the frame's own width errs only at O(1/CNR^4).
     """
     variance_row = np.asarray(variance_row, float)
     cnr = np.asarray(cnr_frame, float)
@@ -184,21 +190,26 @@ def msd_and_weights(scheme: str, variance_row: np.ndarray,
 
     # --- weights --------------------------------------------------------
     # 1 / Var(sigma_hat_i^2), looked up at this measurement's own frame CNR:
-    # the 2-D calibration's rel_variance or the 1-D frame_variance. A 1-D
-    # model without a frame_variance grid falls back to rel_variance, the
-    # MSD-point variance measured inside each calibration ensemble (jagged in
-    # CNR; see BiasLookup.frame_variance), with frame 0 at weight 0.
+    # the 2-D calibration's rel_variance or the 1-D frame_variance, at the
+    # key's true width when a width-aware lookup has a key. A 1-D model
+    # without a frame_variance grid falls back to rel_variance, the MSD-point
+    # variance measured inside each calibration ensemble (jagged in CNR; see
+    # BiasLookup.frame_variance), with frame 0 at weight 0.
     if scheme == "ols":
         w = np.ones_like(cnr)
         per_frame = False
     else:
+        width = None
+        if key_variance is not None and (model.is_2d or model.is_width_scaled):
+            key = np.asarray(key_variance, float)
+            width = key - model.var_bias(cnr, key)
         per_frame = model.is_2d or model.framevar_grid is not None
         if model.is_2d:
-            rv = model.rel_variance(cnr, variance_row)
+            rv = model.rel_variance(cnr, width)
         elif per_frame:
-            rv = model.frame_variance(cnr, key_variance)
+            rv = model.frame_variance(cnr, width)
         else:
-            rv = model.rel_variance(cnr, variance_row)
+            rv = model.rel_variance(cnr)
         hi = np.nanmax(rv)
         tiny = hi * 1e-12 if np.isfinite(hi) and hi > 0 else 1e-12
         w = 1.0 / np.clip(rv, tiny, None)
@@ -249,11 +260,19 @@ def calibration_D_se(times: np.ndarray, msd: np.ndarray, weights: np.ndarray,
     covariance, ``Var_cal(D) = (1/4) c^T M M^T c`` with M from
     :meth:`~width_debias.bias_lookup.BiasLookup.var_bias_factor`.
     ``key_variance`` is the width key passed to ``msd_and_weights``, if any.
+    A width-aware lookup (2-D, or 1-D with a width table) needs
+    ``variance_row`` or ``key_variance``, and raises without both.
     """
     t = np.asarray(times, float)
     m = np.asarray(msd, float)
     w = np.asarray(weights, float)
     cnr = np.asarray(cnr_frame, float)
+    if variance_row is None and key_variance is None and (model.is_2d
+                                                          or model.is_width_scaled):
+        # The correction read this lookup at each frame's width; without it the
+        # SE would come from the width-averaged grid and understate the error.
+        raise ValueError("a width-aware lookup needs variance_row (or the "
+                         "key_variance given to msd_and_weights)")
     good = np.isfinite(t) & np.isfinite(m) & np.isfinite(w) & (w > 0)
     if good.sum() < 2:
         return np.nan

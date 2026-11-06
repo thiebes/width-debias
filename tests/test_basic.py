@@ -846,3 +846,81 @@ def test_per_frame_cnr_passes_options_to_fft_cnr():
     assert np.array_equal(per_frame_cnr(profiles, tukey_alpha=0.25), default)
     with pytest.raises(TypeError):
         per_frame_cnr(profiles, not_an_fft_cnr_option=1)
+
+
+# --------------------------------------------------------------------------
+# Width keys
+# --------------------------------------------------------------------------
+def _synthetic_joint_lookup():
+    """A 2-D lookup with bias 0.06 sqrt(v)/CNR^2 and Var(sigma_hat^2) 0.24 v^1.5/CNR^2."""
+    from width_debias import BiasLookup, CalibrationGrid
+    cnr_g = np.geomspace(0.3, 200, 60)
+    var_g = np.linspace(0.3, 6.0, 40)
+    c, v = np.meshgrid(cnr_g, var_g, indexing="ij")
+    grid = CalibrationGrid(cnr_grid=cnr_g, variance_grid=var_g,
+                           var_bias=0.06 * np.sqrt(v) / c ** 2,
+                           rel_variance=0.24 * v ** 1.5 / c ** 2,
+                           n_runs=300, model_name="gaussian")
+    return BiasLookup.from_calibration(grid)
+
+
+def test_joint_lookup_weights_do_not_follow_a_frames_own_width():
+    """Without a key the 2-D weights are width-averaged, so a frame that
+    scatters high keeps its weight (a weight tied to its own error biases the
+    slope at the order being corrected)."""
+    from width_debias import msd_and_weights
+    model = _synthetic_joint_lookup()
+    cnr = 12.0 * np.exp(-Experiment().times)
+    row = np.ones(12)
+    scattered = row.copy()
+    scattered[5] = 3.0
+    _, w = msd_and_weights("subtract", row, cnr, model)
+    _, w_scattered = msd_and_weights("subtract", scattered, cnr, model)
+    assert np.array_equal(w, w_scattered)
+    assert np.allclose(w, 1.0 / model.rel_variance(cnr))
+    assert w[0] > 0
+
+
+def test_joint_lookup_weights_read_at_the_keys_true_width():
+    from width_debias import msd_and_weights
+    model = _synthetic_joint_lookup()
+    cnr = 12.0 * np.exp(-Experiment().times)
+    key = np.linspace(1.0, 2.5, 12)
+    width = key - model.var_bias(cnr, key)
+    _, w = msd_and_weights("subtract", np.ones(12), cnr, model, key_variance=key)
+    assert np.allclose(w, 1.0 / model.rel_variance(cnr, width))
+
+
+def test_width_scaled_weights_read_at_the_keys_true_width():
+    """var_bias and frame_variance read the key at the same (true) width."""
+    from dataclasses import replace
+    from width_debias import msd_and_weights
+    base = _synthetic_width_scaled_model()
+    model = replace(base, framevar_grid=4 * 0.05 / base.cnr_grid ** 2)
+    cnr = 12.0 * np.exp(-Experiment().times)
+    key = np.linspace(1.2, 3.0, 12)
+    width = key - model.var_bias(cnr, key)
+    _, w = msd_and_weights("subtract", np.ones(12), cnr, model, key_variance=key)
+    assert np.allclose(w, 1.0 / model.frame_variance(cnr, width))
+
+
+def test_calibration_D_se_needs_the_width_for_a_width_aware_lookup():
+    from width_debias import calibration_D_se, msd_and_weights
+    model = _synthetic_joint_lookup()
+    times = Experiment().times
+    cnr = 12.0 * np.exp(-times)
+    row = np.linspace(1.0, 1.2, 12)
+    msd, w = msd_and_weights("subtract", row, cnr, model)
+    with pytest.raises(ValueError, match="width-aware"):
+        calibration_D_se(times, msd, w, cnr, model)
+    assert np.isfinite(calibration_D_se(times, msd, w, cnr, model, row))
+
+
+def test_public_api_exports_the_recommended_path():
+    """The README's real-data path imports from the package root."""
+    import width_debias
+    for name in ("calibrate_d_free", "msd_and_weights", "fit_D", "DFit",
+                 "calibration_D_se", "per_frame_cnr", "WhiteNoise", "ShotNoise",
+                 "CalibrationRangeWarning", "BiasLookup"):
+        assert name in width_debias.__all__
+    assert all(hasattr(width_debias, name) for name in width_debias.__all__)
