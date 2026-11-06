@@ -1,4 +1,4 @@
-"""End-to-end validation: does the folded-normal correction reduce D bias?
+"""End-to-end validation: does the per-frame bias correction reduce D bias?
 
 The validation has two stages, deliberately on independent random seeds:
 
@@ -31,7 +31,7 @@ def sweep_stats(exp: Experiment, cnr0_grid: np.ndarray, n_runs: int = 400,
     """Per-frame statistics from a Monte Carlo CNR sweep.
 
     Returns one :class:`~width_debias.bias_lookup.FrameStats` per CNR_0.  This
-    is the raw material both for the truncation model and for per-frame
+    is the raw material both for the bias lookup and for per-frame
     diagnostics, so callers can reuse it instead of resampling.
     ``model`` selects the profile model (see :mod:`width_debias.models`);
     ``noise_model`` selects the noise law (see :mod:`width_debias.noise`,
@@ -47,7 +47,7 @@ def sweep_stats(exp: Experiment, cnr0_grid: np.ndarray, n_runs: int = 400,
 
 def calibrate(exp: Experiment, cnr0_grid: np.ndarray, n_runs: int = 400,
               seed: int = 1, model=None, noise_model=None) -> BiasLookup:
-    """Build a truncation model from a Monte Carlo CNR sweep.
+    """Build a bias lookup from a Monte Carlo CNR sweep.
 
     The calibration uses ``exp.D`` to generate synthetic profile sequences, so
     the lookup is implicitly conditioned on that D. For a D-independent
@@ -65,7 +65,7 @@ def calibrate_d_free(cnr0_grid: np.ndarray, *, sigma0: float = 1.0,
                      t_max: float = 3.0, amplitude0: float = 1.0,
                      n_runs: int = 400, seed: int = 1,
                      model=None, noise_model=None) -> BiasLookup:
-    """Build a truncation model **without reference to the application's D**.
+    """Build a bias lookup **without reference to the application's D**.
 
     Generates the calibration profile sequence at ``D = 0``, so every frame's
     true variance is ``sigma_0^2`` and the resulting 1-D ``var_bias(CNR)``
@@ -75,7 +75,7 @@ def calibrate_d_free(cnr0_grid: np.ndarray, *, sigma0: float = 1.0,
 
     Use this whenever the application's D is unknown (real data), variable
     across measurements, or itself heterogeneous (a mixed-D population). In
-    the low-D regime where the truncation bias bites, the per-frame variance
+    the low-D regime, the per-frame variance
     barely changes from ``sigma_0^2`` over the measurement window, so the
     bias calibrated at ``sigma^2 = sigma_0^2`` is the bias the application
     actually sees. Tested by Monte Carlo at D = 0.005 to 0.1 sigma_0^2/tau on

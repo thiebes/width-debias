@@ -2,7 +2,7 @@
 
 The default pipeline adds white, signal-independent Gaussian noise at the
 profile level (constant standard deviation set by the requested CNR). That is
-the noise law the folded-normal calibration is built on. Real transient-
+the noise law the default calibration is built on. Real transient-
 microscopy detectors are dominated by *shot* (photon-counting) noise, whose
 variance scales with the local signal, plus a read-noise floor. A correction
 calibrated and validated only on white noise has not been tested against the

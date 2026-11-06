@@ -82,7 +82,7 @@ class AnomalousExperiment(Experiment):
     Only the two truth properties change; the geometry (``x``, ``times``), the
     single-exponential decay (``amplitude``), and the CNR bookkeeping are
     inherited unchanged, so the whole Monte Carlo / fit / weighting pipeline
-    runs on this bed with no other change. The truncation bias lifts the
+    runs on this bed with no other change. The noise bias lifts the
     low-CNR late frames more than the high-CNR early ones, which tilts the MSD
     curve toward a steeper apparent exponent -- so the bias contaminates alpha,
     not only D, and this bed is how the correction's recovery of alpha is
@@ -124,7 +124,7 @@ class MultiExpExperiment(Experiment):
     is the inherited Fickian one; only the decay (hence the per-frame CNR
     trajectory) changes.
 
-    The point of this bed is that the folded-normal correction keys on the
+    The point of this bed is that the correction keys on the
     *per-frame CNR*, not on the decay law: the per-frame residual bias is the
     same function of per-frame CNR whichever decay produced it, so multi-
     exponential decay does not invalidate the correction. It does change *which*

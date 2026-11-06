@@ -61,7 +61,7 @@ def per_frame_cnr(profiles: np.ndarray,
         a Gaussian fit 0.05-0.17 of the amplitude off across that kurtosis
         range while the generalized-Gaussian fit stays within ~0.01, with the
         Gaussian falling
-        out as the p=2 special case. Because the truncation bias scales as
+        out as the p=2 special case. Because the noise bias scales as
         ~A/CNR^2, a biased CNR feeds straight into a biased correction, so the
         shape-robust estimator matters here. The generalized-Gaussian fit
         returns a finite confidence interval (it falls back to the peak method

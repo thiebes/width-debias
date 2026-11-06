@@ -1,7 +1,7 @@
 """Profile models: how each frame's spatial profile is shaped and fitted.
 
-The truncation-at-zero bias is not specific to a Gaussian fit -- it afflicts
-*any* non-negative width parameter. This module makes the profile model
+The noise bias of a fitted variance is not specific to a Gaussian fit: every
+fitted width carries it. This module makes the profile model
 pluggable so the boundary diagnostic, the Monte Carlo, and the weighting can be
 run for each of:
 
@@ -81,8 +81,8 @@ class VoigtModel:
     Lorentzian PSF of half-width-at-half-maximum ``gamma``.
 
     The Voigt fit deconvolves the fixed instrument Lorentzian from the
-    diffusing Gaussian, so the recovered, truncation-prone width is the
-    Gaussian component sigma_G; MSD(t) = sigma_G^2(t) - sigma_G^2(0).
+    diffusing Gaussian, so the recovered width is the Gaussian component
+    sigma_G; MSD(t) = sigma_G^2(t) - sigma_G^2(0).
     """
 
     gamma: float = 0.3          # Lorentzian HWHM, in sigma_0 units (fixed PSF)
@@ -287,7 +287,7 @@ def _gaussian_precision(x: np.ndarray, mu: float, b: float,
 class UnboundedGaussianModel:
     """Gaussian width fit with the positivity wall removed (precision-fitted).
 
-    This is the head-to-head comparator for the folded-normal correction: the
+    This is the head-to-head comparator for the ``subtract`` correction: the
     *same* shape-matched Gaussian, fitted in the precision parameter
     ``b = 1 / sigma^2`` so the fitted variance ``1 / b`` can take any sign. Its
     sampling distribution is therefore not folded at zero, which is the

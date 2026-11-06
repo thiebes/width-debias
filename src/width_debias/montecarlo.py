@@ -2,7 +2,7 @@
 
 Because true D is known here, the ensemble exposes the bias that real
 measurements cannot.  The output is a stack of per-frame fitted variances plus
-the MSD curves derived from them, ready for the truncation and weighting
+the MSD curves derived from them, ready for the bias lookup and weighting
 analysis.
 
 The profile model (Gaussian / Voigt / generalized-Gaussian) is pluggable --

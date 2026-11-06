@@ -6,11 +6,13 @@ This is the fitting hierarchy that the weighting scheme acts on:
 2. The MSD curve, MSD(t) = sigma^2(t) - sigma^2(0), is fit linearly; the
    slope is 2 D.
 
-The variance parameter of a Gaussian fit is bounded below by zero but
-unbounded above.  At low CNR the sampling distribution of the fitted variance
-is therefore **left-truncated and right-skewed**: noise can throw a fit to an
-arbitrarily broad profile, but not below the wall at zero.  That asymmetry,
-carried forward through the MSD slope, is what inflates D.
+A width fitted to a noisy profile scatters about the true width, so its
+square, the fitted variance, exceeds the true variance on average by the
+width's estimation variance. Carried through the MSD slope, that bias inflates
+D. The variance is bounded below (about one pixel squared), but above a
+per-frame CNR of about 1.5 the bound does not bind and plays no part in the
+bias; below that, noise can throw a fit to a broad profile and the fitted
+variance becomes right-skewed.
 
 The fitting here mirrors the validated DICE engine (Thiebes & Grumstrup, JCP
 2024): the variance is fit directly with a wide lower-to-upper bound, and a

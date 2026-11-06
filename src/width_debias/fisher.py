@@ -5,7 +5,7 @@ If the width estimate is unbiased to second order (E[sigma_hat] = sigma), then
 
     E[sigma_hat^2] = sigma^2 + Var(sigma_hat),
 
-so the additive bias the folded-normal scheme subtracts is, to leading order in
+so the additive bias the ``subtract`` scheme removes is, to leading order in
 1/CNR^2, the width's own estimation variance. For an efficient fit that variance
 is the Cramer-Rao value, which follows from the noise-free profile model alone:
 no Monte Carlo is needed for the leading term. The second-order bias of the

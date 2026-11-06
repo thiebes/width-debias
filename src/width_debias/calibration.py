@@ -3,8 +3,8 @@
 The recommended D-free calibration is :func:`width_debias.calibrate_d_free`,
 a 1-D lookup that runs the CNR-sweep calibration at ``D = 0``. It
 captures the bias at ``sigma^2 = sigma_0^2``, which is the relevant region
-for the low-D regime where the truncation bias bites (sigma^2(t) barely
-changes across the measurement when D is small); see
+for the low-D regime (sigma^2(t) barely changes across the measurement when D
+is small); see
 ``experiments/dfree-calibration/validate_d_zero.py`` for its validation.
 
 :func:`calibrate_cells` supplies the single-frame Monte Carlo cells that
@@ -276,7 +276,7 @@ def calibrate_cnr_sigma2(model=None, *, pixel_x: np.ndarray | None = None,
         consistent with ``pixel_x``).
     sigma_grid : alternative way to specify the variance axis -- linear-in-
         sigma spacing, which gives denser sampling at small sigma^2 (where
-        the bias gradient is largest near the wall at zero). Internally
+        the bias changes fastest with sigma^2). Internally
         converted to ``variance_grid = sigma_grid ** 2``. Pass either this
         or ``variance_grid``, not both.
     cnr_grid : the per-frame CNR values to span. Defaults to log-spaced
