@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         python-version: ["3.11", "3.13"]
@@ -24,7 +24,7 @@ jobs:
       # uv is pinned to a version whose SHA-256 setup-uv carries in its known
       # list, and the cache is off so a release run cannot restore a cache
       # written by another workflow.
-      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
         with:
           version: "0.13.0"
           enable-cache: false
@@ -36,12 +36,12 @@ jobs:
   # dependencies never run where the publish credential is available.
   build:
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
         with:
           version: "0.13.0"
           enable-cache: false
@@ -51,6 +51,15 @@ jobs:
       # The build backend and its dependencies are pinned with hashes; see
       # .github/build-constraints.txt for how to regenerate it.
       - run: uv build --python 3.13.16 --managed-python --build-constraints .github/build-constraints.txt --require-hashes
+      # A release must upload the version its tag names; PyPI never accepts a
+      # second upload of a version, so a mismatch is caught before it.
+      - if: github.event_name == 'release'
+        run: |
+          version=$(grep -oP '^__version__ = "\K[^"]+' src/width_debias/__init__.py)
+          if [ "v${version}" != "${GITHUB_REF_NAME}" ]; then
+            echo "tag ${GITHUB_REF_NAME} does not match __version__ ${version}"
+            exit 1
+          fi
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: dist
@@ -62,7 +71,7 @@ jobs:
   verify:
     needs: build
     if: github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
@@ -79,7 +88,7 @@ jobs:
   publish:
     needs: build
     if: github.event_name == 'release'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       id-token: write
@@ -91,4 +100,4 @@ jobs:
           path: dist/
       # When bumping this action, update the twine and packaging pins in the
       # package job of test.yml to match its requirements/runtime.txt.
-      - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
+      - uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
