@@ -1,4 +1,4 @@
-"""Per-profile floor of the folded-normal correction.
+"""Per-profile floor of the noise-bias correction.
 
 The cleanest test of where the correction works: isolated single profiles
 at chosen per-profile CNR, with no diffusion, no decay, no frame indexing.

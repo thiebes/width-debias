@@ -1,8 +1,8 @@
-"""Does the folded-normal correction de-bias the anomalous exponent alpha?
+"""Does the noise-bias correction de-bias the anomalous exponent alpha?
 
 The MSD curve of a disordered film grows as ``MSD(t) = 2 D t^alpha``; the
 exponent ``alpha`` is the disorder signature the field reads off (``alpha < 1``
-subdiffusive, the disordered-nanocrystal-solid case). The truncation bias does
+subdiffusive, the disordered-nanocrystal-solid case). The noise bias does
 not just inflate D -- because the per-frame contrast-to-noise falls as the
 population decays, the late, low-CNR frames are lifted more than the early ones,
 which tilts the MSD curve toward a steeper apparent exponent. So a naive fit
@@ -166,7 +166,7 @@ class CellSamples:
     realisation and averaging instead would fold in the power-law fit's own
     per-measurement skew -- at this small diffusion length the single-shot
     exponent is broad and bound-clipped, so its mean is pulled high even with no
-    truncation bias. That per-measurement spread is reported separately, as the
+    noise bias. That per-measurement spread is reported separately, as the
     precision band, not as the bias.
     """
 

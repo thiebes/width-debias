@@ -1,6 +1,6 @@
 # cspbbr-strobescat -- CsPbBr3 single-crystal diffusion, real-data correction example
 
-End-to-end application of the truncation-bias correction to a real measurement:
+End-to-end application of the noise-bias correction to a real measurement:
 CsPbBr3 single-crystal transient-PL-microscopy diffusion (Upasana's data, from
 the Antonella/Carlos diffusion paper). The late-time MSD inflates as the
 per-frame CNR collapses; the correction removes that bias before the D fit. The

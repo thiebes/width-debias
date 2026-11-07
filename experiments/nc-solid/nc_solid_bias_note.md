@@ -140,7 +140,7 @@ pure shot noise is consistent with the sign change of the single-frame
 width-variance bias under photon-limited noise reported in the fft-cnr
 validation cases.
 
-This is the established noise-law result for the truncation bias, here confirmed
+This is the established noise-law result for the noise bias, here confirmed
 on the nanocrystal-solid maps with true Poisson sampling: the bias is set by the
 contrast against the constant noise floor, not by the total noise. Differential
 or pump-probe techniques, which ride on a bright constant pedestal, are
@@ -201,7 +201,7 @@ design rule into a statement about a real measurement:
   bias regime applies at all.
 
 A practical consequence follows for applying the correction to real data. The
-width-debias folded-normal correction is calibrated on white noise and keyed
+width-debias noise-bias correction is calibrated on white noise and keyed
 on the spectral CNR. On shot-dominated data both assumptions are off — the
 bias-governing CNR is the peak-local member, and a white calibration
 over-corrects photon-limited data — so the correct order of operations is to
@@ -235,7 +235,7 @@ contrast across noise laws.
 The figure shows the noise bias and its correction over the realistic measurement
 regime: no MSD experiment is run below CNR₀ ≈ 30, the apparent exponent carries a
 residual upward bias well into the contrast people actually use, and the
-folded-normal correction recovers the nominal exponent. An inset extends the sweep
+noise-bias correction recovers the nominal exponent. An inset extends the sweep
 to low contrast, where the naive estimate diverges to the ballistic ceiling. One
 representative sample is shown (C16, the smallest crystals); the others behave the
 same. Produced by
@@ -258,7 +258,7 @@ same. Produced by
 > the MSD averaged over 64,000 independent noisy realisations (each marker is an
 > independent Monte Carlo estimate, not a fitted curve; error bars are the bootstrap
 > standard error of the exponent). The naive estimate (red) reads about 0.09 too
-> high at CNR₀ ≈ 30 and clears only near CNR₀ ≈ 200. The folded-normal correction
+> high at CNR₀ ≈ 30 and clears only near CNR₀ ≈ 200. The noise-bias correction
 > (blue) subtracts from each frame, before the fit, the calibrated per-frame
 > variance bias — the folded-normal estimation-noise variance looked up by the
 > frame's CNR from a D-free white-noise calibration — and recovers the nominal

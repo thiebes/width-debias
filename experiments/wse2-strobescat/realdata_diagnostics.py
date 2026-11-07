@@ -1,4 +1,4 @@
-"""Per-measurement truncation-bias diagnostics for Enrique's diffusion scans.
+"""Per-measurement noise-bias diagnostics for Enrique's diffusion scans.
 
 A review tool that processes one diffusion time-series end to end and writes
 a complete diagnostic set (manifest, naive/corrected MSD plots, an all-frame
@@ -19,7 +19,7 @@ What it does for one measurement
    noise law (white vs shot) selects the matched calibration.
 3. Builds (and caches) a D-free ``var_bias(CNR)`` calibration at the measurement
    geometry and the matched noise law, then subtracts ``var_bias(CNR) * sigma0^2``
-   per frame (the folded-normal correction, ``docs/DERIVATION.md``).
+   per frame (the noise-bias correction, ``docs/DERIVATION.md``).
 
 Units (important)
 -----------------
@@ -678,8 +678,8 @@ def _print_table(t, cnr, var_naive, vb, var_corr, keep, retained):
 
 def _update_index(s):
     path = os.path.join(WIP, "index.md")
-    header = ("# Real-data truncation-bias diagnostics\n\n"
-              "Per-measurement diagnostics of the folded-normal correction on "
+    header = ("# Real-data noise-bias diagnostics\n\n"
+              "Per-measurement diagnostics of the noise-bias correction on "
               "Enrique's diffusion scans. Widths in px^2 (1 px = 0.060 um at the "
               "sample, so 1 px^2 = 0.0036 um^2). D in px^2/ns. The naive and "
               "corrected D are the "

@@ -2,8 +2,8 @@
 
 ## Purpose
 
-The core proof-of-concept: show the low-CNR truncation bias in the extracted
-diffusion coefficient D, and that the folded-normal correction removes it. One
+The core proof-of-concept: show the low-CNR noise bias in the extracted
+diffusion coefficient D, and that the noise-bias correction removes it. One
 two-panel figure per profile model (truncation diagnostic; bias curves
 `mean(D_hat)/D_true` vs CNR0 for OLS, inverse-variance, and folded-normal).
 

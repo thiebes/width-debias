@@ -15,7 +15,7 @@ sorted time axis, and fits
 over ``t in [t0, time_fit]`` with inverse-variance weights from his fit-error
 ``errorsquare = |2 sigma * sigma_err|``. His stored ``time_fit = 2 ns`` and
 ``cutoff = 0`` for every measurement here -- so his "clean" D is the early,
-high-CNR regime (which is exactly why it looks clean: the truncation bias is
+high-CNR regime (which is exactly why it looks clean: the noise bias is
 small there).
 
 This script:

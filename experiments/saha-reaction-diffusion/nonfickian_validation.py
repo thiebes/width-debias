@@ -1,15 +1,15 @@
-"""Where the folded-normal correction acts on a nonlinear, multi-population bed.
+"""Where the noise-bias correction acts on a nonlinear, multi-population bed.
 
 This experiment places the Saha reaction-diffusion bed inside the validation
 framework of `docs/VALIDATION_DESIGN.md`. The deliverable of an exciton-diffusion
 measurement is the *carrier distribution* and its transport, not the recorded
 emission profile. Three distortions sit between the two:
 
-1. measurement noise (and the truncation bias it puts in any bounded width fit),
+1. measurement noise (and the noise bias it puts in any fitted width),
 2. the instrument point-spread function,
 3. the emission-to-carrier mapping.
 
-The folded-normal correction in `width_debias` removes distortion 1 only. The
+The noise-bias correction in `width_debias` removes distortion 1 only. The
 Saha emission is nonlinear in carrier density -- E = qe nu (1-x) n + qf rho x^2
 n^2 -- so distortion 3 is present and large, and no width estimator plus noise
 correction can reach the carrier transport on its own. That is the forward-model
@@ -37,7 +37,7 @@ Under noise it then checks the first stage two ways:
 * the moment estimator (non-truncated, no folded-normal) recovers the
   recorded-emission moment where the per-frame contrast-to-noise allows it
   (it is unstable below CNR ~ 3);
-* a Gaussian fit plus the folded-normal correction recovers the *noise-free
+* a Gaussian fit plus the noise-bias correction recovers the *noise-free
   Gaussian fit* -- this isolates distortion 1, and is a first-stage diagnostic,
   not a claim about the carrier transport.
 
@@ -102,7 +102,7 @@ CALIBRATION_PATH = os.path.join("output", "calibration_saha.npz")
 
 # First-stage estimators. The moment estimator returns the recorded-emission
 # second moment directly (no truncation, no calibration); the Gaussian fit is
-# the bounded estimator the folded-normal correction debiases.
+# the fitted-width estimator the noise-bias correction debiases.
 GAUSS = GaussianModel()
 MOMENT = MomentModel()
 
@@ -237,7 +237,7 @@ def first_stage_trajectories(regime: Regime, cnr0: float,
 
     * ``moment`` -- the non-truncated moment estimator (targets the
       recorded-emission moment; no folded-normal);
-    * ``gauss_folded`` -- the Gaussian fit with the folded-normal correction
+    * ``gauss_folded`` -- the Gaussian fit with the noise-bias correction
       (targets the noise-free Gaussian fit; isolates distortion 1). ``None``
       when no calibration is supplied.
 

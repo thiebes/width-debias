@@ -2,14 +2,14 @@
 
 ## Purpose
 
-Show that the truncation bias is governed by the contrast against the
+Show that the noise bias is governed by the contrast against the
 **constant** (white / read-floor) part of the noise, not the signal-following
 shot part: white noise carries the bias everywhere, pure shot noise nowhere, and
 a read floor of a few counts restores it.
 
 ## Contents
 
-- `shot_noise_validation.py` -- folded-normal correction across white / shot /
+- `shot_noise_validation.py` -- noise-bias correction across white / shot /
   Poisson laws at matched peak CNR; correctness (matched calibration removes
   bias) and robustness (does the white calibration transfer?).
 - `read_floor_sweep.py` -- raises a constant read floor on shot noise and tracks
@@ -49,4 +49,4 @@ negative). Figures: `read_floor_sweep.png`, `fftcnr_white_vs_shot.png`.
 
 ## See also
 
-`docs/DERIVATION.md` (the folded-normal correction).
+`docs/DERIVATION.md` (the noise-bias correction).

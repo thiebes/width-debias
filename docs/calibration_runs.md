@@ -42,7 +42,7 @@ measured per-frame CNR), and choose the noise model.
 
 ## Choosing the noise model
 
-The calibration must match the detector's noise, because the truncation bias is
+The calibration must match the detector's noise, because the noise bias is
 driven by the part of the noise that survives in the low-signal profile wings.
 
 - **`--noise gaussian`** (default): additive white noise, constant across the

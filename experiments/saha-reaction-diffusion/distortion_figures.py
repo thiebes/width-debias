@@ -1,7 +1,7 @@
 """Diagnostic figures for the Saha bed: the two distortions, made concrete.
 
 These are illustration/diagnostic figures, NOT poster figures. The Saha bed did
-not earn a width-debias poster panel (see README.md): the truncation effect is
+not earn a width-debias poster panel (see README.md): the noise bias is
 modest in the trusted band, and the emission-to-carrier framing is out of
 width-debias's scope and not novel. The figures are kept because they make the
 validation framework (docs/VALIDATION_DESIGN.md) concrete.
@@ -26,7 +26,7 @@ width_debias package, not on the (actively reworked) validation harness.
 
 Style: the plot style guide, Okabe-Ito palette (blue = truth/
 reference, gold = emission/intermediate, red = biased/uncorrected, green =
-folded-normal correction).
+noise-bias correction).
 
 Run from the repository root (the mechanism figure needs output/calibration_saha.npz)::
 

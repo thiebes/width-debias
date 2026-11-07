@@ -20,11 +20,12 @@ The recorded profile differs from the carrier distribution in three independent
 ways. Recovering the carrier distribution means inverting all three, and they
 need different tools:
 
-1. **Measurement noise**, and the truncation bias it induces in any bounded
-   width estimator at low CNR. A fitted width cannot go negative, so its
-   sampling distribution is left-truncated and biased high. This is what the
-   folded-normal correction in this repository removes, and it is the only one
-   of the three the correction addresses.
+1. **Measurement noise**, and the bias it induces in a fitted width at low
+   CNR. The fitted width scatters about the true width, so its square, the
+   fitted variance, is biased high by the width's estimation variance (above a
+   per-frame CNR of about 1.5 the fit's lower bound does not bind). This is
+   what the noise-bias correction in this repository removes, and it is the
+   only one of the three the correction addresses.
 2. **The instrument point-spread function.** The recorded profile is the
    emission convolved with the instrument response. Removed by deconvolution, by
    a Voigt (mixed Gaussian-Lorentzian) fit with the known Lorentzian width, or
@@ -41,7 +42,7 @@ accurate, noise-debiased measurement of the recorded profile's width over time
 (distortion 1, and distortion 2 if the estimator deconvolves the
 point-spread function). A **forward-model** stage turns that measurement into
 the carrier distribution and its transport (distortions 2 and 3). The
-folded-normal correction lives in the first stage.
+noise-bias correction lives in the first stage.
 
 A useful simplification: when emission is linear in carrier density (a single
 population emitting in proportion to n, for example excitonic emission), the
@@ -84,7 +85,7 @@ Choose the estimator by the recorded profile's shape and population structure:
 | Mixture of populations of different width (free charges + excitons; free + trapped) | second moment, or forward-model fit | no single shape matches the recorded profile |
 
 On the parametric-fit choices the bounded width fit is precise but biased high at
-low CNR; the folded-normal correction calibrates that additive noise bias against
+low CNR; the noise-bias correction calibrates that additive noise bias against
 per-frame CNR and subtracts it (see `docs/DERIVATION.md`). It removes the noise
 bias only; it is not a shape correction and not an emission inversion.
 
@@ -92,7 +93,7 @@ The calibration's noise model must match the detector's. Real measurement noise
 has two physically distinct parts, following the photon-transfer relation
 `var = gain * signal + read^2`: a signal-dependent shot (Poisson) term with slope
 `gain`, and a constant floor (read/electronic noise plus dark counts and
-background). The truncation bias is driven by the *constant floor* -- the part
+background). The noise bias is driven by the *constant floor* -- the part
 that survives in the low-signal wings, where the bounded fit takes its leverage --
 so pure photon-limited (shot-only) noise barely biases, while a few counts of
 floor put the measurement back in the bias regime. Both terms are measurable from
@@ -109,7 +110,7 @@ The moment estimator is the alternative for the multi-population recorded
 profile. It admits negative values, so it does not truncate and is approximately
 unbiased, returning the recorded profile's second moment directly. Its cost is
 variance: it is noisy at low CNR and unstable below CNR ≈ 3, so it needs adequate
-CNR or averaging, and it takes no folded-normal correction. It is not clean when
+CNR or averaging, and it takes no noise-bias correction. It is not clean when
 the profile carries a Lorentzian point-spread function, which has a divergent
 second moment; deconvolve first, or use the forward fit.
 
@@ -130,7 +131,7 @@ second moment; deconvolve first, or use the forward fit.
   estimator.
 
 Conflating the two, or folding either into the noise calibration, is the error to
-avoid. The folded-normal correction's scope is distortion 1 only.
+avoid. The noise-bias correction's scope is distortion 1 only.
 
 ## Computing the second moment
 
@@ -150,7 +151,7 @@ avoid. The folded-normal correction's scope is distortion 1 only.
 1. Reference: the carrier distribution's second moment from the known inputs, and
    its α.
 2. Width extraction: the matched estimator on the recorded profile, with the
-   folded-normal correction on the parametric paths (or the moment estimator).
+   noise-bias correction on the parametric paths (or the moment estimator).
 3. Carrier recovery: forward-model inversion of the point-spread function and the
    emission mapping (trivial when emission is linear in n).
 4. Success: the recovered carrier-distribution α matches the known input within

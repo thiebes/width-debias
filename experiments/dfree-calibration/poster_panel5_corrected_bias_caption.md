@@ -1,5 +1,5 @@
 **Subtract the calibrated bias and accuracy returns, for every profile shape.**
-Corrected ⟨D̂⟩ / D_true against CNR₀ for the folded-normal correction on Gaussian,
+Corrected ⟨D̂⟩ / D_true against CNR₀ for the noise-bias correction on Gaussian,
 Voigt, and generalized-Gaussian profiles; the gray band is ±0.05 around the
 unbiased value. Above CNR₀ ≈ 5 all three shapes sit within a few hundredths of 1.
 The calibration is D-free: it is built once at D = 0 from the setup geometry, with

@@ -1,4 +1,4 @@
-"""Locate the analytical floor of the folded-normal correction.
+"""Locate the analytical floor of the noise-bias correction.
 
 In the folded-normal model the calibrated `var_bias(CNR)` is the variance
 of the width estimator, which follows a localization-CRLB scaling at high
@@ -241,7 +241,7 @@ def report(result: dict) -> None:
 
 
 def main() -> None:
-    print(f"Analytical floor of the folded-normal correction")
+    print(f"Analytical floor of the noise-bias correction")
     print(f"  Calibration: {N_CALIB} log-spaced CNR_0 in "
           f"{CNR0_RANGE}, {N_RUNS_CAL} runs/cell")
     print(f"  A = CNR^2 Var(sigma_hat) from the Fisher information; Monte Carlo check "

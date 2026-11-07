@@ -5,7 +5,7 @@ A self-contained study folder for two coupled results:
 1. A clean, high-statistics Br-I halide-mixing test bed (400,000-walker average),
    and
 2. the result that the per-frame width fit's **upper bound** -- not the
-   contrast-to-noise alone -- governs how large the truncation bias appears.
+   contrast-to-noise alone -- governs how large the noise bias appears.
 
 ## The upper bound
 

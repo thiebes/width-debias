@@ -4,11 +4,11 @@ Compares, on identical simulated data:
 
 * Gaussian-fit estimator + OLS
 * Gaussian-fit estimator + inverse-variance weighting
-* Gaussian-fit estimator + folded-normal correction (hard subtraction)
+* Gaussian-fit estimator + noise-bias correction (hard subtraction)
 * Gaussian-fit estimator + MAS-style correction (gated subtraction)
 * Moment estimator + inverse-variance weighting (the non-truncated route)
 
-The folded-normal correction removes the bias but can overcorrect in the
+The noise-bias correction removes the bias but can overcorrect in the
 deepest noise. Two alternatives target that: the MAS-style gated subtraction
 (it switches off rather than overshooting), and the moment estimator (it has
 no wall to fold against, so it needs no correction at all -- at the cost of

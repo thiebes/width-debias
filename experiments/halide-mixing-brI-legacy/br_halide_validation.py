@@ -1,4 +1,4 @@
-"""Validate the folded-normal correction on Marc's Br-I halide-mixing maps.
+"""Validate the noise-bias correction on Marc's Br-I halide-mixing maps.
 
 A heterogeneous-transport stress test on a material system distinct from the Mn
 maps and the disordered nanocrystal solids: excitons diffusing on a halide-mixing

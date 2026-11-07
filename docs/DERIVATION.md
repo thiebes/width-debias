@@ -135,7 +135,7 @@ removed the deep-regime overshoot.
 
 **On the wider `CNR₀ ∈ [2,100]` sweep the ranking reverses.**
 At very low CNR₀ (≲ 4) the MAS gate switches the correction off where the
-truncation bias is large, leaving most of the raw inflation in. On
+noise bias is large, leaving most of the raw inflation in. On
 `experiments/dfree-calibration/dense_calibration_and_test.py`'s 100-point
 sweep (5000 calibration runs per cell, 1000 test runs; the committed
 `dense_calibration_and_test.txt`), the overall mean |⟨D⟩/D_ref − 1| is,
@@ -177,7 +177,7 @@ describes the dynamics.
 
 The fix is small. The folded-normal bias `s²(CNR)` is dominated by per-frame
 CNR; the dependence on `σ²(t)` is weak (the second-order term in the
-folded-normal expansion). In the low-`D` regime where the truncation bias
+folded-normal expansion). In the low-`D` regime where the noise bias
 bites, `σ²(t)` barely changes from `σ_0²` across the measurement window, so
 calibrating at `σ² = σ_0²` (i.e. `D = 0`) captures the bias the application
 actually sees. `calibrate_d_free(cnr0_grid, ...)` is the thin wrapper that
@@ -352,7 +352,7 @@ lookup of Section 8; both are experimental.
   form is the per-frame `CNR ≳ 1` of §9.
 - **Wall pile-up at CNR ≈ 1.** The Voigt and generalized-Gaussian p = 1.5 fits
   pile up at the lower bound in 0.05 to 0.06 of fits at CNR ≈ 1; a small
-  censored term on top of the folded-normal correction may be needed for the
+  censored term on top of the noise-bias correction may be needed for the
   deepest-noise frames.
 - **Not tested:** heterogeneous transport with site-dependent mobility (an
   effective `D` from a mixed population), and a trapped-exciton background

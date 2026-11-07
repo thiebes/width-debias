@@ -3,7 +3,7 @@
 Material: **MoSSe alloy** (Mo(S,Se)2; Enrique Arevalo Rodriguez's stroboSCAT
 sample `250716_MoSSe_mystery`, `mixed_tmdc/26_32/250716`). Not WSe2.
 
-The truncation-bias correction on a real diffusion measurement, in physical
+The noise-bias correction on a real diffusion measurement, in physical
 units. Each of the two interleaved delay sweeps is re-zeroed to its own t0
 (de-parity), the merged MSD is converted to um^2 with the 0.060 um pixel at the
 sample (0.0036 um^2/px^2, from Enrique Arevalo Rodriguez), and the per-frame

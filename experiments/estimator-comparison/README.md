@@ -3,7 +3,7 @@
 ## Purpose
 
 Answer "is the correction even needed, or does a different estimator avoid the
-bias?" Compares the folded-normal correction against the non-parametric moment
+bias?" Compares the noise-bias correction against the non-parametric moment
 estimator and an unbounded (positivity-wall-removed) width fit.
 
 ## Contents

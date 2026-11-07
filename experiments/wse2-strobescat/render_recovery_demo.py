@@ -1,4 +1,4 @@
-"""Simulated recovery demo: the truncation bias and its correction, where the
+"""Simulated recovery demo: the noise bias and its correction, where the
 truth is known (real data has no ground truth, so this carries the "we recover
 the true width" claim).
 

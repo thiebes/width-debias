@@ -118,7 +118,7 @@ def _bias_task(packed):
     for s in range(n_seeds):
         rows[s] = base.fit_each_row(x, white.sample(profiles, cnr0,
                                                     np.random.default_rng(base_seed + s)))
-    # folded-normal correction: subtract the calibrated per-frame variance bias.
+    # noise-bias correction: subtract the calibrated per-frame variance bias.
     # var_bias is elementwise (its fixed-point refines each element on its own), so
     # one call on the stacked (n_seeds, n_frames) array gives exactly the per-row
     # result without the per-seed Python-call overhead.

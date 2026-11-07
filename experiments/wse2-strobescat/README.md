@@ -2,9 +2,9 @@
 
 ## Purpose
 
-Real-data truncation-bias diagnostics on Enrique Arévalo Rodríguez's stroboSCAT
+Real-data noise-bias diagnostics on Enrique Arévalo Rodríguez's stroboSCAT
 diffusion scans (bulk WSe2 and MoS2/MoSe2 alloys). Reduce the scans through
-Enrique's own pipeline, apply the project's folded-normal correction, and
+Enrique's own pipeline, apply the project's noise-bias correction, and
 establish what the correction does on real measurements.
 
 ## Key findings
@@ -89,7 +89,7 @@ and generalized-Gaussian p = 1.5 and p = 4 profiles, D 0.005 to 0.1, CNR_0 5 to
 
 - `realdata_diagnostics.py` -- the shared registry (`MEASUREMENTS`), loaders
   (`load_measurement`, sweep detection), per-frame CNR, calibration build/cache,
-  the folded-normal correction, de-parity, the sustained-tail truncation, and the
+  the noise-bias correction, de-parity, the sustained-tail truncation, and the
   per-measurement diagnostic outputs. Imported by the others.
 - `realdata_enrique_pipeline.py` -- reproduces Enrique's exact D fit (t <= 2 ns,
   forced origin, inverse-variance) and overlays the correction; per-measurement

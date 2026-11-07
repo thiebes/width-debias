@@ -1,4 +1,4 @@
-"""Proof-of-concept demo: the truncation bias and the folded-normal correction.
+"""Proof-of-concept demo: the noise bias and the noise-bias correction.
 
 Run from the repository root::
 
@@ -33,7 +33,7 @@ from width_debias.bias_lookup import BiasLookup  # noqa: E402
 # Nanocrystal-solid regime: short diffusion length against the spot size.
 # D and tau are chosen so that L_D = sqrt(2 D tau) ~ 0.20 sigma0, i.e.
 # L_D / FWHM_0 ~ 0.085 -- the short-diffusion-length corner that disordered
-# perovskite nanocrystal solids occupy and where the truncation bias bites.
+# perovskite nanocrystal solids occupy and where the noise bias bites.
 EXP = Experiment(sigma0=1.0, D=0.02, tau=1.0, n_frames=12, t_max=3.0)
 CNR0_GRID = np.array([5.0, 8.0, 13.0, 21.0, 34.0, 55.0, 90.0])
 N_RUNS = 400
@@ -165,7 +165,7 @@ def _plot(stats, results, model_name) -> None:
     ax1.set_ylabel("$\\langle D_{est}\\rangle\\, /\\, D_{true}$")
     ax1.set_xscale("log")
     ax1.set_yscale("log")   # OLS spans ~40x; log keeps the corrected schemes legible
-    ax1.set_title("(b)  Bias in $D$: only the folded-normal correction removes it")
+    ax1.set_title("(b)  Bias in $D$: only the noise-bias correction removes it")
     ax1.legend(fontsize=8)
 
     fig.tight_layout()

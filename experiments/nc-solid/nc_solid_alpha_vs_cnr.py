@@ -15,7 +15,7 @@ which would otherwise inflate the per-frame CNR (the raw ``max`` rides the
 sampling noise and rises with time instead of falling as 1/sigma). The maps are
 near-Gaussian (kurtosis ~ 0), so the bed is faithful.
 
-Story the figure tells: the truncation bias lifts the late-time MSD, so it
+Story the figure tells: the noise bias lifts the late-time MSD, so it
 pushes apparent alpha *up* toward ballistic (alpha = 2). The true subdiffusive
 exponent (alpha ~ 0.88) only re-emerges once the deepest usable frame keeps
 CNR >~ 2-3, i.e. CNR_0 >~ 35-50. The bias therefore masks subdiffusion, never
@@ -71,7 +71,7 @@ TAU_SWEEP = (6.0, 14.0, 18.0)   # C16 / C12 / C8 thin-film lifetimes (ns)
 
 # Noise laws for the noise-law comparison (small map). White is the constant-
 # floor worst case; pure shot (read=0) has clean wings where the width fit takes
-# its leverage, so the truncation bias nearly vanishes; a read floor of a few
+# its leverage, so the noise bias nearly vanishes; a read floor of a few
 # counts restores it. The label is what appears in the legend / cache key; the
 # colour keys the figure. See experiments/noise-law/ and the fft-cnr paper
 # cases 12/13 (the bias-governing CNR is the peak-local member, which
@@ -313,7 +313,7 @@ def main():
 
     # --- noise-law comparison on the 'small' map ----------------------------
     # The white-noise bias above is the constant-floor worst case. Pure shot
-    # noise has clean wings, so the truncation bias should nearly vanish; a read
+    # noise has clean wings, so the noise bias should nearly vanish; a read
     # floor of a few counts restores it. (fft-cnr paper cases 12/13.)
     def noise_row(label, cnr0):
         """Row for a noise law; white reuses the main small-map white result."""

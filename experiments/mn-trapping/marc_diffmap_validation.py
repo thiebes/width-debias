@@ -18,7 +18,8 @@ framework routes this bed to the moment estimator. Two paths are reported:
   * **Moment estimator -- the in-principle carrier path.** The non-truncated
     second moment closes the shape gap by construction (its noiseless value
     equals ``case.var_true``), so it is scored directly against the carrier
-    moment. It takes no folded-normal correction (it has no wall); the cost is
+    moment. It takes no noise-bias correction (it is linear in the data, so
+    unbiased to leading order); the cost is
     variance. On these maps that cost is severe -- under realistic noise the
     cross-seed SD reaches order 1e4-1e5 um^2 and the NaN fraction ~0.2, so the
     bare moment is not usable here. The practical carrier-recovery path for this
@@ -181,8 +182,8 @@ def main() -> None:
 
     # --- MomentModel: the non-truncated estimator -------------------------
     # The second central moment IS the true-transport width by construction, so
-    # it closes the shape gap -- but it takes NO folded-normal correction (it has
-    # no wall) and pays in noise variance, which the x^2 weighting amplifies in
+    # it closes the shape gap -- but it takes no noise-bias correction (it is
+    # linear in the data) and pays in noise variance, which the x^2 weighting amplifies in
     # the tails. We report the cross-seed SD (instability) and the NaN fraction
     # (frames where the baseline-subtracted total goes <= 0, i.e. unusable) as
     # the cost of that gap-closing.

@@ -1,4 +1,4 @@
-"""Apply the truncation-bias correction to a reduced CsPbBr3 fluence.
+"""Apply the noise-bias correction to a reduced CsPbBr3 fluence.
 
 Loads the per-frame profiles from ``reduce.py`` and a ``(CNR, sigma^2)``
 calibration built by ``scripts/build_calibration.py``, then reports the

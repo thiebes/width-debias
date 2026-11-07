@@ -1,4 +1,4 @@
-"""Real-data panel: the folded-normal correction on Zhang et al. (2022) QD-solid
+"""Real-data panel: the noise-bias correction on Zhang et al. (2022) QD-solid
 femtosecond exciton transport.
 
 Source data are the published figure worksheets exported from the manuscript
@@ -20,7 +20,7 @@ this folder:
 
 Why this dataset is a scope test rather than a correction target: the reported
 fast-regime diffusivity (Dfast ~ 99-280 cm^2/s for the PbS films) is anomalously
-large, and it is read from the noisy earliest frames. The truncation bias would
+large, and it is read from the noisy earliest frames. The noise bias would
 inflate a fitted width at low CNR -- so the question is whether the anomalous
 Dfast is partly a noise-bias artifact. Two facts answer it:
 

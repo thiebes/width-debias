@@ -2,7 +2,7 @@
 
 Generates clean single-panel profile overlays (raw 1-D profile + naive Gaussian
 + corrected Gaussian) for a hand-picked set of frames spanning the per-frame CNR
-range, to show where the truncation-bias correction helps and where it fails.
+range, to show where the noise-bias correction helps and where it fails.
 Reads widths from the per-measurement ``manifest.csv`` (px^2) and the profile
 from the analysis file; nothing is re-fit.
 

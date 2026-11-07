@@ -10,7 +10,7 @@ that early window.
 At these short cutoffs the per-frame CNR is high, so ``var_bias`` is small and
 the naive and corrected points/fits nearly coincide -- the plot reports the
 clean early-regime D (and the naive/corrected agreement is a consistency check);
-the truncation-bias effect lives in the late low-CNR frames that the cutoff
+the noise-bias effect lives in the late low-CNR frames that the cutoff
 removes.
 
 Usage::

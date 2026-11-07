@@ -2,7 +2,7 @@
 
 ## Purpose
 
-A scope/robustness control: apply the folded-normal correction to Zhang et al.
+A scope/robustness control: apply the noise-bias correction to Zhang et al.
 (2022) QD-solid ultrafast exciton-transport data (Dfast at early times) and show
 the result is robust -- the correction barely moves it, because the per-frame CNR
 stays well above the floor. This is a control example, not a correction target.

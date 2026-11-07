@@ -1,4 +1,4 @@
-"""Does the folded-normal correction hold across transport-microscopy noise laws?
+"""Does the noise-bias correction hold across transport-microscopy noise laws?
 
 The poster is not tied to one technique, so the correction must hold across the
 noise regimes that different transport-microscopy methods present. Two bases,

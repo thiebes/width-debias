@@ -107,7 +107,7 @@ variance of the fitted width matches the bound to within 2–6 % (`crlb.py`).
 ## 5. Consequences
 
 1. **Bias and variance are separate problems.** The bias is removable: the
-   folded-normal correction (`docs/DERIVATION.md`) removes it. The variance is
+   noise-bias correction (`docs/DERIVATION.md`) removes it. The variance is
    the CRLB and cannot be removed. Treating both as one problem ("low-CNR data
    are unreliable") hides that only the variance is fundamental.
 

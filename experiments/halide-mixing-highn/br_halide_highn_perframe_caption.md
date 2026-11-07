@@ -6,7 +6,7 @@ maps, Br fraction (a) 0.25, (b) 0.5, (c) 0.75, on high-statistics
 Each point is the mean fitted variance over 800 noisy realizations minus the
 Gaussian fit of the same noise-free profile, Δσ², so it isolates the noise
 bias; bars are standard errors. Red circles: the naive bounded fit. Blue
-squares: the folded-normal correction, with the bias read from a joint (CNR,
+squares: the noise-bias correction, with the bias read from a joint (CNR,
 σ²) calibration (40 CNR × 26 σ × 4000 runs) keyed on a robust straight line
 through each realization's own fitted variances, refitted to the corrected
 values. The indigo line is the separate offset between the noise-free fit and

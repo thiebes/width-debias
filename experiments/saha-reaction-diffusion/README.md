@@ -21,7 +21,7 @@ repo) shows the uncorrected alpha below the noise-free-fit reference (1.270) by
 are within 0.003 of the reference. Two properties limit what the bed
 demonstrates:
 
-- The truncation effect is modest in the trusted CNR band. The clean correction
+- The noise bias is modest in the trusted CNR band. The clean correction
   demonstration is the single-population NC-solid bed (where emission is
   proportional to the carrier density, so the bias acts cleanly), not this
   multi-population bed.
@@ -35,7 +35,7 @@ The bed supports three technical results:
 - The validation framework in [`docs/VALIDATION_DESIGN.md`](../../docs/VALIDATION_DESIGN.md):
   truth is the carrier distribution's second moment; three distortions sit
   between the recorded profile and the carrier distribution (noise, handled by
-  the folded-normal correction; the instrument PSF; the emission-to-carrier
+  the noise-bias correction; the instrument PSF; the emission-to-carrier
   mapping, handled by the forward model); and two workflows (simulation truth is
   input-derived, experimental truth is recovered by forward fit or analytics).
 - The recombination and emission terms are bimolecular in the free population,
@@ -56,7 +56,7 @@ The bed supports three technical results:
   `free-exciton-diffusion` repo.)
 - `nonfickian_validation.py` — the validation harness: builds regimes and their
   carrier / emission / fit reference α, runs the estimator paths (Gaussian fit
-  plus the non-truncated moment estimator), applies the folded-normal correction,
+  plus the non-truncated moment estimator), applies the noise-bias correction,
   flags the CNR floor, and reports how many non-positive MSD points the
   log-log exponent fit leaves out (`nonfickian_validation.txt`, CNR_0 60: 0 to
   1 per regime on the moment path, none on the Gaussian + folded path).
@@ -77,5 +77,5 @@ The bed supports three technical results:
 ## Pointers
 
 - Validation framework: [`docs/VALIDATION_DESIGN.md`](../../docs/VALIDATION_DESIGN.md)
-- The folded-normal correction: [`docs/DERIVATION.md`](../../docs/DERIVATION.md)
+- The noise-bias correction: [`docs/DERIVATION.md`](../../docs/DERIVATION.md)
 - The lifetime and De/Df diffusion-paper work: the `free-exciton-diffusion` repo.

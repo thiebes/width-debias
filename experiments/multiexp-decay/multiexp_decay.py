@@ -1,4 +1,4 @@
-"""Is the folded-normal correction invalidated by multi-exponential decay?
+"""Is the noise-bias correction invalidated by multi-exponential decay?
 
 Real photoluminescence rarely decays as a single exponential. The whole project
 calibrates and validates with a single-exponential peak, so the question is which
@@ -134,7 +134,7 @@ def write_report(collapse: dict, dcurves: dict, deepest_at20: dict,
                  design_floor: float, path: Path) -> None:
     lines = [
         "=" * 78,
-        "Multi-exponential decay: is the folded-normal correction invalidated?",
+        "Multi-exponential decay: is the noise-bias correction invalidated?",
         "=" * 78,
         f"Fickian D = {D_FICKIAN} sigma0^2/tau; Gaussian fit; standard geometry.",
         f"calibration: D-free (calibrate_d_free, D = 0), Gaussian, {len(CAL_CNR0)} "

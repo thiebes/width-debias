@@ -1,4 +1,4 @@
-"""Validate the folded-normal correction on the high-statistics Br-I maps.
+"""Validate the noise-bias correction on the high-statistics Br-I maps.
 
 The companion to :mod:`br_halide_validation`, run on the clean 400k-walker
 re-simulation (``experiments/halide-mixing-highn/br_highn_data.py``) instead of

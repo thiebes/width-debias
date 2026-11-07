@@ -1,4 +1,4 @@
-"""Validate the folded-normal correction on the Solari disordered-NC-solid maps.
+"""Validate the noise-bias correction on the Solari disordered-NC-solid maps.
 
 This is the poster's headline regime on real model transport: CH3NH3PbBr3
 nanocrystal-solid diffusion maps (Marc Melendez's runs of the Solari et al.
@@ -18,7 +18,7 @@ decay is a per-frame scalar, so it sets the per-frame contrast-to-noise without
 changing the spatial moment -- so the recorded-profile second moment equals the
 carrier moment, and the near-Gaussian shape makes the noiseless Gaussian fit
 match it (a negligible shape gap, reported here as a check). D and alpha are
-scored against the carrier second moment; the folded-normal correction removes
+scored against the carrier second moment; the noise-bias correction removes
 the per-frame noise bias.
 
 The calibration file is a ``CalibrationGrid`` over (CNR, sigma^2), so the

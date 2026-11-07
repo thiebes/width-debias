@@ -1,4 +1,4 @@
-"""Head-to-head: the folded-normal correction vs an unbounded width fit.
+"""Head-to-head: the noise-bias correction vs an unbounded width fit.
 
 The expert panel's open question: is the correction even needed? An estimator
 that admits negative variance has no wall at zero to fold against, so it should
@@ -60,7 +60,7 @@ EXP = Experiment(sigma0=1.0, D=0.02, tau=1.0, n_frames=12, t_max=3.0)
 D_CNR0_GRID = np.array([4.0, 6.0, 9.0, 13.0, 21.0, 34.0, 55.0, 90.0])
 D_N_RUNS = 2500
 
-# Calibration for the folded-normal correction (D-free, standard geometry).
+# Calibration for the noise-bias correction (D-free, standard geometry).
 CAL_CNR0_GRID = np.logspace(np.log10(2.0), np.log10(100.0), 50)
 CAL_N_RUNS = 1500
 

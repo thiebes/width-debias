@@ -47,4 +47,4 @@ the seeds in the table header. Figure: `coverage_check.png`; table
 
 ## See also
 
-`docs/DERIVATION.md` (the folded-normal correction).
+`docs/DERIVATION.md` (the noise-bias correction).
