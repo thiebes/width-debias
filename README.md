@@ -27,7 +27,7 @@ Below a per-frame CNR of about 1 the fits spread into a broad upper tail and the
 correction no longer holds (see [On real data](#on-real-data)). The derivation,
 which reaches the same additive form from a folded-normal model of the width
 estimate, is in
-[`docs/DERIVATION.md`](https://github.com/thiebes/width-debias/blob/v0.4.0/docs/DERIVATION.md).
+[`docs/DERIVATION.md`](https://github.com/thiebes/width-debias/blob/v0.4.1/docs/DERIVATION.md).
 
 ## Install
 
@@ -123,7 +123,7 @@ calibration's geometry but does not check it against the data.
   (about 55 for p = 1.5 and 13 for p = 4), and from about 21 at D >= 0.05.
   Below that, the pooled Gaussian mean at D = 0.02 over initial CNR 8 to 90 is
   1.9 of the reference (standard error 0.4). See
-  [`experiments/wse2-strobescat`](https://github.com/thiebes/width-debias/tree/v0.4.0/experiments/wse2-strobescat).
+  [`experiments/wse2-strobescat`](https://github.com/thiebes/width-debias/tree/v0.4.1/experiments/wse2-strobescat).
 - **Estimate the CNR on the spot.** Cut each profile to about ±4 sigma_0 around
   the spot before calling `per_frame_cnr`. Background and fringe structure in a
   full line cut corrupts the spectral CNR estimate at low signal.
@@ -149,7 +149,7 @@ calibration's geometry but does not check it against the data.
 - It corrects the anomalous exponent of subdiffusive transport as well as D
   (`experiments/subdiffusive-alpha`, `experiments/nc-solid`).
 
-[`docs/REPO_MAP.md`](https://github.com/thiebes/width-debias/blob/v0.4.0/docs/REPO_MAP.md)
+[`docs/REPO_MAP.md`](https://github.com/thiebes/width-debias/blob/v0.4.1/docs/REPO_MAP.md)
 lists every experiment set with its result, and each set's README gives the
 details and how to run it.
 
@@ -203,4 +203,4 @@ pytest
 
 ## License
 
-MIT, see [`LICENSE`](https://github.com/thiebes/width-debias/blob/v0.4.0/LICENSE).
+MIT, see [`LICENSE`](https://github.com/thiebes/width-debias/blob/v0.4.1/LICENSE).

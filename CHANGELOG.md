@@ -5,6 +5,81 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2026-11-07
+
+Fixes from the review of 0.4.0. The recommended path (`calibrate_d_free`, then
+`msd_and_weights("subtract")`, then `fit_D`) gives the same results for valid
+input: a probe of the paths the fft-cnr paper used gives 105 of 105 outputs
+byte-identical to 0.4.0.
+
+### Fixed
+
+- The joint (CNR, sigma^2) and width-scaled lookups read their slope weights at
+  the true width a key implies, or average them over width when no key is
+  given. They read them at each frame's own fitted variance, a weight tied to
+  that frame's error, which biases the slope at the order being corrected. On a
+  500-run joint calibration with Gaussian fits (D 0.02 and 0.1 sigma_0^2/tau,
+  initial CNR 8 to 34), corrected D/D_true was 0.39 to 0.96 with the former
+  weights and is 0.88 to 1.09 (evaluation SE 0.004 to 0.12).
+- `calibrate_cnr_sigma2` fits every cell with the model instance passed, so the
+  shape exponent of a generalized-Gaussian model, a Voigt `gamma`, or a
+  `max_var` is the one calibrated. The model was rebuilt from its name, which
+  calibrated `GeneralizedGaussianModel(shape=1.5)` as p = 2. Passing
+  `model_kwargs` keeps the former rebuild.
+- `calibrate_cnr_sigma2` keeps every fit in a cell's bias mean, as the
+  application keeps a failed fit's fallback value. Pass
+  `filter_threshold=5 * variance_grid.max()` to reproduce a grid built with the
+  former default.
+- Calibration profiles (`calibrate_cells`, `calibrate_cnr_sigma2`) and the
+  Fisher terms are placed at the pixel grid's midpoint. A grid that does not
+  run from minus its end to its end (one from 0 to 12) put the profile off the
+  window and gave a wrong bias.
+- A profile with a non-finite pixel gives a NaN variance, an unusable frame, in
+  every model, not the broad fallback width.
+- `BiasLookup.load` accepts the path given to `save` (`save("cal")` writes
+  `cal.npz`), and every calibration loader closes its archive; an open archive
+  kept the file locked on Windows.
+- `calibration_D_se` raises for a width-aware lookup given neither
+  `variance_row` nor `key_variance`, where it took the SE from the
+  width-averaged grid.
+
+### Added
+
+- `msd_and_weights(..., min_cnr=...)` sets the weight of frames below a
+  per-frame CNR to zero, the floor the validations apply.
+- `CalibrationRangeWarning`: `msd_and_weights` warns when a frame it keeps lies
+  outside the lookup's calibrated CNR range, where the lookup takes its edge
+  value.
+- `calibrate_d_free` records the calibration's pixel grid, profile model, and
+  lowest CNR (`pixel_x`, `model_spec`, `cnr_floor`).
+- `BiasLookup` archives carry a format version (`format_version`). `load`
+  refuses a newer format, and warns when a 1-D lookup has no `framevar_grid`
+  (its weights then fall back to the MSD-point variance).
+- `per_frame_cnr` passes extra keyword arguments to `fft_cnr.fft_cnr` (for
+  example `roi`).
+- The package root exports `fit_D`, `DFit`, `per_frame_cnr`, `WhiteNoise`, and
+  `ShotNoise`.
+
+### Changed
+
+- `msd_and_weights` takes one realisation and refuses a 2-D batch, which it
+  differenced against the batch's first row.
+- `calibrate_cnr_sigma2` refuses a `noise_model` other than `"gaussian"` or
+  `"poisson"` (any other value ran white noise), and its default worker count
+  follows `WIDTH_DEBIAS_WORKERS` like `run_ensemble` (it used every core but
+  one).
+- CI runs on `ubuntu-24.04` with setup-uv v10.3.2 and the PyPI publish action
+  v1.14.3, and a release fails when its tag does not match `__version__`.
+
+### Documentation
+
+- Docstrings, docs, and experiment READMEs describe the bias as the noise bias
+  of the fitted width, its estimation variance, not a truncation or wall
+  effect.
+- The tests check what the release notes promise (the exact subtraction and
+  calibrated bias, the saved weights, worker-count independence, the failed-fit
+  fallback) and import the installed package.
+
 ## [0.4.0] - 2026-11-06
 
 The first release.

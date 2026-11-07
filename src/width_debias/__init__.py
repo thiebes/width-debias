@@ -56,7 +56,7 @@ from .calibration import (CalibrationCells, CalibrationGrid, calibrate_cells,
 from .fisher import LeadingOrderTerms, leading_order_terms
 from .cnr import per_frame_cnr
 
-__version__ = "0.4.0"
+__version__ = "0.4.1"
 
 __all__ = [
     "Experiment", "AnomalousExperiment", "MultiExpExperiment",
