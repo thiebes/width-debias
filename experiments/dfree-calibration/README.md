@@ -36,6 +36,11 @@ back the corrected-bias curves.
   against the MSD-point lookup) on the cached draws of
   `calibration_se_check.py`: mean, spread over realizations, and calibration
   SE per cell. Minutes once the cache exists.
+- `joint_weights_check.py` -- scores the joint (CNR, sigma^2) lookup's slope
+  weights: read at each frame's own fitted variance, against averaged over the
+  variance grid (what `msd_and_weights` uses without a width key), on one
+  joint calibration and fresh evaluation ensembles. A few minutes with
+  `WIDTH_DEBIAS_WORKERS=0`.
 - `slope_fit_check.py` -- compares the library slope weights (every frame,
   t = 0 included, by 1 / Var(sigma_hat_i^2)) with frame 0 at weight 0 on the cached draws and on the four-shape evaluation sets of
   `crlb-precision/efficiency_check.py`: calibration SE, bias in combined SE,
@@ -162,6 +167,16 @@ realizations to 0.36 to 0.78 of the MSD-point-lookup weights (the fallback,
 frame 0 at weight 0) in every cell, and shift cell means by at most 2.3
 combined SE (mean over draws), with no consistent sign.
 
+`joint_weights_check` (`joint_weights_check.txt`; one joint calibration of
+16 CNR × 7 σ² cells × 500 runs with Gaussian fits, seed 7; 600 evaluation runs
+per cell at D 0.02 and 0.1 σ₀²/τ, CNR₀ 8 to 34): with the weights read at each
+frame's own fitted variance, the corrected D/D_true is 0.39 to 0.96; with the
+width-averaged weights it is 0.88 to 1.09 (evaluation SE 0.004 to 0.12; the
+calibration SE is not included). Both arms subtract the same bias, so the
+difference is the weights alone. The own-width arm reads low in every cell, by
+up to 0.61 at D = 0.02 σ₀²/τ, CNR₀ 13; the width-averaged arm lies within 2.1
+evaluation SE of 1 in every cell.
+
 `slope_fit_check` (`slope_fit_check.txt`): weighting frame 0 narrows the
 spread of D/D_in to 0.42 to 0.77 of the frame-0-at-weight-0 values across the
 four shapes; 2 of 96 cells lie beyond 2 combined SE with either weighting (4.4
@@ -190,7 +205,7 @@ depending on the shape. Folded-normal is the default. The overall mean
 Tables: `validate_d_zero_{gaussian,voigt,genGauss_p1.5,genGauss_p4}.txt`,
 `validate_d_zero_short_{gaussian,voigt,genGauss_p1.5,genGauss_p4}.txt`,
 `dense_calibration_and_test_four_shapes.txt`, `calibration_se_check.txt`,
-`weights_check.txt`, `slope_fit_check.txt`. `validate_d_zero_genGauss.txt` is a
+`weights_check.txt`, `joint_weights_check.txt`, `slope_fit_check.txt`. `validate_d_zero_genGauss.txt` is a
 p = 2 draw kept for reference. `dense_calibration_and_test.txt` (Gaussian,
 Voigt, p = 2) and `dense_calibration_and_test_genGauss_p1.5_p4.txt` are the
 earlier dense run with the former slope weights; the first is the source of the

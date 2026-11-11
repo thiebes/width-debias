@@ -1,0 +1,13 @@
+Joint calibration: 16 CNR x 7 variance cells (CNR 0.25 to 100, sigma^2 0.8 to 2), 500 runs per cell, seed 7; Gaussian fits
+Evaluation: 600 runs per cell, seeds 20000 + i; subtract keyed on each frame's own fitted variance in both arms
+mean D/D_true +/- its evaluation SE (SD over realisations / sqrt(n))
+
+     D  CNR_0      own-width weights         width-averaged
+  0.02      8       0.418 +/-  0.123       1.090 +/-  0.106
+  0.02     13       0.390 +/-  0.057       0.881 +/-  0.058
+  0.02     21       0.676 +/-  0.032       0.978 +/-  0.033
+  0.02     34       0.816 +/-  0.019       0.977 +/-  0.019
+  0.10      8       0.846 +/-  0.023       1.009 +/-  0.022
+  0.10     13       0.865 +/-  0.013       0.974 +/-  0.013
+  0.10     21       0.930 +/-  0.007       0.995 +/-  0.007
+  0.10     34       0.960 +/-  0.004       0.992 +/-  0.004
