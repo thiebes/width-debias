@@ -121,8 +121,8 @@ def test_models_run_through_montecarlo(model):
 
 
 def test_moment_estimator_can_go_negative():
-    """The moment estimator has no fit bound and is linear in the data, so it
-    must admit negative variances at low CNR."""
+    """The moment estimator has no fit bound, so it must admit negative
+    variances at low CNR."""
     exp = Experiment(D=0.02, n_frames=8, t_max=2.0)
     ens = run_ensemble(exp, cnr0=4.0, n_runs=300, seed=0, model=MomentModel())
     finite = ens.variance[np.isfinite(ens.variance)]

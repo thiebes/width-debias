@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   variance, with the bound at zero confined to per-frame CNR below about 1,
   and its floor section counts the lookup's own error and sets the tolerance
   relative to the end-point MSD.
+- The `MomentModel` docstring no longer calls the moment estimator unbiased to
+  leading order: it is a ratio of two sums linear in the data, taken about an
+  estimated centroid, so its bias is of order 1/CNR^2, the same order as a
+  fitted width's.
 
 ## [0.4.1] - 2026-11-11
 

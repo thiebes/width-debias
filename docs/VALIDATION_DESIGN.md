@@ -107,10 +107,12 @@ fit is skipped below ~3 sigma of signal range); take `background` from the profi
 edges and the per-frame CNR from fft-cnr.
 
 The moment estimator is the alternative for the multi-population recorded
-profile. It admits negative values, so it does not truncate and is approximately
-unbiased, returning the recorded profile's second moment directly. Its cost is
-variance: it is noisy at low CNR and unstable below CNR ≈ 3, so it needs adequate
-CNR or averaging, and it takes no noise-bias correction. It is not clean when
+profile. It admits negative values, so it has no lower bound, and its noise-free
+value is the recorded profile's second moment. It is a ratio of two sums that are
+linear in the data, so under noise it carries a bias of order 1/CNR², the same
+order as a fitted width's; the package applies no correction to it. Its larger
+cost is variance: it is noisy at low CNR and unstable below CNR ≈ 3, so it needs
+adequate CNR or averaging. It is not clean when
 the profile carries a Lorentzian point-spread function, which has a divergent
 second moment; deconvolve first, or use the forward fit.
 

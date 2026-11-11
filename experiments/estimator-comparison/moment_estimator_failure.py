@@ -11,13 +11,13 @@ Compares, on identical simulated data:
 The noise-bias correction removes the bias but can overcorrect in the
 deepest noise. Two alternatives target that: the MAS-style gated subtraction
 (it switches off rather than overshooting), and the moment estimator (it has
-no wall to fold against, so it needs no correction at all -- at the cost of
-higher variance). The table reports both bias and spread so the
-bias-variance trade-off is visible.
+no lower bound and takes no correction -- at the cost of higher variance).
+The table reports both bias and spread so the bias-variance trade-off is
+visible.
 
 Run from the repository root::
 
-    python scripts/compare_methods.py
+    .venv/Scripts/python.exe experiments/estimator-comparison/moment_estimator_failure.py
 
 Writes ``output/method_comparison.png``.
 """

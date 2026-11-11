@@ -174,17 +174,20 @@ while MAS fails over a wider CNR₀ range and in either direction.
 **`subtract` is the recommended scheme.** MAS is available in the package for
 comparison.
 
-**Non-truncated moment estimator (`MomentModel`).** The alternative is to
-remove the wall entirely: estimate the variance from the discrete second
-moment of the profile, which is linear in the data, admits negative values,
-and so needs no correction (cf. Vestergaard's covariance-based estimator,
-unbiased *because* it allows negative values). It **fails here**: the moment
-is a ratio, second moment over total intensity, and the denominator passes
-through zero at low CNR, producing wild, often negative `D` (mean bias ~10³,
-enormous spread). Removing the wall is sound in principle, but it needs a
-*stable* non-truncated estimator — the covariance-based estimator achieves
-this on raw displacement increments, which an intensity-profile MSD pipeline
-does not have. An intensity-profile moment is not a viable substitute.
+**Moment estimator with no lower bound (`MomentModel`).** The alternative is
+to remove the bound entirely: estimate the variance from the discrete second
+moment of the profile, which admits negative values (cf. Vestergaard's
+covariance-based estimator, unbiased *because* it allows negative values). It
+**fails here**: the moment is a ratio, second moment over total intensity, and
+the denominator passes through zero at low CNR, producing wild, often negative
+`D` (mean bias ~10³, enormous spread). Where it is stable it is still not
+unbiased: a ratio of two sums that are linear in the data, taken about an
+estimated centroid, carries a bias of order 1/CNR², the same order as the
+fitted width's, so admitting negative values does not by itself remove the
+noise bias. Removing the bound is sound in principle, but it needs a *stable*
+estimator — the covariance-based estimator achieves this on raw displacement
+increments, which an intensity-profile MSD pipeline does not have. An
+intensity-profile moment is not a viable substitute.
 
 ## 8. Calibration without knowledge of D
 
