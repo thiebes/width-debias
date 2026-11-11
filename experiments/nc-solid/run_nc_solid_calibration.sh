@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Rebuild the NC-solid Gaussian (CNR, sigma^2) calibration at high statistics.
 #
-# The poster figure's folded-normal correction reads var_bias from
+# The poster figure's noise-bias correction reads var_bias from
 # output/calibration_nc_solid_gaussian.npz, a Monte Carlo lookup on a
 # (CNR, sigma^2) grid. The committed calibration is 1000 runs/cell, whose MC
 # noise imprints a reproducible wiggle on the corrected-alpha series. This
@@ -25,6 +25,9 @@ export PYTHONUNBUFFERED=1
 PY="${PYTHON:-python3}"
 WORKERS="${WORKERS:-$(nproc)}"
 
+# --filter-threshold 0.6125 (5 * sigma_max^2) is the filter this preset ran
+# with, so a rebuild reproduces its grid; drop it for a grid that keeps every
+# fit in the per-cell bias mean, as calibrate_cnr_sigma2 does by default.
 echo "Building NC-solid calibration: $WORKERS workers, python = $PY"
 "$PY" scripts/build_calibration.py \
   --tag nc_solid_gaussian \
@@ -33,6 +36,7 @@ echo "Building NC-solid calibration: $WORKERS workers, python = $PY"
   --cnr-min 1 --cnr-max 250 --n-cnr 120 \
   --n-runs 8000 \
   --model gaussian \
+  --filter-threshold 0.6125 \
   --n-workers "$WORKERS"
 
 echo

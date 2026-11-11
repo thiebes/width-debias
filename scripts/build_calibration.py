@@ -86,7 +86,8 @@ def build_parser() -> argparse.ArgumentParser:
                    help="generalized-Gaussian shape exponent p (only used "
                         "when --model=generalized_gaussian)")
     p.add_argument("--n-workers", type=int, default=None,
-                   help="parallel workers (default: cpu_count - 1)")
+                   help="parallel workers; 0 uses every core (default: "
+                        "WIDTH_DEBIAS_WORKERS, else serial)")
     p.add_argument("--seed", type=int, default=2026,
                    help="root random seed")
     p.add_argument("--amplitude", type=float, default=1.0,
@@ -125,9 +126,11 @@ def build_parser() -> argparse.ArgumentParser:
                         "uses, or the var_bias subtraction is mismatched.")
     p.add_argument("--filter-threshold", type=float, default=None,
                    help="per-cell, discard fits whose sigma_hat^2 exceeds "
-                        "this when computing the mean bias (broken-fit "
-                        "outliers pegged at var_max). Defaults to "
-                        "5 * sigma_max^2. rel_variance is unaffected.")
+                        "this when computing the mean bias. The default keeps "
+                        "every fit, failed fits' fallback values included, as "
+                        "the application keeps them; pass 5 * sigma_max^2 to "
+                        "reproduce a grid built with that filter. rel_variance "
+                        "is unaffected.")
     return p
 
 
@@ -144,16 +147,16 @@ def main() -> None:
     cnr_grid = np.logspace(np.log10(args.cnr_min), np.log10(args.cnr_max),
                             args.n_cnr)
 
-    # Build the model. Profile-specific kwargs need to also go into
-    # model_kwargs so worker processes can reconstruct the same model.
-    model_kwargs: dict = {}
+    # Build the model; calibrate_cnr_sigma2 passes this instance to every
+    # worker, so its settings are the ones calibrated.
+    model_settings: dict = {}
     if args.model == "voigt" and args.voigt_gamma is not None:
-        model_kwargs["gamma"] = float(args.voigt_gamma)
+        model_settings["gamma"] = float(args.voigt_gamma)
     if args.model == "generalized_gaussian" and args.gengauss_shape is not None:
-        model_kwargs["shape"] = float(args.gengauss_shape)
+        model_settings["shape"] = float(args.gengauss_shape)
     if args.max_var is not None:
-        model_kwargs["max_var"] = float(args.max_var)
-    model = MODELS[args.model](**model_kwargs)
+        model_settings["max_var"] = float(args.max_var)
+    model = MODELS[args.model](**model_settings)
 
     if args.noise == "poisson" and args.background <= 0:
         raise SystemExit("--noise=poisson requires --background > 0 "
@@ -161,7 +164,7 @@ def main() -> None:
                          "data's profile edges)")
 
     print(f"Building calibration tag={args.tag!r}")
-    print(f"  model     : {args.model}  {model_kwargs}")
+    print(f"  model     : {args.model}  {model_settings}")
     if args.noise == "poisson":
         base_noise = (args.gain * args.background + args.read_noise ** 2) ** 0.5
         print(f"  noise     : poisson, gain={args.gain:g}, "
@@ -179,7 +182,9 @@ def main() -> None:
           f"[{args.cnr_min}, {args.cnr_max}]")
     print(f"  MC budget : {args.n_runs} runs/cell  "
           f"({args.n_cnr * args.n_sigma * args.n_runs:_} total fits)")
-    print(f"  workers   : {args.n_workers or 'cpu_count - 1'}")
+    workers = (args.n_workers if args.n_workers is not None
+               else os.environ.get("WIDTH_DEBIAS_WORKERS", "1 (serial)"))
+    print(f"  workers   : {workers}  (0 = every core)")
     print(f"  seed      : {args.seed}")
 
     var_max = (2 * args.half_window) ** 2
@@ -189,11 +194,11 @@ def main() -> None:
         print(f"  WARNING: var_max / sigma^2_max < 25; fit's upper bound "
               f"may pinch large-sigma cells")
 
-    filter_threshold = (args.filter_threshold
-                        if args.filter_threshold is not None
-                        else 5.0 * args.sigma_max ** 2)
-    print(f"  filter    : drop sigma_hat^2 > {filter_threshold:.4g} um^2 "
-          f"from per-cell mean (broken-fit outliers)")
+    if args.filter_threshold is None:
+        print("  filter    : none; every fit enters the per-cell mean")
+    else:
+        print(f"  filter    : drop sigma_hat^2 > {args.filter_threshold:.4g} "
+              f"from the per-cell mean")
 
     t0 = time.time()
     cal = calibrate_cnr_sigma2(
@@ -205,8 +210,7 @@ def main() -> None:
         n_runs=args.n_runs,
         seed=args.seed,
         n_workers=args.n_workers,
-        model_kwargs=model_kwargs,
-        filter_threshold=filter_threshold,
+        filter_threshold=args.filter_threshold,
         noise_model=args.noise,
         background=args.background,
         read_noise=args.read_noise,
