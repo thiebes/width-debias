@@ -3,12 +3,12 @@
 For each frame, the Monte Carlo ensemble gives the sampling distribution of the
 fitted MSD increment.  Three quantities summarise that distribution:
 
-* ``trunc_fraction`` -- the fraction of realisations with MSD <= 0, i.e. the
-  probability mass that has crossed to the wrong side of the D >= 0 wall.
+* ``trunc_fraction`` -- the fraction of realisations with MSD <= 0, the share
+  of fitted increments the noise puts at or below zero.
 * ``rel_variance``   -- the variance of the MSD point, the input the *standard*
   inverse-variance scheme already uses.
-* ``skew``           -- the sample skewness, a direct readout of the asymmetry
-  that inverse-variance weighting wrongly assumes away.
+* ``skew``           -- the sample skewness of the MSD point, which a
+  symmetric-error model of the slope fit ignores.
 
 All three are monotone in per-frame CNR.  :class:`BiasLookup` packages
 them against CNR so a weighting scheme can look them up from a per-frame CNR
@@ -26,14 +26,19 @@ The class supports **two calibration modes** with the same API:
 * **2-D, joint (CNR, sigma^2)** (experimental): built from a
   :class:`~width_debias.calibration.CalibrationGrid` via
   :meth:`BiasLookup.from_calibration`. Looks up ``var_bias`` and
-  per-frame ``rel_variance`` from (CNR, fitted-variance) jointly. Its low-CNR
+  per-frame ``rel_variance`` from (CNR, sigma^2) jointly. Its low-CNR
   cells need far more Monte Carlo runs than the 1-D path, and keying each frame
   on its own fitted width under-corrects when the width grows several-fold
   (see :meth:`var_bias`); see :mod:`width_debias.calibration`.
 
 The selection between the two is automatic: pass a ``variance`` argument to
 :meth:`var_bias` or :meth:`rel_variance` to trigger the 2-D lookup when the
-2-D table is present; otherwise the 1-D fallback runs.
+2-D table is present; otherwise the 1-D fallback runs. The two read
+``variance`` on different scales. :meth:`var_bias` (and :meth:`var_bias_se`,
+:meth:`var_bias_factor`) take an observed fitted variance, or a key on that
+scale, and find the true width it implies by a fixed-point iteration;
+:meth:`rel_variance` and :meth:`frame_variance` take a true width, which
+:meth:`implied_true_variance` computes from an observed one.
 """
 from __future__ import annotations
 
@@ -50,11 +55,14 @@ from .montecarlo import Ensemble
 # first versioned layout; archives without the key predate it.
 LOOKUP_FORMAT_VERSION = 1
 
+# Archive keys from width-debias 0.4.0 that name a field since renamed.
+_RENAMED_FIELDS = {"cnr_floor": "lowest_calibrated_cnr"}
+
 
 def _resolve_npz_path(path) -> Path:
     """The file ``np.savez`` wrote for ``path``: it appends ``.npz`` when missing."""
     given = Path(os.fspath(path))
-    if given.exists() or given.suffix == ".npz":
+    if given.is_file() or given.suffix == ".npz":
         return given
     return given.with_name(given.name + ".npz")
 
@@ -253,13 +261,16 @@ class BiasLookup:
         ``calibration_variance`` and equal CNR (:meth:`from_cells` with a width
         table). When present, a variance passed to :meth:`var_bias` rescales
         the lookup to that width; see :meth:`_width_lookup_point`.
-    cnr_floor : the lowest calibrated CNR, for provenance. Every lookup takes
-        the edge value outside ``cnr_grid``.
+    lowest_calibrated_cnr : the lowest CNR the calibration covers, for
+        provenance. Every lookup takes the edge value outside ``cnr_grid``.
+        It is not a floor below which the correction fails; that floor is the
+        ``min_cnr`` of :func:`~width_debias.weights.msd_and_weights`.
     pixel_x, model_spec : the calibration's pixel grid and profile model, for
         provenance; an application must match both. :meth:`from_cells` and
         :func:`~width_debias.validate.calibrate_d_free` record these and
-        ``cnr_floor``; other constructors leave them ``None``, and the match is
-        then the caller's to keep. Nothing checks them automatically.
+        ``lowest_calibrated_cnr``; other constructors leave them ``None``, and
+        the match is then the caller's to keep. Nothing checks them
+        automatically.
     format_version : the archive layout a loaded model was saved with
         (``None`` for a model built in memory or saved before versioning).
     """
@@ -280,7 +291,7 @@ class BiasLookup:
     width_variance_grid: np.ndarray | None = None
     width_scale_grid: np.ndarray | None = None
     calibration_variance: float | None = None
-    cnr_floor: float | None = None
+    lowest_calibrated_cnr: float | None = None
     pixel_x: np.ndarray | None = None
     model_spec: str | None = None
     format_version: int | None = None
@@ -372,7 +383,7 @@ class BiasLookup:
         Carlo error with the error of a curve fitted to all cells; that error is
         correlated along the grid, so its covariance factor is stored for
         :func:`~width_debias.weights.calibration_D_se`. Lookups below the lowest
-        cell clamp to it (``cnr_floor``); nothing is extrapolated.
+        cell clamp to it (``lowest_calibrated_cnr``); nothing is extrapolated.
         """
         from .smoothing import pspline_fit
 
@@ -428,7 +439,7 @@ class BiasLookup:
                    width_variance_grid=terms.variance_grid,
                    width_scale_grid=terms.bias_scale,
                    calibration_variance=terms.variance_cal,
-                   cnr_floor=float(cnr.min()),
+                   lowest_calibrated_cnr=float(cnr.min()),
                    pixel_x=cells.pixel_x,
                    model_spec=cells.model_spec)
 
@@ -444,6 +455,22 @@ class BiasLookup:
         return (self.width_scale_grid is not None
                 and self.width_variance_grid is not None
                 and self.calibration_variance is not None)
+
+    @property
+    def is_width_aware(self) -> bool:
+        """Whether a width argument changes the lookup (2-D, or 1-D with a width table)."""
+        return self.is_2d or self.is_width_scaled
+
+    def implied_true_variance(self, cnr, variance, n_iter: int = 4) -> np.ndarray:
+        """The true width an observed fitted variance (or a key) implies.
+
+        ``variance - var_bias(cnr, variance)``, the point the fixed-point
+        iteration of :meth:`var_bias` reads the bias at. The weights
+        (:meth:`rel_variance`, :meth:`frame_variance`) and the calibration SE
+        are read at the same point, so they take it from here.
+        """
+        variance = np.asarray(variance, float)
+        return variance - self.var_bias(cnr, variance, n_iter)
 
     def p(self, cnr) -> np.ndarray:
         """Interpolated truncation fraction at the given per-frame CNR."""
@@ -493,7 +520,7 @@ class BiasLookup:
         sigma, not sigma^2, a key error moves it about half as much as in the
         2-D lookup. A model with neither ignores ``variance``.
         """
-        if variance is None or not (self.is_2d or self.is_width_scaled):
+        if variance is None or not self.is_width_aware:
             return np.interp(cnr, self.cnr_grid, self.varbias_grid,
                              left=self.varbias_grid[0],
                              right=self.varbias_grid[-1])
@@ -535,8 +562,8 @@ class BiasLookup:
         cnr_arr = np.atleast_1d(np.asarray(cnr, float))
         if variance is None or not self.is_width_scaled:
             return _interp_matrix(cnr_arr, self.cnr_grid) @ self.varbias_cov_factor
-        sigma2_obs = np.atleast_1d(np.asarray(variance, float))
-        sigma2_true = sigma2_obs - self.var_bias(cnr_arr, sigma2_obs, n_iter)
+        sigma2_true = self.implied_true_variance(
+            cnr_arr, np.atleast_1d(np.asarray(variance, float)), n_iter)
         scale, cnr_eq = self._width_lookup_point(cnr_arr, sigma2_true)
         return scale[:, None] * (_interp_matrix(cnr_eq, self.cnr_grid)
                                  @ self.varbias_cov_factor)
@@ -581,9 +608,8 @@ class BiasLookup:
             return _interp_se(cnr_arr, self.cnr_grid, self.varbias_se_grid)
         if self.varbias_se_2d is None:
             return np.full(np.shape(cnr_arr), np.nan) if np.ndim(cnr_arr) else np.nan
-        sigma2_obs = np.asarray(variance, float)
-        sigma2_true = sigma2_obs - self.var_bias(cnr_arr, sigma2_obs, n_iter)
-        sigma2_true = np.clip(sigma2_true, float(self.variance_grid[0]),
+        sigma2_true = np.clip(self.implied_true_variance(cnr_arr, variance, n_iter),
+                              float(self.variance_grid[0]),
                               float(self.variance_grid[-1]))
         return _bilinear_se(self.cnr_grid, self.variance_grid,
                             self.varbias_se_2d, cnr_arr, sigma2_true)
@@ -659,15 +685,17 @@ class BiasLookup:
         """Load a model saved with :meth:`save` (or any archive of its fields).
 
         A 1-D lookup saved without ``framevar_grid`` loads with a warning:
-        :func:`~width_debias.weights.msd_and_weights` then weights by the
-        MSD-point variance with frame 0 at weight 0, the weights a lookup
-        calibrated before per-frame variances were recorded used.
+        :func:`~width_debias.weights.msd_and_weights` then uses the MSD-point
+        weights, with frame 0 at weight 0.
         """
         known = {f.name for f in fields(cls)}
+        values = {}
         with np.load(_resolve_npz_path(path)) as archive:
-            values = {name: (archive[name].item() if archive[name].ndim == 0
-                             else archive[name])
-                      for name in archive.files if name in known}
+            for key in archive.files:
+                name = _RENAMED_FIELDS.get(key, key)
+                if name in known:
+                    values[name] = (archive[key].item() if archive[key].ndim == 0
+                                    else archive[key])
         version = values.get("format_version")
         if version is not None and int(version) > LOOKUP_FORMAT_VERSION:
             raise ValueError(f"{path} has archive format {version}; this version of "

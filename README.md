@@ -65,18 +65,15 @@ se = np.hypot(r.spread / np.sqrt(300), r.cal_se)  # evaluation + calibration SE
 print(r.mean_bias, se)                            # <D_est>/D_ref per CNR_0
 ```
 
-On a measurement, the per-frame CNR comes from `width_debias.cnr.per_frame_cnr`
-(which wraps `fft-cnr`), the corrected MSD and weights from
-`width_debias.weights.msd_and_weights("subtract", ...)`, the slope from
-`width_debias.fit.fit_D`, and the calibration's contribution to the
-uncertainty from `width_debias.weights.calibration_D_se`:
+On a measurement, the per-frame CNR comes from `per_frame_cnr` (which wraps
+`fft-cnr`), the corrected MSD and weights from
+`msd_and_weights("subtract", ...)`, the slope from `fit_D`, and the
+calibration's contribution to the uncertainty from `calibration_D_se`:
 
 ```python
 import numpy as np
-from width_debias import calibrate_d_free
-from width_debias.cnr import per_frame_cnr
-from width_debias.fit import fit_D
-from width_debias.weights import calibration_D_se, msd_and_weights
+from width_debias import (calibrate_d_free, calibration_D_se, fit_D,
+                          msd_and_weights, per_frame_cnr)
 
 # times (n_frames,); profiles (n_frames, n_pixels) cut to about +/-4 sigma_0
 # around the spot; variance (n_frames,) the fitted widths in px^2;

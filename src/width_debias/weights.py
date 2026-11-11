@@ -131,13 +131,17 @@ def msd_and_weights(scheme: str, variance_row: np.ndarray,
         Per-frame CNR (known in Monte Carlo; measured with ``fft-cnr`` on real
         data).
     model : calibrated :class:`~width_debias.bias_lookup.BiasLookup`.
+    key_variance : optional array, shape (n_frames,)
+        A measurement-level width key on the scale of the fitted variances, for
+        a width-aware lookup; see Notes.
     min_cnr : optional per-frame CNR floor. Frames below it get weight 0, so
         :func:`~width_debias.fit.fit_D` and :func:`calibration_D_se` leave
         them out. Off by default; the validations use 1 (1.3 on measured data),
         below which the correction no longer holds (README, "On real data").
-        A scheme that consults the lookup warns
-        (:class:`CalibrationRangeWarning`) when a frame it keeps lies outside
-        the calibrated CNR range.
+        This is not the lookup's ``lowest_calibrated_cnr``, the edge of its
+        grid, which usually lies well below the floor. A scheme that consults
+        the lookup warns (:class:`CalibrationRangeWarning`) when a frame it
+        keeps lies outside the calibrated CNR range.
 
     Notes
     -----
@@ -171,9 +175,11 @@ def msd_and_weights(scheme: str, variance_row: np.ndarray,
     not depend on width (a 2-D lookup uses its width-averaged 1-D
     ``rel_variance``). A weight read at a frame's own noisy width would
     correlate with that frame's error and bias the slope at O(1/CNR^2), the
-    order being corrected; on a synthetic joint lookup it left D/D_true at
-    0.73 at CNR_0 30 (D = 0.02), against 1.00 for a width-free weight. A bias
-    keyed on the frame's own width errs only at O(1/CNR^4).
+    order being corrected: on a joint calibration with Gaussian fits it left
+    D/D_true at 0.39 to 0.96 over CNR_0 8 to 34, against 0.88 to 1.09 for the
+    width-averaged weight
+    (``experiments/dfree-calibration/joint_weights_check.py``). A bias keyed
+    on the frame's own width errs only at O(1/CNR^4).
     """
     variance_row = np.asarray(variance_row, float)
     cnr = np.asarray(cnr_frame, float)
@@ -183,6 +189,9 @@ def msd_and_weights(scheme: str, variance_row: np.ndarray,
         raise ValueError("msd_and_weights takes one realisation: variance_row and "
                          f"cnr_frame of shape (n_frames,), got {variance_row.shape} "
                          f"and {cnr.shape}")
+    if key_variance is not None and np.shape(key_variance) != variance_row.shape:
+        raise ValueError("key_variance must match variance_row, shape "
+                         f"{variance_row.shape}; got {np.shape(key_variance)}")
 
     # --- bias correction ------------------------------------------------
     corrected = corrected_variance(scheme, variance_row, cnr, model, key_variance)
@@ -200,9 +209,8 @@ def msd_and_weights(scheme: str, variance_row: np.ndarray,
         per_frame = False
     else:
         width = None
-        if key_variance is not None and (model.is_2d or model.is_width_scaled):
-            key = np.asarray(key_variance, float)
-            width = key - model.var_bias(cnr, key)
+        if key_variance is not None and model.is_width_aware:
+            width = model.implied_true_variance(cnr, key_variance)
         per_frame = model.is_2d or model.framevar_grid is not None
         if model.is_2d:
             rv = model.rel_variance(cnr, width)
@@ -217,10 +225,10 @@ def msd_and_weights(scheme: str, variance_row: np.ndarray,
     w = np.asarray(w, float).copy()
     if not per_frame:
         w[0] = 0.0   # the MSD origin, which these weights cannot place
-    if min_cnr is not None:
-        w = np.where(cnr >= min_cnr, w, 0.0)
+    kept = np.ones(cnr.shape, bool) if min_cnr is None else cnr >= min_cnr
+    w = np.where(kept, w, 0.0)
     if scheme != "ols":
-        _warn_outside_calibration(cnr if min_cnr is None else cnr[cnr >= min_cnr], model)
+        _warn_outside_calibration(cnr[kept], model)
     return msd, w
 
 
@@ -261,14 +269,13 @@ def calibration_D_se(times: np.ndarray, msd: np.ndarray, weights: np.ndarray,
     :meth:`~width_debias.bias_lookup.BiasLookup.var_bias_factor`.
     ``key_variance`` is the width key passed to ``msd_and_weights``, if any.
     A width-aware lookup (2-D, or 1-D with a width table) needs
-    ``variance_row`` or ``key_variance``, and raises without both.
+    ``variance_row`` or ``key_variance``, and raises when neither is given.
     """
     t = np.asarray(times, float)
     m = np.asarray(msd, float)
     w = np.asarray(weights, float)
     cnr = np.asarray(cnr_frame, float)
-    if variance_row is None and key_variance is None and (model.is_2d
-                                                          or model.is_width_scaled):
+    if variance_row is None and key_variance is None and model.is_width_aware:
         # The correction read this lookup at each frame's width; without it the
         # SE would come from the width-averaged grid and understate the error.
         raise ValueError("a width-aware lookup needs variance_row (or the "

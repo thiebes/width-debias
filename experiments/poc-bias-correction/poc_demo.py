@@ -8,10 +8,10 @@ MODEL is ``gaussian``, ``voigt``, or ``generalized_gaussian:<p>``.
 
 Produces ``output/poc_demo.png`` (if matplotlib is installed) with two panels:
 
-* (a) the truncation fraction p and MSD skewness vs per-frame CNR -- evidence
-      that the wall at zero distorts the width estimator, worst at low CNR;
+* (a) the fraction p of MSD points at or below zero and the MSD skewness vs
+      per-frame CNR -- the noise in the fitted width grows as the CNR falls;
 * (b) the bias <D_est>/D_true vs CNR_0 for OLS, standard inverse-variance, and
-      the derived folded-normal scheme (see docs/DERIVATION.md).
+      the derived ``subtract`` scheme (see docs/DERIVATION.md).
 
 It also prints a summary table to stdout, so it is useful with or without a
 plotting backend.

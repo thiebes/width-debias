@@ -3,8 +3,8 @@
 Most are smoke tests that keep the moving parts wired together. The tests under
 "Release guarantees" pin what the release notes promise: the subtraction itself,
 the saved lookup's weights, worker-count independence, and the failed-fit
-fallback. They import the installed package, not ``src/``, so CI tests what
-ships.
+fallback. They import the installed package, not ``src/``; CI installs it
+non-editable, so it tests what ships.
 """
 import numpy as np
 import pytest
@@ -16,6 +16,7 @@ from width_debias import (AnomalousExperiment, Experiment, GaussianModel,
                             frame_stats, model_from_spec, run_ensemble,
                             spec_tag)
 from width_debias.fit import fit_D, fit_variance
+from width_debias.models import MODELS
 from width_debias.simulate import noise_free_series
 
 
@@ -58,8 +59,8 @@ def test_fit_D_covariance_se():
 
 
 def test_var_bias_is_positive_and_grows_at_low_cnr():
-    """The folded-normal prediction: sigma_hat^2 is biased high, more so at
-    low CNR (DERIVATION.md s.2)."""
+    """The derived prediction: sigma_hat^2 is biased high by its estimation
+    variance, more so at low CNR (DERIVATION.md s.2)."""
     exp = Experiment(D=0.02)
     lo = frame_stats(run_ensemble(exp, cnr0=4.0, n_runs=300, seed=0))
     hi = frame_stats(run_ensemble(exp, cnr0=60.0, n_runs=300, seed=0))
@@ -68,7 +69,8 @@ def test_var_bias_is_positive_and_grows_at_low_cnr():
 
 
 def test_truncation_fraction_grows_at_low_cnr():
-    """The wall bites harder at low CNR: p is larger when CNR_0 is small."""
+    """More MSD points fall at or below zero at low CNR: p is larger when
+    CNR_0 is small."""
     exp = Experiment(D=0.02)
     lo = frame_stats(run_ensemble(exp, cnr0=2.0, n_runs=300, seed=0))
     hi = frame_stats(run_ensemble(exp, cnr0=40.0, n_runs=300, seed=0))
@@ -119,9 +121,8 @@ def test_models_run_through_montecarlo(model):
 
 
 def test_moment_estimator_can_go_negative():
-    """The non-truncated moment estimator must admit negative variances at
-    low CNR -- that is what makes it un-folded and (to leading order)
-    unbiased."""
+    """The moment estimator has no fit bound and is linear in the data, so it
+    must admit negative variances at low CNR."""
     exp = Experiment(D=0.02, n_frames=8, t_max=2.0)
     ens = run_ensemble(exp, cnr0=4.0, n_runs=300, seed=0, model=MomentModel())
     finite = ens.variance[np.isfinite(ens.variance)]
@@ -549,11 +550,52 @@ def test_load_accepts_the_path_given_to_save_and_releases_the_file(tmp_path, dfr
     from width_debias import BiasLookup
     from width_debias.bias_lookup import LOOKUP_FORMAT_VERSION
     stem = tmp_path / "cal"
+    stem.mkdir()     # a directory of the same name must not shadow cal.npz
     dfree_lookup.save(stem)
     loaded = BiasLookup.load(stem)
     assert loaded.format_version == LOOKUP_FORMAT_VERSION
     assert np.array_equal(loaded.varbias_grid, dfree_lookup.varbias_grid)
     (tmp_path / "cal.npz").unlink()
+
+
+def test_every_calibration_loader_closes_its_archive(tmp_path, monkeypatch, dfree_lookup):
+    """Each loader closes the archive it opens. An open archive keeps the file
+    locked on Windows, and the garbage collector closing it would hide a leak,
+    so the test holds every archive and checks it directly."""
+    from width_debias import BiasLookup, CalibrationGrid
+    from width_debias.calibration import CalibrationCells
+    dfree_lookup.save(tmp_path / "lookup.npz")
+    _synthetic_joint_grid().save(tmp_path / "grid.npz")
+    CalibrationCells(cnr=np.array([1.0, 2.0]), mean_bias=np.array([0.1, 0.02]),
+                     bias_sd=np.array([1.0, 0.5]), n_finite=np.array([10, 10]),
+                     n_runs=np.array([10, 10]), variance_cal=1.0,
+                     pixel_x=Experiment().x,
+                     model_spec="GaussianModel({})").save(tmp_path / "cells.npz")
+    opened = []
+    real_load = np.load
+
+    def recording_load(*args, **kwargs):
+        archive = real_load(*args, **kwargs)
+        opened.append(archive)
+        return archive
+
+    monkeypatch.setattr(np, "load", recording_load)
+    BiasLookup.load(tmp_path / "lookup.npz")
+    CalibrationGrid.load(tmp_path / "grid.npz")
+    CalibrationCells.load(tmp_path / "cells.npz")
+    assert len(opened) == 3
+    assert all(archive.zip is None for archive in opened)
+
+
+def test_load_reads_the_former_name_of_lowest_calibrated_cnr(tmp_path, dfree_lookup):
+    """Archives written by 0.4.0 store lowest_calibrated_cnr as cnr_floor."""
+    from width_debias import BiasLookup
+    arrays = {k: v for k, v in vars(dfree_lookup).items()
+              if v is not None and k != "lowest_calibrated_cnr"}
+    arrays["cnr_floor"] = dfree_lookup.lowest_calibrated_cnr
+    np.savez(tmp_path / "former.npz", **arrays)
+    loaded = BiasLookup.load(tmp_path / "former.npz")
+    assert loaded.lowest_calibrated_cnr == dfree_lookup.lowest_calibrated_cnr
 
 
 def test_load_refuses_a_newer_archive_format(tmp_path, dfree_lookup):
@@ -606,11 +648,67 @@ def test_calibrated_bias_is_the_ensemble_mean_less_the_truth():
     from width_debias import BiasLookup
     exp = Experiment(D=0.0)
     ens = run_ensemble(exp, 5.0, n_runs=30, seed=21)
-    expected = np.nanmean(ens.variance, axis=0) - exp.true_variance
+    expected = _finite_column_means(ens.variance) - exp.true_variance
     stats = frame_stats(ens)
-    assert np.allclose(stats.var_bias, expected, rtol=0, atol=1e-15)
+    assert np.allclose(stats.var_bias, expected, rtol=1e-12, atol=0)
     lookup = BiasLookup.from_stats([stats])
-    assert np.allclose(lookup.var_bias(ens.cnr_frame), expected, rtol=0, atol=1e-15)
+    assert np.allclose(lookup.var_bias(ens.cnr_frame), expected, rtol=1e-12, atol=0)
+
+
+def _finite_column_means(values):
+    """Mean of each column's finite entries, summed per column as frame_stats
+    sums them (a strided nanmean sums in another order, a last-place difference
+    that varies by platform)."""
+    return np.array([np.mean(col[np.isfinite(col)]) for col in values.T])
+
+
+# Width-debias 0.4.0 (tag v0.4.0) on the dfree_lookup calibration and one
+# application ensemble. The fft-cnr paper's results rest on this path.
+GOLDEN_040 = {
+    "probe_cnr": [0.6, 2.0, 7.0, 15.0],
+    "var_bias": [1.8029102582599381, 0.01872219702240734,
+                 -0.0015306361303821328, 0.001230091873256246],
+    "frame_variance": [170.19819096053237, 0.07500166965710224,
+                       0.005484276868628264, 0.0007113074479971729],
+    "D": [0.04057229067247343, 0.008054226066210982, 0.01728553960993827],
+    "D_se": 0.03814988673847957,
+    "calibration_D_se": 0.003546048041279665,
+}
+
+
+def test_recommended_path_matches_release_0_4_0(dfree_lookup):
+    """calibrate_d_free, msd_and_weights("subtract"), fit_D, and
+    calibration_D_se give the 0.4.0 values. The tolerance absorbs
+    floating-point differences between platforms; a change of logic moves
+    these values by far more."""
+    from width_debias import calibration_D_se, msd_and_weights
+    golden = GOLDEN_040
+    probe = np.array(golden["probe_cnr"])
+    np.testing.assert_allclose(dfree_lookup.var_bias(probe), golden["var_bias"], rtol=1e-6)
+    np.testing.assert_allclose(dfree_lookup.frame_variance(probe),
+                               golden["frame_variance"], rtol=1e-6)
+    exp = Experiment(D=0.02)
+    ens = run_ensemble(exp, 10.0, n_runs=3, seed=11)
+    for r in range(ens.n_runs):
+        msd, w = msd_and_weights("subtract", ens.variance[r], ens.cnr_frame, dfree_lookup)
+        d = fit_D(exp.times, msd, w)
+        assert d.D == pytest.approx(golden["D"][r], rel=1e-6)
+        assert d.D_se == pytest.approx(golden["D_se"], rel=1e-6)
+        assert calibration_D_se(exp.times, msd, w, ens.cnr_frame, dfree_lookup) == \
+            pytest.approx(golden["calibration_D_se"], rel=1e-6)
+
+
+def test_dfree_calibration_is_the_d_zero_sweep(dfree_lookup):
+    """calibrate_d_free is from_stats over D = 0 ensembles seeded seed,
+    seed + 1, ...: nothing rescales or filters the lookup on the way."""
+    from width_debias import BiasLookup
+    cal_exp = Experiment(D=0.0)
+    stats = [frame_stats(run_ensemble(cal_exp, cnr0, n_runs=60, seed=3 + i))
+             for i, cnr0 in enumerate((5.0, 20.0))]
+    hand_built = BiasLookup.from_stats(stats)
+    for name in ("cnr_grid", "varbias_grid", "framevar_grid", "relvar_grid",
+                 "varbias_se_grid"):
+        assert np.array_equal(getattr(dfree_lookup, name), getattr(hand_built, name))
 
 
 def test_saved_lookup_keeps_frame_variance_and_weights(tmp_path, dfree_lookup):
@@ -640,9 +738,8 @@ def test_results_do_not_depend_on_worker_count():
     assert np.array_equal(serial.cnr_frame, parallel.cnr_frame)
 
 
-def test_failed_fit_falls_back_and_is_kept(monkeypatch):
-    """A fit that fails returns the broad initial guess, flagged not ok; it is
-    never dropped (dropping failures would delete the tail that carries the bias)."""
+def test_failed_fit_returns_the_broad_guess(monkeypatch):
+    """A fit that fails returns the broad initial guess, flagged not ok."""
     import width_debias.fit as fit_module
 
     def fail(*args, **kwargs):
@@ -654,6 +751,30 @@ def test_failed_fit_falls_back_and_is_kept(monkeypatch):
     span = x[-1] - x[0]
     assert not ff.ok
     assert ff.variance == pytest.approx((span / 4.0) ** 2)
+
+
+def test_failed_fits_stay_in_the_ensemble_and_the_calibrated_bias(monkeypatch):
+    """Failed fits keep their fallback width through run_ensemble and
+    frame_stats, so the calibrated bias includes them as the application does
+    (dropping failures would delete the tail that carries the bias)."""
+    import itertools
+    import width_debias.fit as fit_module
+    real_curve_fit = fit_module.curve_fit
+    calls = itertools.count(1)
+
+    def fail_every_seventh(*args, **kwargs):
+        if next(calls) % 7 == 0:
+            raise RuntimeError("no convergence")
+        return real_curve_fit(*args, **kwargs)
+
+    monkeypatch.setattr(fit_module, "curve_fit", fail_every_seventh)
+    exp = Experiment(D=0.0)
+    ens = run_ensemble(exp, 10.0, n_runs=6, seed=4, workers=1)
+    failed = ~ens.ok
+    assert failed.any()
+    assert np.all(ens.variance[failed] == ((exp.x[-1] - exp.x[0]) / 4.0) ** 2)
+    expected = _finite_column_means(ens.variance) - exp.true_variance
+    assert np.allclose(frame_stats(ens).var_bias, expected, rtol=1e-12, atol=0)
 
 
 def test_fit_D_drops_nan_frames():
@@ -756,17 +877,16 @@ def test_calibration_profile_and_fisher_terms_do_not_assume_a_centred_grid():
 # --------------------------------------------------------------------------
 # Invalid input
 # --------------------------------------------------------------------------
-@pytest.mark.parametrize("model", [
-    GaussianModel(), VoigtModel(), GeneralizedGaussianModel(shape=1.5),
-    MomentModel(), UnboundedGaussianModel(),
-])
-def test_profile_with_a_nan_pixel_is_unusable(model):
-    """A non-finite pixel gives a NaN variance, not the fallback guess, so the
-    frame drops out downstream instead of entering the fit as a finite width."""
-    x = Experiment().x
+@pytest.mark.parametrize("axis", ["x", "y"])
+@pytest.mark.parametrize("model_cls", list(MODELS.values()), ids=list(MODELS))
+def test_profile_with_a_nan_pixel_is_unusable(model_cls, axis):
+    """A non-finite pixel or grid point gives a NaN variance, not the fallback
+    guess, so the frame drops out downstream instead of entering the fit as a
+    finite width. Every registered model is checked."""
+    x = Experiment().x.copy()
     y = np.exp(-0.5 * x ** 2)
-    y[17] = np.nan
-    ff = model.fit_variance(x, y)
+    (x if axis == "x" else y)[17] = np.nan
+    ff = model_cls().fit_variance(x, y)
     assert np.isnan(ff.variance)
     assert not ff.ok
 
@@ -792,6 +912,9 @@ def test_msd_and_weights_refuses_a_batch(dfree_lookup):
         msd_and_weights("subtract", rows, np.full((3, 12), 10.0), dfree_lookup)
     with pytest.raises(ValueError):
         msd_and_weights("subtract", np.ones(12), np.full(11, 10.0), dfree_lookup)
+    with pytest.raises(ValueError, match="key_variance"):
+        msd_and_weights("subtract", np.ones(12), np.full(12, 10.0), dfree_lookup,
+                        key_variance=np.ones((3, 12)))
 
 
 # --------------------------------------------------------------------------
@@ -801,7 +924,7 @@ def test_dfree_lookup_records_its_geometry(tmp_path, dfree_lookup):
     from width_debias import BiasLookup
     assert np.array_equal(dfree_lookup.pixel_x, Experiment().x)
     assert dfree_lookup.model_spec.startswith("GaussianModel")
-    assert dfree_lookup.cnr_floor == dfree_lookup.cnr_grid[0]
+    assert dfree_lookup.lowest_calibrated_cnr == dfree_lookup.cnr_grid[0]
     dfree_lookup.save(tmp_path / "cal.npz")
     loaded = BiasLookup.load(tmp_path / "cal.npz")
     assert np.array_equal(loaded.pixel_x, dfree_lookup.pixel_x)
@@ -830,6 +953,8 @@ def test_cnr_outside_the_calibration_warns(dfree_lookup):
         msd_and_weights("ols", row, np.geomspace(80.0, 0.01, 12), dfree_lookup)
     with pytest.warns(CalibrationRangeWarning, match="calibrated range"):
         msd_and_weights("subtract", row, np.geomspace(80.0, 0.5, 12), dfree_lookup)
+    with pytest.warns(CalibrationRangeWarning, match="calibrated range"):
+        msd_and_weights("subtract", row, np.geomspace(15.0, 0.01, 12), dfree_lookup)
     with warnings.catch_warnings():
         warnings.simplefilter("error", CalibrationRangeWarning)
         low = np.geomspace(15.0, 0.01, 12)
@@ -851,17 +976,21 @@ def test_per_frame_cnr_passes_options_to_fft_cnr():
 # --------------------------------------------------------------------------
 # Width keys
 # --------------------------------------------------------------------------
-def _synthetic_joint_lookup():
-    """A 2-D lookup with bias 0.06 sqrt(v)/CNR^2 and Var(sigma_hat^2) 0.24 v^1.5/CNR^2."""
-    from width_debias import BiasLookup, CalibrationGrid
+def _synthetic_joint_grid():
+    """A 2-D grid with bias 0.06 sqrt(v)/CNR^2 and Var(sigma_hat^2) 0.24 v^1.5/CNR^2."""
+    from width_debias import CalibrationGrid
     cnr_g = np.geomspace(0.3, 200, 60)
     var_g = np.linspace(0.3, 6.0, 40)
     c, v = np.meshgrid(cnr_g, var_g, indexing="ij")
-    grid = CalibrationGrid(cnr_grid=cnr_g, variance_grid=var_g,
+    return CalibrationGrid(cnr_grid=cnr_g, variance_grid=var_g,
                            var_bias=0.06 * np.sqrt(v) / c ** 2,
                            rel_variance=0.24 * v ** 1.5 / c ** 2,
                            n_runs=300, model_name="gaussian")
-    return BiasLookup.from_calibration(grid)
+
+
+def _synthetic_joint_lookup():
+    from width_debias import BiasLookup
+    return BiasLookup.from_calibration(_synthetic_joint_grid())
 
 
 def test_joint_lookup_weights_do_not_follow_a_frames_own_width():

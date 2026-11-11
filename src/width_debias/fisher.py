@@ -141,15 +141,15 @@ def sequence_fisher_information(model, exp: Experiment,
     d mu_i / d D = 2 t_i d mu_i / d v_i. Every model is peak-normalised, so
     d mu_i / d A_i = mu_i / A_i.
     """
-    v, t, amp = exp.true_variance, exp.times, exp.amplitude
+    v, t, amp, c = exp.true_variance, exp.times, exp.amplitude, exp.mean
     n = exp.n_frames
     hv = 1e-4 * v
-    dv = (_profile_stack(model, exp.x, v + hv, amp)
-          - _profile_stack(model, exp.x, v - hv, amp)) / (2 * hv[:, None])
+    dv = (_profile_stack(model, exp.x, v + hv, amp, c)
+          - _profile_stack(model, exp.x, v - hv, amp, c)) / (2 * hv[:, None])
     hc = 1e-4 * exp.sigma0
-    dc = (_profile_stack(model, exp.x, v, amp, hc)
-          - _profile_stack(model, exp.x, v, amp, -hc)) / (2 * hc)
-    mu = _profile_stack(model, exp.x, v, amp)
+    dc = (_profile_stack(model, exp.x, v, amp, c + hc)
+          - _profile_stack(model, exp.x, v, amp, c - hc)) / (2 * hc)
+    mu = _profile_stack(model, exp.x, v, amp, c)
     fim = np.zeros((2 + 2 * n, 2 + 2 * n))
     for i in range(n):
         cols = np.zeros((2 + 2 * n, exp.x.size))
@@ -165,7 +165,7 @@ def per_frame_crlb(model, exp: Experiment, noise_sigma: float) -> np.ndarray:
     """Var(sigma_hat_i^2) floor for each frame alone (A_i, c_i as nuisances)."""
     return np.array([
         var_of_fitted_variance(model, exp.x, v, noise_sigma ** 2,
-                               amplitude=a, estimator="ml")
+                               amplitude=a, mean=exp.mean, estimator="ml")
         for v, a in zip(exp.true_variance, exp.amplitude)
     ])
 

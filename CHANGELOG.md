@@ -5,12 +5,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.4.1] - 2026-11-07
+## [0.4.1] - 2026-11-11
 
 Fixes from the review of 0.4.0. The recommended path (`calibrate_d_free`, then
 `msd_and_weights("subtract")`, then `fit_D`) gives the same results for valid
 input: a probe of the paths the fft-cnr paper used gives 105 of 105 outputs
-byte-identical to 0.4.0.
+byte-identical to 0.4.0, and a test pins the path's outputs to the 0.4.0
+values.
 
 ### Fixed
 
@@ -20,7 +21,8 @@ byte-identical to 0.4.0.
   that frame's error, which biases the slope at the order being corrected. On a
   500-run joint calibration with Gaussian fits (D 0.02 and 0.1 sigma_0^2/tau,
   initial CNR 8 to 34), corrected D/D_true was 0.39 to 0.96 with the former
-  weights and is 0.88 to 1.09 (evaluation SE 0.004 to 0.12).
+  weights and is 0.88 to 1.09 (evaluation SE 0.004 to 0.12;
+  `experiments/dfree-calibration/joint_weights_check.py`).
 - `calibrate_cnr_sigma2` fits every cell with the model instance passed, so the
   shape exponent of a generalized-Gaussian model, a Voigt `gamma`, or a
   `max_var` is the one calibrated. The model was rebuilt from its name, which
@@ -31,14 +33,18 @@ byte-identical to 0.4.0.
   `filter_threshold=5 * variance_grid.max()` to reproduce a grid built with the
   former default.
 - Calibration profiles (`calibrate_cells`, `calibrate_cnr_sigma2`) and the
-  Fisher terms are placed at the pixel grid's midpoint. A grid that does not
-  run from minus its end to its end (one from 0 to 12) put the profile off the
-  window and gave a wrong bias.
-- A profile with a non-finite pixel gives a NaN variance, an unusable frame, in
-  every model, not the broad fallback width.
+  leading-order Fisher terms are placed at the pixel grid's midpoint. On a grid
+  that does not run from minus its end to its end (one from 0 to 12), the
+  calibration profile had a quarter of the true variance and the Fisher terms
+  were centred on the grid's edge, so both gave a wrong bias. `per_frame_crlb`
+  and `sequence_fisher_information` place the profile at the experiment's
+  centre (`Experiment.mean`), which they took as 0.
+- A profile with a non-finite pixel or grid point gives a NaN variance, an
+  unusable frame, in every model, not the broad fallback width.
 - `BiasLookup.load` accepts the path given to `save` (`save("cal")` writes
-  `cal.npz`), and every calibration loader closes its archive; an open archive
-  kept the file locked on Windows.
+  `cal.npz`, and a directory named `cal` does not shadow it), and every
+  calibration loader closes its archive; an open archive kept the file locked
+  on Windows.
 - `calibration_D_se` raises for a width-aware lookup given neither
   `variance_row` nor `key_variance`, where it took the SE from the
   width-averaged grid.
@@ -51,7 +57,11 @@ byte-identical to 0.4.0.
   outside the lookup's calibrated CNR range, where the lookup takes its edge
   value.
 - `calibrate_d_free` records the calibration's pixel grid, profile model, and
-  lowest CNR (`pixel_x`, `model_spec`, `cnr_floor`).
+  lowest CNR (`pixel_x`, `model_spec`, `lowest_calibrated_cnr`).
+- `BiasLookup.implied_true_variance` gives the true width an observed fitted
+  variance or key implies, the point at which `var_bias`, the slope weights,
+  and the calibration SE are read; `BiasLookup.is_width_aware` says whether a
+  width argument changes the lookup.
 - `BiasLookup` archives carry a format version (`format_version`). `load`
   refuses a newer format, and warns when a 1-D lookup has no `framevar_grid`
   (its weights then fall back to the MSD-point variance).
@@ -62,23 +72,32 @@ byte-identical to 0.4.0.
 
 ### Changed
 
+- `BiasLookup.cnr_floor` is `lowest_calibrated_cnr`, so it is not mistaken for
+  the correction floor (`min_cnr`); `load` reads archives that use either name.
 - `msd_and_weights` takes one realisation and refuses a 2-D batch, which it
-  differenced against the batch's first row.
+  differenced against the batch's first row, and a `key_variance` of another
+  shape than `variance_row`.
 - `calibrate_cnr_sigma2` refuses a `noise_model` other than `"gaussian"` or
   `"poisson"` (any other value ran white noise), and its default worker count
   follows `WIDTH_DEBIAS_WORKERS` like `run_ensemble` (it used every core but
   one).
+- `scripts/build_calibration.py` keeps every fit in the bias mean unless
+  `--filter-threshold` is given, and passes the configured model to
+  `calibrate_cnr_sigma2`. The NC-solid calibration preset passes the filter it
+  ran with, so a rebuild reproduces its grid.
 - CI runs on `ubuntu-24.04` with setup-uv v10.3.2 and the PyPI publish action
-  v1.14.3, and a release fails when its tag does not match `__version__`.
+  v1.14.3, installs the package non-editable for the tests, and fails a
+  release whose tag does not match `__version__`.
 
 ### Documentation
 
 - Docstrings, docs, and experiment READMEs describe the bias as the noise bias
   of the fitted width, its estimation variance, not a truncation or wall
   effect.
-- The tests check what the release notes promise (the exact subtraction and
-  calibrated bias, the saved weights, worker-count independence, the failed-fit
-  fallback) and import the installed package.
+- The tests check what the release notes promise: the exact subtraction and
+  calibrated bias, the recommended path's outputs against 0.4.0, the saved
+  weights, worker-count independence, failed fits kept in the bias, and
+  closed archives. They import the installed package.
 
 ## [0.4.0] - 2026-11-06
 

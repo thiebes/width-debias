@@ -91,7 +91,8 @@ def calibrate_d_free(cnr0_grid: np.ndarray, *, sigma0: float = 1.0,
     ``sigma0``: with the default ``sigma0 = 1``, the fitted variances passed to
     the lookup must be in units of sigma_0^2. The lookup records the pixel grid
     (``pixel_x``), the profile model (``model_spec``) and the lowest calibrated
-    CNR (``cnr_floor``), so an application can check its data against them.
+    CNR (``lowest_calibrated_cnr``), so an application can check its data
+    against them.
     """
     from .calibration import _describe_model
     from .models import GaussianModel
@@ -103,7 +104,7 @@ def calibrate_d_free(cnr0_grid: np.ndarray, *, sigma0: float = 1.0,
                        noise_model=noise_model)
     lookup.pixel_x = cal_exp.x
     lookup.model_spec = _describe_model(GaussianModel() if model is None else model)
-    lookup.cnr_floor = float(lookup.cnr_grid[0])
+    lookup.lowest_calibrated_cnr = float(lookup.cnr_grid[0])
     return lookup
 
 

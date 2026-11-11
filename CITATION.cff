@@ -3,7 +3,7 @@ message: "If you use this software, please cite it using the metadata below."
 title: "width-debias: correction of the noise bias in fitted profile widths for MSD diffusion measurements"
 type: software
 version: 0.4.1
-date-released: "2026-11-07"
+date-released: "2026-11-11"
 authors:
   - family-names: Thiebes
     given-names: "Joseph J."

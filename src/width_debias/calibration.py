@@ -184,9 +184,8 @@ def _cell_worker(args):
 
     The bias is the mean over every finite fit, a failed fit's fallback value
     included, as the application keeps it. Only an explicit
-    ``filter_threshold`` drops fits above it from the mean (the behaviour of
-    grids built before width-debias 0.4.1). The rel_variance is computed over
-    all finite fits either way.
+    ``filter_threshold`` drops fits above it from the mean. The rel_variance is
+    computed over all finite fits either way.
 
     Two noise models. ``gaussian`` adds zero-mean white noise of standard
     deviation ``amplitude / cnr`` to a clean profile of peak ``amplitude`` --
@@ -296,8 +295,8 @@ def calibrate_cnr_sigma2(model=None, *, pixel_x: np.ndarray | None = None,
         whose sigma_hat^2 exceeds it. The default (``None``) keeps every fit,
         failed fits' fallback values included, because the application keeps
         them: dropping the high fits removes the upper tail that carries the
-        bias. Grids built before width-debias 0.4.1 used
-        ``5 * variance_grid.max()``; pass that to reproduce one.
+        bias. To reproduce a grid built with a filter, pass the threshold it
+        used (the committed grids used ``5 * variance_grid.max()``).
         rel_variance is computed over every finite fit either way.
     noise_model : ``"gaussian"`` (additive white noise of standard deviation
         ``amplitude / cnr``) or ``"poisson"`` (the photon-transfer model of
@@ -456,7 +455,7 @@ def calibrate_cells(cnr_grid: np.ndarray, *, model=None,
 
     Each cell fits ``n_runs`` (a scalar, or one count per cell to spend more
     runs where the bias is noisiest) white-noise profiles at the true variance
-    ``variance_cal`` and peak CNR ``cnr_grid[k]``. Unlike
+    ``variance_cal`` and peak CNR ``cnr_grid[k]``. As in the default of
     :func:`calibrate_cnr_sigma2`, no outlier filter is applied: the mean is the
     raw mean the application's subtraction must match, as in
     :func:`~width_debias.validate.calibrate_d_free`. Cells are seeded from one

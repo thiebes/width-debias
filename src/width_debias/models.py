@@ -216,20 +216,19 @@ class GeneralizedGaussianModel:
 
 
 # --------------------------------------------------------------------------
-# Moment estimator -- the non-truncated alternative ("remove the wall")
+# Moment estimator -- a width estimator with no fit bound
 # --------------------------------------------------------------------------
 @dataclass
 class MomentModel:
-    """Non-truncated, moment-based width estimator.
+    """Moment-based width estimator, with no fit bound.
 
     Instead of a bounded curve fit, the variance is the discrete second
     central moment of the (background-subtracted) profile. That estimator is
-    linear in the data: it can return a *negative* variance and does not fold
-    at zero. Its sampling distribution is therefore approximately symmetric
-    and, to leading order, unbiased -- so no bias correction is needed (cf.
-    Vestergaard's covariance-based estimator: unbiased *because* it admits
-    negative values). The cost is higher variance, since the x^2 weighting
-    amplifies tail noise.
+    linear in the data, so the noise averages out of its mean: to leading
+    order it is unbiased and needs no bias correction, and it can return a
+    *negative* variance (cf. Vestergaard's covariance-based estimator of D,
+    which can also return negative values). The cost is higher variance,
+    since the x^2 weighting amplifies tail noise.
 
     The estimator assumes the profile is centred near x = 0, which the
     simulation guarantees; a production implementation would track the
@@ -247,6 +246,8 @@ class MomentModel:
     def fit_variance(self, x: np.ndarray, y: np.ndarray) -> FrameFit:
         x = np.asarray(x, float)
         y = np.asarray(y, float)
+        if (unusable := _unusable_frame(x, y)) is not None:
+            return unusable
         n = x.size
         edge = max(1, int(self.edge_frac * n))
         baseline = 0.5 * (y[:edge].mean() + y[-edge:].mean())
@@ -261,7 +262,7 @@ class MomentModel:
 
         mean = float(np.sum(ys * x) / total)
         variance = float(np.sum(ys * (x - mean) ** 2) / total)
-        # No wall: the moment estimator is not bounded below.
+        # The moment estimator is not bounded below.
         return FrameFit(variance=variance, amplitude=amp,
                         at_wall=False, ok=True)
 
