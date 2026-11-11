@@ -12,6 +12,10 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-24.04
+    # Install the project as a built package, not an editable link to src/, so
+    # the tests import what ships.
+    env:
+      UV_NO_EDITABLE: "1"
     strategy:
       matrix:
         python-version: ["3.11", "3.12", "3.13"]
