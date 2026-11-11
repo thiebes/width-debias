@@ -6,21 +6,21 @@ Marc's noiseless diffmap, ask whether the folded-normal-corrected fitted
 variance matches the noiseless fit.
 
 This version uses the **joint (CNR, sigma^2) calibration** loaded from
-disk: ``output/calibration_marc_gaussian.npz`` built by
+disk: ``output/calibration_marc_gaussian_filtered.npz`` built by
 ``scripts/build_calibration.py`` with Marc's pixel geometry. The
-correction is subtractive folded-normal with fixed-point iteration on the
+correction is the ``subtract`` scheme with fixed-point iteration on the
 2-D lookup (handled automatically by ``BiasLookup.var_bias`` when a
 joint calibration is in place).
 
 Run from the repo root::
 
-    .venv/Scripts/python.exe scripts/marc_mn_trapping_plan_a.py
+    .venv/Scripts/python.exe experiments/mn-trapping/marc_mn_trapping_plan_a.py
 
 Outputs ``output/marc_mn_trapping_plan_a.{png,txt}``.
 
 Test B (Voigt fit on PSF-convolved diffmap) is gated on the existence of
-``output/calibration_marc_voigt.npz``; it is skipped if that calibration
-hasn't been built yet.
+``output/calibration_marc_voigt_filtered.npz``; it is skipped if that
+calibration hasn't been built yet.
 """
 from __future__ import annotations
 

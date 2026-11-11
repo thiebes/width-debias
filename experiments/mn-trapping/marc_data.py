@@ -7,7 +7,9 @@ For each Mn-doping case Marc supplied two files in ``data/``:
   * ``PL_var_<case>.dat`` -- a reduced table whose third column (index 2) is the
     spatial variance sigma^2(t), i.e. the second central moment of the PL
     profile. Confirmed to match each diffmap's own second moment to machine
-    precision, so it is the ground-truth width the correction must recover.
+    precision. It is emission-weighted (each population counts by its emitted
+    intensity), so it is the reference for the recorded profile's width, not
+    the carrier second moment.
 
 Geometry follows the Magdaleno et al. 2025 (0.51% Mn) reaction-diffusion model:
 ``L = 5 um`` over ``nbins = 250`` (dx = 0.0201 um), ``tmax = 25 ns`` over
@@ -44,7 +46,7 @@ CASES = {
 
 @dataclass
 class MarcCase:
-    """One doping case: geometry, noiseless map, and ground-truth variance."""
+    """One doping case: geometry, noiseless map, and PL-moment variance."""
     name: str
     x: np.ndarray          # spatial axis (centred), um
     t: np.ndarray          # time axis, ns
