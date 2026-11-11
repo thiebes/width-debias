@@ -107,7 +107,7 @@ calibration's geometry but does not check it against the data.
   units of sigma_0 applied to widths in micrometres subtracts a bias that is
   off by the square of the unit ratio (16 for sigma_0 = 0.25 μm).
 - **Drop frames below the floor.** The correction holds above a per-frame CNR
-  of about 1 (0.7 to 1.5 depending on shape). The validations set the weight of
+  of about 1 (0.89 to 1.51 depending on shape). The validations set the weight of
   frames below a per-frame CNR of 1.0 or 1.3 to zero before `fit_D`;
   `msd_and_weights(..., min_cnr=...)` does the same, and applies no floor
   unless asked. A CNR outside the calibrated grid takes the value at the
@@ -131,17 +131,20 @@ calibration's geometry but does not check it against the data.
   bounded and unbounded fits return the same widths and the same biased D
   (`experiments/estimator-comparison`). Below it, the bounded fit reflects
   rather than clips at the bound (`experiments/boundary-diagnostic`).
-- With the calibration's own Monte Carlo error included, 4 of 96 cells lie
-  beyond two combined standard errors of the reference (Gaussian, Voigt, and
-  generalized-Gaussian p = 1.5 and p = 4 profiles; D = 0.005, 0.02, and 0.1
-  sigma_0^2/tau; initial CNR 3 to 90; `slope_fit_check.txt`). The cells share
-  noise seeds across shapes and one calibration per shape, so the count is
+- With the calibration's own Monte Carlo error included, 4 of 140 cells lie
+  beyond two combined standard errors of the reference, about 6 expected by
+  chance (Gaussian, Voigt, and generalized-Gaussian p = 1.5 and p = 4
+  profiles; D = 0.005 to 0.1 sigma_0^2/tau; initial CNR 5 to 90; frames with
+  per-frame CNR >= 1), and the corrected D pooled over each shape's cells is
+  within 0.4 combined standard errors of the reference. The uncorrected fit
+  has 46 of 140. One calibration serves every cell of a shape, so the count is
   indicative rather than a test against a binomial null. At small D and low
   initial CNR the combined SE is large, so those cells constrain the bias only
   loosely (`experiments/dfree-calibration`).
-- The correction holds above a per-frame CNR of about 1 (0.7 to 1.5 depending on
-  shape), where the leading-order bias model `var_bias = A / CNR^2` itself
-  breaks (`experiments/correction-floor`). With single-exponential decay to
+- The correction holds above a per-frame CNR of about 1 (0.89 to 1.51 depending
+  on shape, for a residual within 0.3 of the end-point MSD at
+  D = 0.02 sigma_0^2/tau), where the leading-order bias model
+  `var_bias = A / CNR^2` itself breaks (`experiments/correction-floor`). With single-exponential decay to
   3 tau, every frame stays above the floor from an initial CNR of about 20.
 - It corrects the anomalous exponent of subdiffusive transport as well as D
   (`experiments/subdiffusive-alpha`, `experiments/nc-solid`).

@@ -157,7 +157,7 @@ def msd_and_weights(scheme: str, variance_row: np.ndarray,
     free-intercept slope, so fitting ``msd = corrected - corrected[0]`` with
     these weights is the same as fitting the corrected widths against time,
     whose points are independent. That fit reaches the Cramer-Rao bound on D
-    (0.98 to 1.08 x sqrt(CRLB) from CNR_0 21 on four shapes;
+    (0.95 to 1.10 x sqrt(CRLB) from CNR_0 21 on four shapes;
     ``experiments/crlb-precision/efficiency_check.py``), and ``fit_D``'s
     covariance SE is then the right one. MSD-point weights,
     ``1 / (Var_i + Var_0)`` with frame 0 at weight 0, treat the points as
