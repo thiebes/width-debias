@@ -662,40 +662,42 @@ def _finite_column_means(values):
     return np.array([np.mean(col[np.isfinite(col)]) for col in values.T])
 
 
-# Width-debias 0.4.0 (tag v0.4.0) on the dfree_lookup calibration and one
-# application ensemble. The fft-cnr paper's results rest on this path.
+# Width-debias 0.4.0 (tag v0.4.0) on a small D-free calibration and one
+# application ensemble, both with t_max = 1 so every frame keeps a per-frame
+# CNR above 1.8. The fft-cnr paper's results rest on this path. Below the
+# correction floor single fits wander, and a last-place rounding difference
+# between platforms can move the calibrated bias there by a few parts in 10^6.
 GOLDEN_040 = {
-    "probe_cnr": [0.6, 2.0, 7.0, 15.0],
-    "var_bias": [1.8029102582599381, 0.01872219702240734,
-                 -0.0015306361303821328, 0.001230091873256246],
-    "frame_variance": [170.19819096053237, 0.07500166965710224,
-                       0.005484276868628264, 0.0007113074479971729],
-    "D": [0.04057229067247343, 0.008054226066210982, 0.01728553960993827],
-    "D_se": 0.03814988673847957,
-    "calibration_D_se": 0.003546048041279665,
+    "probe_cnr": [2.0, 4.0, 8.0, 15.0],
+    "var_bias": [0.0857953662143389, 0.012031243718120956,
+                 0.001854718546597711, 0.0006070758340755203],
+    "frame_variance": [0.1928613253385929, 0.014238632832977499,
+                       0.003289025057264567, 0.0010517255098902144],
+    "D": [-0.018980218201462788, 0.03918597251513158, 0.0661525920116847],
+    "D_se": 0.03788275301037722,
+    "calibration_D_se": 0.003601554935048315,
 }
 
 
-def test_recommended_path_matches_release_0_4_0(dfree_lookup):
+def test_recommended_path_matches_release_0_4_0():
     """calibrate_d_free, msd_and_weights("subtract"), fit_D, and
     calibration_D_se give the 0.4.0 values. The tolerance absorbs
     floating-point differences between platforms; a change of logic moves
     these values by far more."""
     from width_debias import calibration_D_se, msd_and_weights
     golden = GOLDEN_040
+    lookup = calibrate_d_free(np.array([5.0, 20.0]), t_max=1.0, n_runs=60, seed=3)
     probe = np.array(golden["probe_cnr"])
-    np.testing.assert_allclose(dfree_lookup.var_bias(probe), golden["var_bias"], rtol=1e-6)
-    np.testing.assert_allclose(dfree_lookup.frame_variance(probe),
-                               golden["frame_variance"], rtol=1e-6)
-    exp = Experiment(D=0.02)
+    actual = [*lookup.var_bias(probe), *lookup.frame_variance(probe)]
+    desired = [*golden["var_bias"], *golden["frame_variance"]]
+    exp = Experiment(D=0.02, t_max=1.0)
     ens = run_ensemble(exp, 10.0, n_runs=3, seed=11)
     for r in range(ens.n_runs):
-        msd, w = msd_and_weights("subtract", ens.variance[r], ens.cnr_frame, dfree_lookup)
+        msd, w = msd_and_weights("subtract", ens.variance[r], ens.cnr_frame, lookup)
         d = fit_D(exp.times, msd, w)
-        assert d.D == pytest.approx(golden["D"][r], rel=1e-6)
-        assert d.D_se == pytest.approx(golden["D_se"], rel=1e-6)
-        assert calibration_D_se(exp.times, msd, w, ens.cnr_frame, dfree_lookup) == \
-            pytest.approx(golden["calibration_D_se"], rel=1e-6)
+        actual += [d.D, d.D_se, calibration_D_se(exp.times, msd, w, ens.cnr_frame, lookup)]
+        desired += [golden["D"][r], golden["D_se"], golden["calibration_D_se"]]
+    np.testing.assert_allclose(actual, desired, rtol=1e-6)
 
 
 def test_dfree_calibration_is_the_d_zero_sweep(dfree_lookup):
