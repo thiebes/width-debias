@@ -4,13 +4,15 @@
 
 The core proof-of-concept: show the low-CNR noise bias in the extracted
 diffusion coefficient D, and that the noise-bias correction removes it. One
-two-panel figure per profile model (truncation diagnostic; bias curves
-`mean(D_hat)/D_true` vs CNR0 for OLS, inverse-variance, and folded-normal).
+three-panel figure per profile model, with a caption (the fraction of MSD
+points at or below zero and the MSD skewness against per-frame CNR; bias
+curves `mean(D_hat)/D_true` vs CNR0 for OLS, inverse-variance, and
+`subtract`).
 
 ## Contents
 
-- `poc_demo.py [profile_model]` -- runs the two-panel proof-of-concept for a
-  single profile model (`gaussian` default, or `voigt` / `generalized_gaussian`).
+- `poc_demo.py [profile_model]` -- runs the three-panel proof-of-concept for a
+  single profile model (`gaussian` default, or `voigt` / `generalized_gaussian:<p>`).
 
 ## Data
 
@@ -37,24 +39,26 @@ folder are the current results.
 D = 0.02 σ₀²/τ, 400 runs per CNR₀. The calibration is D-free
 (`calibrate_d_free` at D = 0, 7 CNR₀ points × 400 runs), with calibration and
 evaluation seeds disjoint and offset by 10⁶ per shape. Each table gives the
-folded-normal cell's combined SE (evaluation and calibration). No folded-normal
+`subtract` cell's combined SE (evaluation and calibration). No `subtract`
 cell lies beyond 2 combined SE on any shape (0 of 7 each). Inverse-variance
 weighting leaves 1 (Gaussian), 2 (Voigt), 4 (p = 1.5), and 0 (p = 4) of 7 cells
 beyond 2 evaluation SE. The mean `|mean(D_hat)/D_ref - 1|` over the sweep is
-0.291 folded-normal against 0.368 inverse-variance (Gaussian), 0.093 against
+0.291 `subtract` against 0.368 inverse-variance (Gaussian), 0.093 against
 0.279 (Voigt), 0.081 against 0.261 (p = 1.5), and 0.043 against 0.043 (p = 4);
 Monte Carlo error alone would give 0.143, 0.099, 0.118, and 0.047 for
-folded-normal. The Gaussian mean is set by the CNR₀ 5 cell, 2.67 ± 0.86
+`subtract`. The Gaussian mean is set by the CNR₀ 5 cell, 2.67 ± 0.86
 combined SE (1.9 SE from 1). OLS is inflated 46-fold at CNR₀ 5
-for the Gaussian. The p = 4 OLS fit reads low at CNR₀ ≤ 21 (0.13 at CNR₀ 5),
-and the p = 4 bias is small enough that inverse-variance weighting alone
-leaves no cell beyond 2 SE.
+for the Gaussian. The p = 4 OLS fit reads low at CNR₀ ≤ 21 (0.13 at CNR₀ 5,
+negative at CNR₀ 8), and the p = 4 bias is small enough that inverse-variance
+weighting alone leaves no cell beyond 2 SE.
 
 Tables: `poc_demo_gaussian.txt`, `poc_demo_voigt.txt`,
 `poc_demo_generalized_gaussian_p1.5.txt`, `poc_demo_generalized_gaussian_p4.txt`.
 `poc_demo_generalized_gaussian.txt` and its figure are a p = 2 run (a Gaussian
 profile with the generalized-Gaussian fitter's tighter `var_max`), included for
-reference. Figures: `poc_demo*.png`.
+reference. Figures: `poc_demo.png` (Gaussian), `poc_demo_voigt.png`,
+`poc_demo_generalized_gaussian_p1.5.png`, `poc_demo_generalized_gaussian_p4.png`,
+each with a `_caption.md`.
 
 ## Depends on
 
@@ -63,4 +67,4 @@ reference. Figures: `poc_demo*.png`.
 
 ## See also
 
-`docs/DERIVATION.md` (folded-normal derivation).
+`docs/DERIVATION.md` (derivation of the bias and its correction).
