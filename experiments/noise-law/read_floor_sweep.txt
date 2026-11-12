@@ -3,44 +3,44 @@ MSD-slope bias vs detector read floor (pure shot -> pure white)
   calibration: 30 CNR_0 in [2, 80], 1000 runs/cell
   evaluation:  8 CNR_0 in [3, 60], 1000 runs/cell
   read floors (counts): [0.0, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0]
-  workers = 7
+  workers = 4
 
 Building the default white calibration at D = 0 ...
 
 [read =   0.0] building matched calibration ...
-  OLS raw 0.194 | folded matched 0.036 | folded white-cal 0.343
+  OLS raw 0.194 | subtract matched 0.024 | subtract white-cal 0.271
 
 [read =   1.0] building matched calibration ...
-  OLS raw 2.063 | folded matched 0.039 | folded white-cal 0.317
+  OLS raw 2.063 | subtract matched 0.025 | subtract white-cal 0.221
 
 [read =   2.0] building matched calibration ...
-  OLS raw 6.840 | folded matched 0.049 | folded white-cal 0.294
+  OLS raw 6.840 | subtract matched 0.014 | subtract white-cal 0.220
 
 [read =   4.0] building matched calibration ...
-  OLS raw 14.434 | folded matched 0.243 | folded white-cal 0.432
+  OLS raw 14.434 | subtract matched 0.127 | subtract white-cal 0.208
 
 [read =   8.0] building matched calibration ...
-  OLS raw 20.713 | folded matched 1.653 | folded white-cal 0.302
+  OLS raw 20.713 | subtract matched 0.116 | subtract white-cal 0.337
 
 [read =  16.0] building matched calibration ...
-  OLS raw 23.871 | folded matched 1.085 | folded white-cal 1.023
+  OLS raw 23.871 | subtract matched 1.272 | subtract white-cal 0.273
 
 [read =  32.0] building matched calibration ...
-  OLS raw 26.028 | folded matched 1.102 | folded white-cal 1.768
+  OLS raw 26.028 | subtract matched 0.972 | subtract white-cal 0.349
 
 [white limit] evaluating white data with the white calibration ...
 
 ========================================================================
 mean |mean(D_hat)/D_true - 1| over the CNR_0 sweep, vs read floor
 ========================================================================
-    read    OLS raw   folded matched   folded white-cal
-     0.0      0.194            0.036              0.343
-     1.0      2.063            0.039              0.317
-     2.0      6.840            0.049              0.294
-     4.0     14.434            0.243              0.432
-     8.0     20.713            1.653              0.302
-    16.0     23.871            1.085              1.023
-    32.0     26.028            1.102              1.768
-   white     18.647                -              0.217
+    read    OLS raw subtract matched subtract white-cal
+     0.0      0.194            0.024              0.271
+     1.0      2.063            0.025              0.221
+     2.0      6.840            0.014              0.220
+     4.0     14.434            0.127              0.208
+     8.0     20.713            0.116              0.337
+    16.0     23.871            1.272              0.273
+    32.0     26.028            0.972              0.349
+   white     18.647                -              0.098
 
 Saved read_floor_sweep.png

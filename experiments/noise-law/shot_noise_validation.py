@@ -24,7 +24,7 @@ For each noise law this script asks the two questions an expert panel raised:
 
 Everything runs through the same audited calibrate/evaluate path (`validate.py`)
 with only the noise law swapped (`width_debias.noise`), so the comparison
-isolates the noise model. The metric is mean(D_hat)/D_true for the folded-normal
+isolates the noise model. The metric is mean(D_hat)/D_true for the ``subtract``
 scheme across an initial-CNR sweep; uncorrected OLS is the raw bias to remove.
 
 Run from the repository root (serial by default; set WIDTH_DEBIAS_WORKERS to
@@ -75,7 +75,7 @@ def _mad(curve: np.ndarray) -> float:
 
 
 def main() -> None:
-    print("Folded-normal correction across transport-microscopy noise laws")
+    print("The subtract correction across transport-microscopy noise laws")
     print(f"  D_true = {D_TRUE} sigma_0^2/tau")
     print(f"  calibration: {CAL_CNR0.size} CNR_0 in [2, 80], {N_CAL} runs/cell")
     print(f"  evaluation:  {EVAL_CNR0.size} CNR_0 in [3, 60], {N_EVAL} runs/cell")
@@ -111,7 +111,7 @@ def main() -> None:
     for key, _model, note in NOISE_CASES:
         r = rows[key]
         print(f"\n[{key}]  {note}")
-        print("  CNR_0 | OLS raw | folded (matched calib) | folded (default "
+        print("  CNR_0 | OLS raw | subtract (matched cal) | subtract (default "
               "white calib)")
         for i, c in enumerate(EVAL_CNR0):
             print(f"  {c:6.1f} | {r['ols'][i]:7.2f} | "
@@ -120,16 +120,16 @@ def main() -> None:
     print("\n" + "=" * 72)
     print("mean |bias - 1| over the sweep")
     print("=" * 72)
-    print(f"  {'noise law':<10} {'OLS raw':>9} {'folded matched':>16} "
-          f"{'folded white-calib':>20}")
+    print(f"  {'noise law':<10} {'OLS raw':>9} {'subtract matched':>16} "
+          f"{'subtract white-calib':>20}")
     for key, _model, _note in NOISE_CASES:
         r = rows[key]
         print(f"  {key:<10} {_mad(r['ols']):>9.3f} "
               f"{_mad(r['folded_matched']):>16.3f} "
               f"{_mad(r['folded_white']):>20.3f}")
-    print("\nReading: 'folded matched' small => the correction works under that "
+    print("\nReading: 'subtract matched' small => the correction works under that "
           "law given a matched calibration (CORRECTNESS).")
-    print("'folded white-calib' close to 'folded matched' => the default white "
+    print("'subtract white-calib' close to 'subtract matched' => the default white "
           "calibration transfers to that law (ROBUSTNESS); far => recalibrate.")
     print("Real techniques: stroboSCAT / transient absorption ~ white; "
           "TCSPC / direct PL imaging ~ shot/Poisson.")
