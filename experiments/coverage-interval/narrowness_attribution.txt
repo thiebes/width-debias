@@ -1,0 +1,66 @@
+Narrowness attribution -- why D_se / SD(D_hat) is about 0.97
+D_true = 0.02 sigma0^2/tau, Gaussian, standard geometry; slope weights 1/frame_variance from the D-free lookup
+calibration: shared cache calibration_subdiffusive.npz (coverage_check.load_calibration)
+measured/lookup = ensemble Var(sigma_hat^2) / lookup frame_variance at the frame's CNR
+
+CNR0 10.3  (3000 runs, seed 555000; 0 non-finite realisations dropped)
+     t/tau  sigma^2  per-frame CNR  measured/lookup  (sigma^2)^1.5
+      0.00    1.000          10.30            0.998          1.000
+      0.27    1.011           7.84            1.013          1.016
+      0.55    1.022           5.97            0.972          1.033
+      0.82    1.033           4.54            1.050          1.049
+      1.09    1.044           3.46            1.114          1.066
+      1.36    1.055           2.63            1.086          1.083
+      1.64    1.065           2.01            1.016          1.100
+      1.91    1.076           1.53            1.051          1.117
+      2.18    1.087           1.16            1.288          1.134
+      2.45    1.098           0.88            1.415          1.151
+      2.73    1.109           0.67            0.711          1.168
+      3.00    1.120           0.51            0.952          1.185
+  D_se from the lookup weights           0.03587 sigma0^2/tau
+  D_se/SD, sigma^3 scaling of the lookup 0.971  (no Monte Carlo noise)
+  D_se/SD, measured per-frame variances  0.972
+  D_se/SD, realised                      0.982 +/- 0.013
+  largest |correlation| between frames   0.044
+
+CNR0 34.3  (3000 runs, seed 556000; 0 non-finite realisations dropped)
+     t/tau  sigma^2  per-frame CNR  measured/lookup  (sigma^2)^1.5
+      0.00    1.000          34.30            0.976          1.000
+      0.27    1.011          26.11            1.071          1.016
+      0.55    1.022          19.88            1.025          1.033
+      0.82    1.033          15.13            1.019          1.049
+      1.09    1.044          11.52            1.040          1.066
+      1.36    1.055           8.77            1.072          1.083
+      1.64    1.065           6.68            1.144          1.100
+      1.91    1.076           5.08            1.111          1.117
+      2.18    1.087           3.87            1.110          1.134
+      2.45    1.098           2.95            1.144          1.151
+      2.73    1.109           2.24            1.056          1.168
+      3.00    1.120           1.71            1.143          1.185
+  D_se from the lookup weights           0.00952 sigma0^2/tau
+  D_se/SD, sigma^3 scaling of the lookup 0.965  (no Monte Carlo noise)
+  D_se/SD, measured per-frame variances  0.972
+  D_se/SD, realised                      0.968 +/- 0.013
+  largest |correlation| between frames   0.044
+
+CNR0 90  (3000 runs, seed 557000; 0 non-finite realisations dropped)
+     t/tau  sigma^2  per-frame CNR  measured/lookup  (sigma^2)^1.5
+      0.00    1.000          90.00            1.022          1.000
+      0.27    1.011          68.52            0.985          1.016
+      0.55    1.022          52.16            0.972          1.033
+      0.82    1.033          39.71            1.023          1.049
+      1.09    1.044          30.23            1.057          1.066
+      1.36    1.055          23.02            1.069          1.083
+      1.64    1.065          17.52            1.055          1.100
+      1.91    1.076          13.34            1.073          1.117
+      2.18    1.087          10.16            1.080          1.134
+      2.45    1.098           7.73            1.085          1.151
+      2.73    1.109           5.89            1.202          1.168
+      3.00    1.120           4.48            1.320          1.185
+  D_se from the lookup weights           0.00360 sigma0^2/tau
+  D_se/SD, sigma^3 scaling of the lookup 0.964  (no Monte Carlo noise)
+  D_se/SD, measured per-frame variances  0.969
+  D_se/SD, realised                      0.991 +/- 0.013
+  largest |correlation| between frames   0.052
+
+Exponent of measured/lookup = (sigma^2/sigma0^2)^k over 33 frames with per-frame CNR >= 1: k = 1.36 +/- 0.13 (sigma^3 scaling: k = 1.5)
