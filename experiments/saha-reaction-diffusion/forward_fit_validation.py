@@ -23,8 +23,8 @@ emission second moment, so:
 
 * feeding it the moment-estimator measurement (which is the emission second
   moment, approximately unbiased) recovers the true De, Df and the carrier alpha;
-* feeding it the Gaussian-fit-plus-folded-normal measurement (which converges to
-  the noise-free Gaussian fit, not the emission moment, because the folded-normal
+* feeding it the Gaussian-fit-plus-correction measurement (which converges to
+  the noise-free Gaussian fit, not the emission moment, because the noise-bias
   correction removes the noise bias but not the shape gap) recovers biased De, Df
   -- the shape gap propagates into the transport parameters.
 
@@ -36,7 +36,7 @@ Run from the repository root::
 
     .venv/Scripts/python.exe mc_experiments/saha_reaction_diffusion/forward_fit_validation.py
 
-The Gaussian-plus-folded comparison needs the 2-D calibration
+The Gaussian-plus-correction comparison needs the 2-D calibration
 `output/calibration_saha.npz` (see `nonfickian_validation.py`); without it the
 moment path and the noise-free check still run.
 """
@@ -67,7 +67,7 @@ PIXEL_X = np.linspace(-HALF_WINDOW_UM, HALF_WINDOW_UM, N_PIXELS)
 N_FRAMES = 12
 
 CALIBRATION_PATH = os.path.join("output", "calibration_saha.npz")
-CNR_FLOOR = 1.3            # folded-normal reliability floor (per-frame CNR)
+CNR_FLOOR = 1.3            # correction reliability floor (per-frame CNR)
 MOMENT_CNR_FLOOR = 3.0     # moment-estimator stability floor
 
 GAUSS = GaussianModel()
@@ -178,7 +178,7 @@ def stage1_measurements(bed: Bed, cnr0: float, model: BiasLookup | None,
 
     Returns per-estimator (mean MSD, MSD standard error, per-frame keep mask).
     The moment path returns the emission second moment (its target); the
-    Gaussian+folded path returns the noise-debiased Gaussian fit.
+    Gaussian+subtract path returns the noise-debiased Gaussian fit.
     """
     noise_sigma = bed.peak[0] / cnr0
     cnr_frame = bed.peak / noise_sigma
@@ -344,12 +344,12 @@ def main() -> None:
                               meas["moment_keep"])
         _report_fit("moment (noisy)", fit_mom, bed, A, args.power)
 
-        # Gaussian + folded-normal: noise-debiased, but the shape gap remains, so
+        # Gaussian + subtract: noise-debiased, but the shape gap remains, so
         # the observable does not match the model -> biased De/Df.
         if model is not None:
             fit_gf = forward_fit(grid, meas["gauss_msd"], meas["gauss_se"],
                                  meas["gauss_keep"])
-            _report_fit("Gaussian+folded (noisy)", fit_gf, bed, A, args.power)
+            _report_fit("Gaussian+subtract (noisy)", fit_gf, bed, A, args.power)
 
 
 if __name__ == "__main__":

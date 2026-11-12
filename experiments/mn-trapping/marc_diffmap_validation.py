@@ -1,41 +1,44 @@
 """Validate the per-frame correction on Marc Melendez's Mn diffusion maps.
 
-Marc supplied noiseless diffusion maps and ground-truth variance curves for four
-Mn-doping cases (undoped, 0.51%, 0.81%, 4.04% Mn) from the Magdaleno et al. 2025
-reaction-diffusion model. The maps are multi-population: a free-exciton
-population and two trapped populations of different width emit independently, so
-the photoluminescence is a linear sum of population terms and its second moment
-is an intensity-weighted average -- the apparent (effective) transport.
+Marc supplied noiseless diffusion maps and variance curves for four Mn-doping
+cases (undoped, 0.51%, 0.81%, 4.04% Mn) from the Magdaleno et al. 2025
+reaction-diffusion model. The maps are multi-population: free excitons and two
+trapped populations of different width emit independently, so the
+photoluminescence (PL) is a linear sum of population terms, each weighted by
+its emission rate per carrier (q_i ν_i in ``diffusion_map.py``; for the 0.51% Mn
+defaults 0.12, 0.0022, and 0.10 /ns for free, Mn-trapped, and defect-trapped).
 
-Per docs/VALIDATION_DESIGN.md the truth is the carrier (transport) second
-moment, supplied here as ``case.var_true``. Because the emission is linear in
-the populations, that recorded second moment equals the carrier moment, so no
-forward-model stage is needed (unlike the nonlinear Saha bed); the
-width-extraction stage alone can reach it -- but only with the right estimator.
-The profile is a mixture, so no single peaked shape matches it, and the
-framework routes this bed to the moment estimator. Two paths are reported:
+The reference is ``case.var_true``, the second moment of the PL profile. It is
+emission-weighted: each population counts by its emitted intensity, not by its
+carrier number, so it equals the carrier second moment only when every
+population has the same emission rate per carrier, which is not the case here.
+Reaching the carrier moment needs the forward model (as on the Saha bed); this
+script scores the width-extraction stage against the PL moment only. The
+profile is a mixture, so no single peaked shape matches it. Two paths are
+reported:
 
-  * **Moment estimator -- the in-principle carrier path.** The non-truncated
-    second moment closes the shape gap by construction (its noiseless value
-    equals ``case.var_true``), so it is scored directly against the carrier
-    moment. It takes no noise-bias correction (it is linear in the data, so
-    unbiased to leading order); the cost is
-    variance. On these maps that cost is severe -- under realistic noise the
-    cross-seed SD reaches order 1e4-1e5 um^2 and the NaN fraction ~0.2, so the
-    bare moment is not usable here. The practical carrier-recovery path for this
-    mixture is therefore the forward fit of the reaction-diffusion model
-    (paper-scope, as on the nonlinear Saha bed), not the bare moment.
-  * **Single-shape fits + folded-normal.** A Gaussian, Voigt, or
+  * **Moment estimator.** The second moment, with no lower bound on the width,
+    closes the shape gap to the PL moment by construction (its noiseless value
+    equals ``case.var_true``). It is not corrected here; its cost is variance.
+    On these maps that cost is severe -- under realistic noise the cross-seed
+    SD reaches order 1e5 μm² and the NaN fraction about 0.2, so the bare moment
+    is not usable here. The practical path to the carrier distribution for this
+    mixture is the forward fit of the reaction-diffusion model (paper-scope, as
+    on the Saha bed), not the bare moment.
+  * **Single-shape fits + correction.** A Gaussian, Voigt, or
     generalized-Gaussian fit, each with its joint (CNR, sigma^2) calibration on
-    Marc's geometry. Scored two ways: ``|corrected - noiseless fit|`` isolates
-    the noise (truncation) correction, which it removes; ``|corrected -
-    var_true|`` shows the residual shape gap to the carrier moment, which the
+    Marc's geometry. The generalized-Gaussian arm is
+    ``GeneralizedGaussianModel()`` at its default p = 2, a Gaussian profile
+    fitted by scale (its calibration was also built at p = 2), so it differs
+    from the Gaussian arm only in its fit bounds and calibration. Scored two
+    ways: ``|corrected - noiseless fit|`` isolates the noise correction;
+    ``|corrected - var_true|`` adds the shape gap to the PL moment, which the
     correction does not close. The noiseless-fit-vs-var_true shape gap is
     tabulated across estimators.
 
 Run from the repository root::
 
-    .venv/Scripts/python.exe scripts/marc_diffmap_validation.py
+    .venv/Scripts/python.exe experiments/mn-trapping/marc_diffmap_validation.py
 
 Outputs ``output/marc_diffmap_validation.{png,txt}``.
 """
@@ -83,7 +86,7 @@ ESTIMATORS = [
     ("voigt", "Voigt", DICE_GOLD,
      "calibration_marc_voigt_filtered.npz",
      VoigtModel(gamma=VOIGT_GAMMA).fit_variance),
-    ("gengauss", "generalized-Gaussian", DICE_GREEN,
+    ("gengauss", "gen. Gaussian (p = 2)", DICE_GREEN,
      "calibration_marc_gengauss_filtered.npz",
      GeneralizedGaussianModel().fit_variance),
 ]
@@ -101,7 +104,7 @@ def fit_each_row(x: np.ndarray, profiles: np.ndarray, fit_fn) -> np.ndarray:
 
 def validation_pass(case, trunc: BiasLookup, fit_fn, cnr0: float,
                     n_seeds: int):
-    """Per-frame raw and folded-normal-corrected variance, averaged over seeds."""
+    """Per-frame raw and corrected variance, averaged over seeds."""
     peak0 = float(case.diffmap[0].max())
     noise_sigma = peak0 / cnr0
     cnr_frame = case.diffmap.max(axis=1) / noise_sigma
@@ -129,15 +132,17 @@ def main() -> None:
     cases = load_all()
     lines = [
         "=" * 72,
-        "Marc Mn diffusion-map validation -- carrier-moment truth (var_true)",
-        "Moment estimator = carrier-recovery path; single-shape fits + folded",
-        "= noise-debiased but shape-gap-limited.  (joint 2-D calibration)",
+        "Marc Mn diffusion-map validation -- reference: PL second moment",
+        "(var_true, emission-weighted; not the carrier moment).",
+        "Moment estimator closes the shape gap to the PL moment; single-shape",
+        "fits + correction = noise-debiased but shape-gap-limited.",
+        "Calibration: joint (CNR, sigma^2) grid per estimator (named below).",
         "=" * 72,
-        f"n_seeds per CNR_0: {N_SEEDS};  reliable regime: per-frame "
-        f"CNR >= {FLOOR_CNR}",
+        f"n_seeds per CNR_0: {N_SEEDS} (seed int(CNR_0) * 1000 + s);  "
+        f"reliable regime: per-frame CNR >= {FLOOR_CNR}",
         "Noise correction = |corrected - noiseless fit| (isolates distortion 1).",
-        "Shape gap = mean|noiseless fit - true 2nd moment (carrier)| per frame.",
-        "Carrier residual = |corrected - var_true| (total error vs the truth).",
+        "Shape gap = mean|noiseless fit - PL 2nd moment| per frame.",
+        "PL residual = |corrected - var_true| (noise and shape gap together).",
         "",
     ]
 
@@ -162,11 +167,11 @@ def main() -> None:
             gap = _residual(nf, case.var_true)
             shape_gaps[(key, case.name)] = gap
             lines.append(f"-- {case.name}: noiseless fit "
-                         f"[{np.nanmin(nf):.4g}, {np.nanmax(nf):.4g}] um^2, "
-                         f"shape gap {gap:.4g} um^2 "
-                         f"(true 2nd-moment max {case.var_true.max():.4g})")
+                         f"[{np.nanmin(nf):.4g}, {np.nanmax(nf):.4g}] μm², "
+                         f"shape gap {gap:.4g} μm² "
+                         f"(PL 2nd-moment max {case.var_true.max():.4g})")
             lines.append("   CNR_0 | min CNR | frames>=1 | raw/cor vs noiseless "
-                         "fit | cor vs carrier moment")
+                         "fit | cor vs PL moment")
             for cnr0 in CNR_GRID:
                 raw, cor, cnr_frame = validation_pass(
                     case, trunc, fit_fn, cnr0, N_SEEDS)
@@ -180,20 +185,20 @@ def main() -> None:
                              f"{r_raw:8.4g} / {r_cor:8.4g} | {r_cor_truth:8.4g}")
             lines.append("")
 
-    # --- MomentModel: the non-truncated estimator -------------------------
-    # The second central moment IS the true-transport width by construction, so
-    # it closes the shape gap -- but it takes no noise-bias correction (it is
-    # linear in the data) and pays in noise variance, which the x^2 weighting amplifies in
-    # the tails. We report the cross-seed SD (instability) and the NaN fraction
-    # (frames where the baseline-subtracted total goes <= 0, i.e. unusable) as
-    # the cost of that gap-closing.
-    MOMENT_KEY, MOMENT_LABEL, MOMENT_COLOR = "moment", "second moment", "#9467bd"
+    # --- MomentModel: the estimator with no lower bound --------------------
+    # The second central moment equals the PL moment by construction, so it
+    # closes the shape gap -- but it is not corrected here and pays in noise
+    # variance, which the x^2 weighting amplifies in the tails. We report the
+    # cross-seed SD (instability) and the NaN fraction (frames where the
+    # baseline-subtracted total goes <= 0, i.e. unusable) as the cost of that
+    # gap-closing.
+    MOMENT_KEY, MOMENT_LABEL, MOMENT_COLOR = "moment", "second moment", "#555555"
     moment = MomentModel()
     noiseless_fits[MOMENT_KEY] = {}
     lines.append("#" * 72)
-    lines.append(f"### Estimator: {MOMENT_LABEL}  -- the carrier-recovery path"
-                 " (NON-truncated, no folded correction)")
-    lines.append("   Scored against var_true (carrier moment); cost is variance"
+    lines.append(f"### Estimator: {MOMENT_LABEL}  -- closes the shape gap to the"
+                 " PL moment (no lower bound, no correction)")
+    lines.append("   Scored against var_true (PL moment); cost is variance"
                  " (cross-seed SD, NaN frac).")
     lines.append("#" * 72)
     for case in cases:
@@ -201,8 +206,8 @@ def main() -> None:
         noiseless_fits[MOMENT_KEY][case.name] = nm
         shape_gaps[(MOMENT_KEY, case.name)] = _residual(nm, case.var_true)
         lines.append(f"-- {case.name}: noiseless moment "
-                     f"[{np.nanmin(nm):.4g}, {np.nanmax(nm):.4g}] um^2, "
-                     f"shape gap {shape_gaps[(MOMENT_KEY, case.name)]:.4g} um^2")
+                     f"[{np.nanmin(nm):.4g}, {np.nanmax(nm):.4g}] μm², "
+                     f"shape gap {shape_gaps[(MOMENT_KEY, case.name)]:.4g} μm²")
         lines.append("   CNR_0 | min CNR | frames>=1 | mean|noisy - var_true| | "
                      "cross-seed SD | NaN frac")
         n_frames = case.diffmap.shape[0]
@@ -234,47 +239,55 @@ def main() -> None:
         table_cols.append((MOMENT_KEY, MOMENT_LABEL))
     if table_cols:
         lines.append("=" * 72)
-        lines.append("SHAPE GAP (um^2) -- mean|noiseless fit - true 2nd moment|,"
+        lines.append("SHAPE GAP (μm²) -- mean|noiseless fit - PL 2nd moment|,"
                      " per estimator")
         lines.append("=" * 72)
-        header = "  case            " + "".join(f"{lbl[:12]:>14}"
+        header = "  case            " + "".join(f"{lbl[:21]:>23}"
                                                 for _k, lbl in table_cols)
         lines.append(header)
         for case in cases:
             row = f"  {case.name:14s}" + "".join(
-                f"{shape_gaps[(k, case.name)]:14.4g}" for k, _lbl in table_cols)
+                f"{shape_gaps[(k, case.name)]:23.4g}" for k, _lbl in table_cols)
             lines.append(row)
         lines.append("")
 
     report = "\n".join(lines)
     print(report)
-    (OUTPUT / "marc_diffmap_validation.txt").write_text(report)
+    (OUTPUT / "marc_diffmap_validation.txt").write_text(report + "\n",
+                                                        encoding="utf-8")
 
     # --- Figure: shape gap per estimator across the doping series ---------
     if present:
-        fig, axes = plt.subplots(2, 2, figsize=(8.4, 6.2), sharex=True)
-        for ax, case in zip(axes.ravel(), cases):
+        inch = 1 / 2.54
+        font = 8
+        fig, axes = plt.subplots(2, 2, figsize=(17 * inch, 12.5 * inch),
+                                 sharex=True, layout="constrained")
+        fig.patch.set_alpha(0)
+        for letter, ax, case in zip("abcd", axes.ravel(), cases):
+            ax.set_facecolor("white")
             ax.plot(case.t, case.var_true, color="k", lw=1.6, ls=":",
-                    label="true 2nd moment")
+                    label="PL 2nd moment")
             for key, label, color, _f, _fn in present:
+                # The p = 2 fit equals the Gaussian one; dash it so both show.
+                ls = (0, (4, 3)) if key == "gengauss" else "-"
                 ax.plot(case.t, noiseless_fits[key][case.name], color=color,
-                        lw=1.7, label=f"{label} fit")
+                        lw=2, ls=ls, label=f"{label} fit")
             if MOMENT_KEY in noiseless_fits:
                 ax.plot(case.t, noiseless_fits[MOMENT_KEY][case.name],
                         color=MOMENT_COLOR, lw=1.5, ls="--",
-                        label="second moment")
-            ax.set_title(case.name, fontsize=10)
-            ax.tick_params(direction="in", which="both", top=True, right=True)
+                        label="moment estimator")
+            ax.text(0.03, 0.95, f"({letter})", transform=ax.transAxes,
+                    va="top", fontsize=font, fontweight="bold")
+            ax.text(0.12, 0.95, case.name, transform=ax.transAxes,
+                    va="top", fontsize=font)
+            ax.tick_params(direction="in", which="both", top=False,
+                           right=False, labelsize=font)
             ax.set_ylim(0, max(case.var_true.max() * 1.2, 0.03))
-            ax.grid(True, alpha=0.2)
-        axes[0, 0].legend(fontsize=7, loc="upper left")
+        axes[1, 1].legend(fontsize=font, loc="lower right", frameon=False)
         for ax in axes[1, :]:
-            ax.set_xlabel("time  (ns)")
+            ax.set_xlabel(r"$t\,(\mathrm{ns})$", fontsize=font)
         for ax in axes[:, 0]:
-            ax.set_ylabel(r"variance  $\sigma^2(t)$  (um$^2$)")
-        fig.suptitle("Estimator shape gap on Marc's diffusion maps "
-                     "(noiseless fits vs true 2nd moment)", fontsize=12)
-        fig.tight_layout()
+            ax.set_ylabel(r"$\sigma^2(t)\,(\mu\mathrm{m}^2)$", fontsize=font)
         path = OUTPUT / "marc_diffmap_validation.png"
         fig.savefig(path, dpi=300)
         plt.close(fig)

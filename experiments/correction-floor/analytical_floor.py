@@ -1,6 +1,6 @@
 """Locate the analytical floor of the noise-bias correction.
 
-In the folded-normal model the calibrated `var_bias(CNR)` is the variance
+In the model of docs/DERIVATION.md the calibrated `var_bias(CNR)` is the variance
 of the width estimator, which follows a localization-CRLB scaling at high
 CNR:
 

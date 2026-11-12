@@ -1,5 +1,5 @@
 ==============================================================================
-Subdiffusive-alpha recovery -- folded-normal, gaussian fit
+Subdiffusive-alpha recovery -- subtract, gaussian fit
 ==============================================================================
 bed: AnomalousExperiment, MSD = 2 D t^alpha, matched end-point MSD = 0.12 sigma0^2 (L_D/FWHM_0 ~ 0.15)
 per-frame CNR = cnr0 * exp(-t/tau); floor cut at CNR >= 1.0; design floor cnr0 >= exp(t_max/tau) = 20.1

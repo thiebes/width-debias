@@ -34,7 +34,7 @@ correction.
 
 Under noise it then checks the first stage two ways:
 
-* the moment estimator (non-truncated, no folded-normal) recovers the
+* the moment estimator (no lower bound, no correction) recovers the
   recorded-emission moment where the per-frame contrast-to-noise allows it
   (it is unstable below CNR ~ 3);
 * a Gaussian fit plus the noise-bias correction recovers the *noise-free
@@ -51,7 +51,7 @@ validation belongs on a dedicated single-population point-spread bed, not on thi
 mixture (see `docs/VALIDATION_DESIGN.md`).
 
 Build the 2-D (CNR, sigma^2) calibration first (needed only for the Gaussian +
-folded-normal first-stage diagnostic; the moment path and the gap report need no
+subtract first-stage diagnostic; the moment path and the gap report need no
 calibration)::
 
     .venv/Scripts/python.exe scripts/build_calibration.py \\
@@ -106,7 +106,7 @@ CALIBRATION_PATH = os.path.join("output", "calibration_saha.npz")
 GAUSS = GaussianModel()
 MOMENT = MomentModel()
 
-# Correction-reliability floor for the Gaussian + folded-normal diagnostic. The
+# Correction-reliability floor for the Gaussian + subtract diagnostic. The
 # diagnostic (diagnose_overcorrection.py) shows the 2-D var_bias matches the
 # actual per-frame fit bias for per-frame CNR >~ 1.3 but over-subtracts in the
 # band CNR ~ 0.6-1.3; frames below 1.3 are flagged and dropped. The moment
@@ -236,7 +236,7 @@ def first_stage_trajectories(regime: Regime, cnr0: float,
     Returns a dict of mean trajectories over realisations:
 
     * ``moment`` -- the non-truncated moment estimator (targets the
-      recorded-emission moment; no folded-normal);
+      recorded-emission moment; no correction);
     * ``gauss_folded`` -- the Gaussian fit with the noise-bias correction
       (targets the noise-free Gaussian fit; isolates distortion 1). ``None``
       when no calibration is supplied.
@@ -313,7 +313,7 @@ def first_stage_report(regimes_by_power: dict[int, list[Regime]],
     """First-stage recovery under noise, scored against each stage's own target.
 
     The moment estimator is scored against the recorded-emission alpha (its
-    target); the Gaussian + folded-normal path against the noise-free
+    target); the Gaussian + subtract path against the noise-free
     Gaussian-fit alpha (distortion-1 diagnostic). Both are then compared to the
     carrier truth, whose residual is the emission-to-carrier gap the forward
     stage must close.
@@ -322,7 +322,7 @@ def first_stage_report(regimes_by_power: dict[int, list[Regime]],
         for ci, cnr0 in enumerate(cnr0_list):
             print(f"\nFirst-stage recovery at CNR_0={cnr0}, "
                   f"free_charge_emission_power={power}")
-            print("      A   a_carrier   a_moment(noisy)  a_gauss+folded   "
+            print("      A   a_carrier   a_moment(noisy)  a_gauss+subtract "
                   "frames<fit  frames<mom   MSD<=0 dropped (mom, fit)")
             results = []
             for k, rg in enumerate(regimes):
@@ -375,7 +375,7 @@ def _plot_first_stage(power, results, cnr0) -> None:
                 label="moment estimator (noisy)")
         if tr["gauss_folded"] is not None:
             ax.plot(t, tr["gauss_folded"], "s", color="tab:green", ms=4,
-                    label="Gaussian + folded (noisy)")
+                    label="Gaussian + subtract (noisy)")
         ax.set_xlabel("time (ns)")
         ax.set_title(rf"$\alpha_{{carrier}}$={rg.alpha_carrier:.2f}")
     axes[0].set_ylabel(r"variance (um$^2$)")
@@ -427,7 +427,7 @@ def main() -> None:
                     "carrier-moment truth, the two gaps, first-stage recovery.")
     parser.add_argument("--calibration", default=CALIBRATION_PATH,
                         help="path to the 2-D calibration .npz (Gaussian + "
-                             "folded-normal diagnostic only)")
+                             "noise-bias diagnostic only)")
     parser.add_argument("--cnr0", default=str(EVAL_CNR0),
                         help="comma-separated initial CNR values")
     args = parser.parse_args()
@@ -448,7 +448,7 @@ def main() -> None:
     if model is None:
         print(f"\n[no calibration at {args.calibration}] -- running the "
               "moment-estimator first-stage path only; build the calibration "
-              "(see module docstring) to add the Gaussian + folded-normal "
+              "(see module docstring) to add the Gaussian + subtract "
               "diagnostic.")
     else:
         print(f"\nUsing calibration: {args.calibration}")

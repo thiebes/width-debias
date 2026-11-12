@@ -80,8 +80,9 @@ def calibrate_d_free(cnr0_grid: np.ndarray, *, sigma0: float = 1.0,
     bias calibrated at ``sigma^2 = sigma_0^2`` is the bias the application
     actually sees. Tested by Monte Carlo at D = 0.005 to 0.1 sigma_0^2/tau on
     four profile shapes (``experiments/dfree-calibration``): with the
-    calibration's own Monte Carlo error included, 4 of 96 cells lie beyond two
-    combined standard errors of the reference. Quote a corrected D with the
+    calibration's own Monte Carlo error included, 4 of 140 cells lie beyond two
+    combined standard errors of the reference (about 6 expected by chance).
+    Quote a corrected D with the
     combined SE, the fit's own and
     :func:`~width_debias.weights.calibration_D_se`.
 

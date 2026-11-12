@@ -32,7 +32,7 @@ Three analyses per operating point:
 * **naive + cut** -- the raw variances fitted over only the frames above the
   per-profile CNR floor, with no subtraction. It separates the two
   interventions the corrected arm combines.
-* **corrected** -- folded-normal subtraction of the calibrated per-frame
+* **corrected** -- the ``subtract`` scheme: subtraction of the calibrated per-frame
   ``var_bias(CNR)``, then the same power-law fit over only the frames above the
   per-profile CNR floor (the design rule: keep ``cnr0 * exp(-t/tau) >~ 1``,
   i.e. ``cnr0 >~ exp(t_max/tau) ~ 20`` for ``t_max = 3 tau``).
@@ -275,7 +275,7 @@ def write_report(cells: list[CellSamples], model_name: str, n_frames: int,
     by_alpha = {a: [c for c in cells if c.alpha_true == a] for a in ALPHA_TRUE}
     lines = [
         "=" * 78,
-        f"Subdiffusive-alpha recovery -- folded-normal, {model_name} fit",
+        f"Subdiffusive-alpha recovery -- subtract, {model_name} fit",
         "=" * 78,
         f"bed: AnomalousExperiment, MSD = 2 D t^alpha, matched end-point "
         f"MSD = {MSD_END} sigma0^2 (L_D/FWHM_0 ~ 0.15)",

@@ -1,4 +1,4 @@
-folded-debias POC demo
+width-debias POC demo
   profile model: gaussian
   experiment: D=0.02, tau=1.0, n_frames=12, L_D/FWHM_0=0.085
   CNR_0 sweep: [ 5.  8. 13. 21. 34. 55. 90.]
@@ -9,7 +9,7 @@ Calibrating (D-free) ...
 Evaluating schemes ...
 
   <D_est> / D_true   (1.000 = unbiased; SE = evaluation and calibration combined)
-  CNR_0     OLS     inv-var   folded-normal     SE
+  CNR_0     OLS     inv-var        subtract     SE
        5   46.308    3.261        2.672      0.861
        8   14.031    1.211        0.773      0.179
       13    7.155    1.048        0.981      0.096
@@ -18,8 +18,8 @@ Evaluating schemes ...
       55    1.131    1.019        1.016      0.021
       90    1.023    1.004        1.003      0.013
 
-  mean |bias-1|  ols=9.34  inv-var=0.368  folded-normal=0.291  (Monte Carlo error alone would give 0.143 for folded-normal)
-  folded-normal cells beyond 2 combined SE: 0 of 7
+  mean |bias-1|  ols=9.34  inv-var=0.368  subtract=0.291  (Monte Carlo error alone would give 0.143 for subtract)
+  subtract cells beyond 2 combined SE: 0 of 7
   inverse-variance cells beyond 2 evaluation SE: 1 of 7
 
 Figure written to output\poc_demo.png

@@ -9,8 +9,9 @@ into git, never moved or renamed on the pshare.
 reaction-diffusion diffmaps, two files per doping case:
 
 - `diffmap_<case>.dat` -- `(n_t, n_x)` matrix of noiseless PL intensity.
-- `PL_var_<case>.dat` -- reduced table whose third column (index 2) is the true
-  second moment `sigma^2(t)`.
+- `PL_var_<case>.dat` -- reduced table whose third column (index 2) is the
+  second moment `sigma^2(t)` of the PL profile (emission-weighted, not the
+  carrier moment).
 
 Cases: `undoped`, `0.51_Mn_doped`, `0.81_Mn_doped`, `4.04_Mn_doped` (Magdaleno
 et al. 2025). The loader `marc_data.py` reads from this `data/` dir

@@ -23,7 +23,7 @@ Two analyses per Br fraction and CNR_0, scored against the noiseless Gaussian fi
 (which recovers the particle truth here) and against the particle truth itself:
 
   * **naive** -- raw fitted variances, all frames, power law MSD = 2 D t^alpha.
-  * **corrected** -- folded-normal subtraction of the calibrated per-frame
+  * **corrected** -- the ``subtract`` scheme: subtraction of the calibrated per-frame
     var_bias(CNR), then the same fit over frames above the per-frame CNR floor.
 
 The Gaussian D-free calibration is built once at this geometry (narrow window) and
@@ -138,7 +138,7 @@ def fit_each_row(x: np.ndarray, profiles: np.ndarray) -> np.ndarray:
 
 
 def validation_pass(case, trunc: BiasLookup, cnr0: float, n_seeds: int):
-    """Mean raw and folded-normal-corrected Gaussian-fit variance over seeds."""
+    """Mean raw and corrected Gaussian-fit variance over seeds."""
     peak0 = float(case.profiles[0].max())
     noise_sigma = peak0 / cnr0
     cnr_frame = case.profiles.max(axis=1) / noise_sigma
@@ -205,7 +205,7 @@ def sweep_case(case, trunc: BiasLookup) -> CaseResult:
 def write_report(results: list[CaseResult], n_frames: int, path: Path) -> None:
     lines = [
         "=" * 76,
-        "Br-I halide-mixing validation -- folded-normal, Gaussian fit",
+        "Br-I halide-mixing validation -- subtract, Gaussian fit",
         "carrier truth = particle 2nd moment (variance.dat/2); halide disorder",
         "suppresses D ~10x below D0 and makes transport subdiffusive.",
         "=" * 76,

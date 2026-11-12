@@ -1,8 +1,8 @@
-Folded-normal correction across transport-microscopy noise laws
+The subtract correction across transport-microscopy noise laws
   D_true = 0.02 sigma_0^2/tau
   calibration: 30 CNR_0 in [2, 80], 1000 runs/cell
   evaluation:  8 CNR_0 in [3, 60], 1000 runs/cell
-  workers = 7
+  workers = 4
 
 Building matched calibrations at D = 0 ...
   [white] ...
@@ -20,46 +20,46 @@ mean(D_hat)/D_true  (1.0 = unbiased)
 ========================================================================
 
 [white]  differential / pump-probe (stroboSCAT, transient absorption): constant probe-pedestal noise
-  CNR_0 | OLS raw | folded (matched calib) | folded (default white calib)
-     3.0 |   69.82 |                  1.943 | 1.943
-     4.6 |   42.77 |                  0.627 | 0.627
-     7.1 |   29.55 |                  0.807 | 0.807
-    10.8 |    8.94 |                  0.923 | 0.923
-    16.6 |    2.44 |                  1.065 | 1.065
-    25.5 |    1.45 |                  1.038 | 1.038
-    39.1 |    1.13 |                  0.998 | 0.998
-    60.0 |    1.07 |                  0.956 | 0.956
+  CNR_0 | OLS raw | subtract (matched cal) | subtract (default white calib)
+     3.0 |   69.82 |                  1.487 | 1.487
+     4.6 |   42.77 |                  0.984 | 0.984
+     7.1 |   29.55 |                  0.830 | 0.830
+    10.8 |    8.94 |                  0.928 | 0.928
+    16.6 |    2.44 |                  1.017 | 1.017
+    25.5 |    1.45 |                  0.998 | 0.998
+    39.1 |    1.13 |                  1.013 | 1.013
+    60.0 |    1.07 |                  1.006 | 1.006
 
 [shot]  photon-limited direct imaging: signal-scaling noise (Gaussian shot)
-  CNR_0 | OLS raw | folded (matched calib) | folded (default white calib)
-     3.0 |   -0.01 |                  0.907 | -0.628
-     4.6 |    0.51 |                  0.837 | 0.232
-     7.1 |    0.86 |                  1.017 | 0.702
-    10.8 |    0.96 |                  1.036 | 0.938
-    16.6 |    0.96 |                  1.022 | 0.966
-    25.5 |    1.00 |                  1.004 | 0.995
-    39.1 |    1.00 |                  1.026 | 1.022
-    60.0 |    1.00 |                  0.990 | 0.986
+  CNR_0 | OLS raw | subtract (matched cal) | subtract (default white calib)
+     3.0 |   -0.01 |                  0.946 | -0.235
+     4.6 |    0.51 |                  0.873 | 0.405
+     7.1 |    0.86 |                  0.999 | 0.760
+    10.8 |    0.96 |                  1.008 | 0.931
+    16.6 |    0.96 |                  0.994 | 0.955
+    25.5 |    1.00 |                  1.001 | 0.986
+    39.1 |    1.00 |                  1.004 | 0.996
+    60.0 |    1.00 |                  0.999 | 0.995
 
 [poisson]  photon-counting (TCSPC, direct PL): true Poisson, faithful at low counts
-  CNR_0 | OLS raw | folded (matched calib) | folded (default white calib)
-     3.0 |    0.14 |                  1.094 | -0.542
-     4.6 |    0.63 |                  0.927 | 0.307
-     7.1 |    0.86 |                  0.990 | 0.695
-    10.8 |    0.88 |                  0.973 | 0.894
-    16.6 |    0.97 |                  1.051 | 0.953
-    25.5 |    0.97 |                  0.988 | 0.967
-    39.1 |    1.00 |                  0.987 | 1.001
-    60.0 |    0.99 |                  0.989 | 0.984
+  CNR_0 | OLS raw | subtract (matched cal) | subtract (default white calib)
+     3.0 |    0.14 |                  1.085 | -0.159
+     4.6 |    0.63 |                  0.936 | 0.417
+     7.1 |    0.86 |                  0.983 | 0.757
+    10.8 |    0.88 |                  0.992 | 0.911
+    16.6 |    0.97 |                  0.999 | 0.948
+    25.5 |    0.97 |                  0.990 | 0.975
+    39.1 |    1.00 |                  1.001 | 0.991
+    60.0 |    0.99 |                  0.995 | 0.990
 
 ========================================================================
 mean |bias - 1| over the sweep
 ========================================================================
-  noise law    OLS raw   folded matched   folded white-calib
-  white         18.647            0.217                0.217
-  shot           0.215            0.046                0.354
-  poisson        0.194            0.036                0.343
+  noise law    OLS raw subtract matched subtract white-calib
+  white         18.647            0.098                0.098
+  shot           0.215            0.025                0.276
+  poisson        0.194            0.024                0.271
 
-Reading: 'folded matched' small => the correction works under that law given a matched calibration (CORRECTNESS).
-'folded white-calib' close to 'folded matched' => the default white calibration transfers to that law (ROBUSTNESS); far => recalibrate.
+Reading: 'subtract matched' small => the correction works under that law given a matched calibration (CORRECTNESS).
+'subtract white-calib' close to 'subtract matched' => the default white calibration transfers to that law (ROBUSTNESS); far => recalibrate.
 Real techniques: stroboSCAT / transient absorption ~ white; TCSPC / direct PL imaging ~ shot/Poisson.

@@ -91,7 +91,7 @@ def main():
         naive = results["inverse_variance"][2]
         corr = results["subtract"][2]
         ax.plot(t_ns, naive, "o", color="0.5", label="naive (inverse-variance)")
-        ax.plot(t_ns, corr, "o", color="C0", label="corrected (folded-normal)")
+        ax.plot(t_ns, corr, "o", color="C0", label="corrected (subtract)")
         for scheme, color in (("inverse_variance", "0.5"), ("subtract", "C0")):
             d_um2ns = results[scheme][0] / UM2_PER_NS_TO_CM2_PER_S
             ax.plot(t_ns, 2 * d_um2ns * t_ns, "-", color=color)

@@ -1,20 +1,27 @@
 ==============================================================================
 Coverage / interval check -- does the reported CI on D cover the truth?
 ==============================================================================
-D_true = 0.02 sigma0^2/tau, Gaussian, standard geometry; 2000 runs/cell, 200 bootstrap.
+D_true = 0.02 sigma0^2/tau, Gaussian, standard geometry; 8000 runs/cell, 200 bootstrap.
 calibration: D-free (calibrate_d_free, D = 0), Gaussian, 60 CNR0 in [2, 100] x 1500 runs, seeds 1 + i (shared cache calibration_subdiffusive.npz); evaluation seeds 90000 + 100 k for CNR0 index k, bootstrap seed + 7.
-95% intervals. Coverage = fraction containing D_true.
-folded_normal is de-biased (coverage meaningful); inverse_variance is biased (contrast).
-narrowness = mean(D_se)/SD(D_hat) (<1 = covariance CI too narrow).
+0.95 intervals. Coverage = fraction containing D_true.
+subtract is de-biased (coverage meaningful); inverse_variance is biased (contrast).
+narrowness = D_se/SD(D_hat) (<1 = covariance CI too narrow).
 infl = sqrt(Var_full/Var_diag): how much the shared sigma_hat^2_0
        correlation alone should widen the slope CI (>1 = correlation matters).
+SEs: batch means over 8 sub-ensembles (narrow, infl); binomial (coverages).
 
-  CNR0 | minCNR | bias fn/iv | SD/D | narrow | infl | skew | cover cov/boot/iv
+   CNR0 | minCNR | bias fn/iv |  SD/D |  narrow +/- SE   | infl +/- SE     |  skew | cover cov/boot/iv (SE)
   (cover nominal = 0.95)
-      5 |   0.25 | 0.81/1.65 |  4.75 |   0.97 | 0.86 |  0.88 | 0.95/0.95/0.95
-      8 |   0.40 | 0.96/1.27 |  2.56 |   0.94 | 0.88 |  0.37 | 0.94/0.94/0.93
-     13 |   0.65 | 1.00/1.17 |  1.42 |   0.95 | 0.88 |  0.83 | 0.94/0.95/0.94
-     21 |   1.05 | 1.01/1.10 |  0.84 |   0.96 | 0.89 |  0.39 | 0.95/0.94/0.94
-     34 |   1.69 | 0.97/1.02 |  0.48 |   1.00 | 0.89 | -0.02 | 0.95/0.95/0.95
-     55 |   2.74 | 0.98/1.00 |  0.30 |   0.97 | 0.89 |  0.12 | 0.94/0.94/0.94
-     90 |   4.48 | 0.99/0.99 |  0.18 |   0.98 | 0.89 | -0.01 | 0.95/0.94/0.95
+    5.0 |   0.25 | 0.72/1.57  |  4.61 |  1.003 +/- 0.016 | 0.864 +/- 0.001 |  0.56 | 0.952/0.949/0.953 (0.002)
+    6.4 |   0.32 | 0.88/1.39  |  3.30 |  0.974 +/- 0.011 | 0.871 +/- 0.001 |  0.46 | 0.946/0.944/0.943 (0.003)
+    8.1 |   0.40 | 0.90/1.24  |  2.51 |  0.950 +/- 0.020 | 0.874 +/- 0.001 |  0.80 | 0.946/0.949/0.941 (0.003)
+   10.3 |   0.51 | 0.93/1.20  |  1.84 |  0.974 +/- 0.008 | 0.880 +/- 0.001 |  0.16 | 0.943/0.942/0.940 (0.003)
+   13.1 |   0.65 | 0.98/1.14  |  1.41 |  0.973 +/- 0.011 | 0.883 +/- 0.001 |  0.21 | 0.946/0.942/0.943 (0.003)
+   16.7 |   0.83 | 0.90/1.07  |  1.09 |  0.944 +/- 0.026 | 0.885 +/- 0.001 |  1.69 | 0.940/0.947/0.940 (0.003)
+   21.2 |   1.06 | 0.96/1.05  |  0.82 |  0.970 +/- 0.009 | 0.890 +/- 0.001 |  0.06 | 0.945/0.940/0.944 (0.003)
+   27.0 |   1.34 | 1.02/1.06  |  0.64 |  0.961 +/- 0.011 | 0.890 +/- 0.000 |  0.06 | 0.941/0.937/0.940 (0.003)
+   34.3 |   1.71 | 1.00/1.03  |  0.50 |  0.957 +/- 0.006 | 0.891 +/- 0.001 |  0.05 | 0.939/0.938/0.936 (0.003)
+   43.7 |   2.18 | 1.01/1.03  |  0.38 |  0.976 +/- 0.006 | 0.891 +/- 0.000 |  0.02 | 0.946/0.943/0.944 (0.003)
+   55.6 |   2.77 | 1.00/1.01  |  0.30 |  0.962 +/- 0.007 | 0.891 +/- 0.000 |  0.03 | 0.941/0.943/0.942 (0.003)
+   70.7 |   3.52 | 1.01/1.01  |  0.24 |  0.974 +/- 0.004 | 0.891 +/- 0.001 |  0.04 | 0.942/0.940/0.942 (0.003)
+   90.0 |   4.48 | 1.00/1.00  |  0.19 |  0.971 +/- 0.010 | 0.892 +/- 0.001 |  0.03 | 0.943/0.940/0.943 (0.003)

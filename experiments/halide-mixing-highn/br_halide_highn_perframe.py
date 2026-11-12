@@ -91,7 +91,7 @@ N_SEEDS = 800
 # "smoothed" (a robust line through the measurement; see smoothed_key), or
 # "iterated" (that line refitted to the corrected values; the figure's key).
 KEY = os.environ.get("HIGHN_KEY", "perseed")
-FLOOR_CNR = 1.3      # project floor: folded-normal over-subtracts below ~1.3
+FLOOR_CNR = 1.3      # project floor: the 2-D lookup over-subtracts below ~1.3
 CAL_CNR0 = np.geomspace(1.2, 60.0, 30)
 N_RUNS_CAL = 600
 # Joint (CNR, sigma^2) calibration: sigma spans the true widths of the usable

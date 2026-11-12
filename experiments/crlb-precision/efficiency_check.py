@@ -3,7 +3,7 @@
 ``crlb.py`` derives the bound for the Gaussian measurement model and shows that
 "fit a width per frame, then fit the slope" loses no information: an unbiased,
 efficient width estimate with inverse-CRLB slope weights reaches the bound.
-This script measures how far the actual folded-normal estimator is from it, on
+This script measures how far the actual ``subtract`` estimator is from it, on
 the four validation shapes (Gaussian, Voigt, generalized-Gaussian p = 1.5 and
 p = 4).
 

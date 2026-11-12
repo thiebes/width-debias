@@ -15,7 +15,7 @@ Three possible outcomes:
 * residuals shrink moderately -- there is a bias-vs-calibration-budget
   tradeoff, characterised here;
 * residuals stay similar -- there is a model-misspecification floor of the
-  folded-normal subtraction that more calibration cannot fix.
+  ``subtract`` correction that more calibration cannot fix.
 
 Wall time estimate: ~2 hours for all three shapes (Voigt is the slow one).
 

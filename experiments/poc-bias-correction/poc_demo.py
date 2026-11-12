@@ -6,12 +6,12 @@ Run from the repository root::
 
 MODEL is ``gaussian``, ``voigt``, or ``generalized_gaussian:<p>``.
 
-Produces ``output/poc_demo.png`` (if matplotlib is installed) with two panels:
+Produces ``output/poc_demo.png`` (if matplotlib is installed) with three panels:
 
-* (a) the fraction p of MSD points at or below zero and the MSD skewness vs
-      per-frame CNR -- the noise in the fitted width grows as the CNR falls;
-* (b) the bias <D_est>/D_true vs CNR_0 for OLS, standard inverse-variance, and
-      the derived ``subtract`` scheme (see docs/DERIVATION.md).
+* (a), (b) the fraction of MSD points at or below zero and the MSD skewness vs
+  per-frame CNR -- the noise in the fitted width grows as the CNR falls;
+* (c) the bias <D_est>/D_true vs CNR_0 for OLS, standard inverse-variance, and
+  the derived ``subtract`` scheme (see docs/DERIVATION.md).
 
 It also prints a summary table to stdout, so it is useful with or without a
 plotting backend.
@@ -93,7 +93,7 @@ def main() -> None:
     # shared by every run evaluated with this calibration (weights.calibration_D_se).
     print("\n  <D_est> / D_true   (1.000 = unbiased; SE = evaluation and "
           "calibration combined)")
-    print("  CNR_0     OLS     inv-var   folded-normal     SE")
+    print("  CNR_0     OLS     inv-var        subtract     SE")
     fn = results["subtract"]
     fn_se = np.hypot(fn.spread / np.sqrt(N_RUNS), fn.cal_se)
     for i, c0 in enumerate(CNR0_GRID):
@@ -107,16 +107,16 @@ def main() -> None:
     f = np.isfinite(ols) & np.isfinite(iv) & np.isfinite(fn)
     print(f"\n  mean |bias-1|  ols={np.nanmean(np.abs(ols[f] - 1)):.2f}  "
           f"inv-var={np.nanmean(np.abs(iv[f] - 1)):.3f}  "
-          f"folded-normal={np.nanmean(np.abs(fn[f] - 1)):.3f}  "
+          f"subtract={np.nanmean(np.abs(fn[f] - 1)):.3f}  "
           f"(Monte Carlo error alone would give "
-          f"{np.sqrt(2 / np.pi) * np.nanmean(fn_se[f]):.3f} for folded-normal)")
+          f"{np.sqrt(2 / np.pi) * np.nanmean(fn_se[f]):.3f} for subtract)")
     # The verdict is computed, not written in: which scheme leaves a resolved
     # bias depends on the shape (p = 4's raw bias is small enough that
     # inverse-variance weighting alone is close to unbiased).
     z = (fn - 1.0) / fn_se
     iv_se = results["inverse_variance"].spread / np.sqrt(N_RUNS)
     z_iv = (iv - 1.0) / iv_se
-    print(f"  folded-normal cells beyond 2 combined SE: {int(np.sum(np.abs(z[f]) > 2))} "
+    print(f"  subtract cells beyond 2 combined SE: {int(np.sum(np.abs(z[f]) > 2))} "
           f"of {int(f.sum())}")
     print(f"  inverse-variance cells beyond 2 evaluation SE: "
           f"{int(np.sum(np.abs(z_iv[f]) > 2))} of {int(f.sum())}")
@@ -134,45 +134,73 @@ def _plot(stats, results, model_name) -> None:
               "install with `pip install width-debias[plot]`]")
         return
 
-    cnr = np.concatenate([s.cnr for s in stats])
-    p = np.concatenate([s.trunc_fraction for s in stats])
-    skew = np.concatenate([s.skew for s in stats])
+    # Frame 0 is the MSD reference (MSD = 0 there by construction, so
+    # P(MSD <= 0) = 1), so panels (a) and (b) start at the frame after it.
+    cnr = np.concatenate([s.cnr[1:] for s in stats])
+    p = np.concatenate([s.trunc_fraction[1:] for s in stats])
+    skew = np.concatenate([s.skew[1:] for s in stats])
 
-    fig, (ax0, ax1) = plt.subplots(1, 2, figsize=(11, 4.3))
+    from matplotlib.ticker import FixedLocator, FuncFormatter, NullLocator
 
-    ax0.scatter(cnr, p, s=20, c="tab:red", alpha=0.75)
-    ax0.set_xlabel("per-frame CNR")
-    ax0.set_ylabel("truncation fraction $p$  =  P(MSD $\\leq$ 0)", color="tab:red")
-    ax0.set_xscale("log")
-    ax0.set_ylim(-0.02, 0.55)
-    ax0.axhline(0.5, ls=":", c="grey", lw=1)
-    ax0.tick_params(axis="y", labelcolor="tab:red")
-    ax0b = ax0.twinx()
-    ax0b.scatter(cnr, skew, s=16, c="tab:blue", alpha=0.5, marker="^")
-    ax0b.set_ylabel("MSD sample skewness", color="tab:blue")
-    ax0b.tick_params(axis="y", labelcolor="tab:blue")
-    ax0.set_title(f"(a)  The wall distorts the width estimator ({model_name})")
+    # DICE palette; the caption carries the title role (no titles, no grid).
+    blue, gold, green = "#003f7f", "#f7941e", "#0cce6b"
+    inch, font = 1 / 2.54, 8
+    fig, (ax0, ax1, ax2) = plt.subplots(1, 3, figsize=(17 * inch, 7 * inch),
+                                        layout="constrained",
+                                        gridspec_kw={"width_ratios": (1, 1, 1.25)})
+    fig.patch.set_alpha(0)
+
+    ax0.scatter(cnr, p, s=10, color=blue, alpha=0.75)
+    ax0.set_ylabel(r"$P(\mathrm{MSD} \leq 0)$", fontsize=font)
+    ax0.set_ylim(-0.02, max(0.62, float(np.nanmax(p)) + 0.03))
+    ax1.scatter(cnr, skew, s=10, color=blue, alpha=0.75)
+    ax1.set_ylabel("MSD sample skewness", fontsize=font)
+    for ax in (ax0, ax1):
+        ax.set_xscale("log")
+        ax.set_xlabel("per-frame CNR", fontsize=font)
 
     for scheme, color, label in [
-        ("ols", "tab:gray", "OLS (unweighted)"),
-        ("inverse_variance", "tab:orange", "inverse-variance (standard)"),
-        ("subtract", "tab:green", "folded-normal (derived)"),
+        ("ols", blue, "OLS"),
+        ("inverse_variance", gold, "inverse-variance"),
+        ("subtract", green, "subtract"),
     ]:
         r = results[scheme]
-        ax1.plot(r.cnr0, r.mean_bias, "o-", color=color, label=label)
-    ax1.axhline(1.0, ls="--", c="k", lw=1, label="unbiased")
-    ax1.set_xlabel("initial CNR$_0$")
-    ax1.set_ylabel("$\\langle D_{est}\\rangle\\, /\\, D_{true}$")
-    ax1.set_xscale("log")
-    ax1.set_yscale("log")   # OLS spans ~40x; log keeps the corrected schemes legible
-    ax1.set_title("(b)  Bias in $D$: only the noise-bias correction removes it")
-    ax1.legend(fontsize=8)
+        ax2.plot(r.cnr0, r.mean_bias, "o-", color=color, lw=2, ms=4, label=label)
+    ax2.axhline(1.0, ls="--", c="k", lw=1, label="unbiased")
+    ax2.set_xlabel(r"$\mathrm{CNR}_0$", fontsize=font)
+    ax2.set_ylabel(r"$\langle \hat{D} \rangle / D_\mathrm{true}$", fontsize=font)
+    ax2.set_xscale("log")
+    # OLS spans up to ~60x and can go negative (p = 4), so the axis is
+    # symmetric-log: linear in [-2, 2], where the corrected schemes sit, and
+    # logarithmic above.
+    ax2.set_yscale("symlog", linthresh=2.0, linscale=2.0)
+    biases = np.concatenate([results[s].mean_bias for s in
+                             ("ols", "inverse_variance", "subtract")])
+    biases = biases[np.isfinite(biases)]
+    lo, hi = min(0.0, biases.min()) - 0.15, max(2.0, 1.15 * biases.max())
+    ax2.set_ylim(lo, hi)
+    ax2.yaxis.set_major_locator(FixedLocator(
+        [v for v in (-1, -0.5, 0, 0.5, 1, 1.5, 2, 5, 10, 20, 50, 100) if lo <= v <= hi]))
+    ax2.yaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:g}"))
+    ax2.yaxis.set_minor_locator(NullLocator())
+    # Above the panel: where the curves fall inside it depends on the shape.
+    ax2.legend(fontsize=font, frameon=False, loc="lower center",
+               bbox_to_anchor=(0.5, 1.0), ncol=2, handlelength=1.5,
+               columnspacing=1.0, borderaxespad=0.2)
 
-    fig.tight_layout()
+    # Letters in the upper-right corner, which the data leave empty.
+    for letter, ax in zip("abc", (ax0, ax1, ax2)):
+        ax.set_facecolor("white")
+        ax.tick_params(axis="both", which="both", direction="in", top=False,
+                       right=False, labelsize=font)
+        ax.text(0.96, 0.96, f"({letter})", transform=ax.transAxes, va="top",
+                ha="right", fontsize=font, fontweight="bold")
+
     os.makedirs("output", exist_ok=True)
     suffix = "" if model_name == "gaussian" else f"_{model_name}"
     out = os.path.join("output", f"poc_demo{suffix}.png")
-    fig.savefig(out, dpi=150)
+    fig.savefig(out, dpi=300)
+    plt.close(fig)
     print(f"\nFigure written to {out}")
 
 

@@ -223,12 +223,15 @@ class MomentModel:
     """Moment-based width estimator, with no fit bound.
 
     Instead of a bounded curve fit, the variance is the discrete second
-    central moment of the (background-subtracted) profile. That estimator is
-    linear in the data, so the noise averages out of its mean: to leading
-    order it is unbiased and needs no bias correction, and it can return a
-    *negative* variance (cf. Vestergaard's covariance-based estimator of D,
-    which can also return negative values). The cost is higher variance,
-    since the x^2 weighting amplifies tail noise.
+    central moment of the (background-subtracted) profile. Nothing bounds it
+    below, so it can return a *negative* variance (cf. Vestergaard's
+    covariance-based estimator of D, which can also return negative values).
+    Its numerator and denominator are linear in the data, but the estimate is
+    their ratio, taken about an estimated centroid, so it still carries a bias
+    of order 1/CNR^2, the same order as a fitted width's; the package applies
+    no correction to it. The larger cost is variance: the x^2 weighting
+    amplifies tail noise, and the ratio becomes unstable where the total
+    intensity passes through zero at low CNR.
 
     The estimator assumes the profile is centred near x = 0, which the
     simulation guarantees; a production implementation would track the

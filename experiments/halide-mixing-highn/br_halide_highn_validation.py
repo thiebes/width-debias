@@ -17,7 +17,7 @@ both matter:
     caveat therefore does not apply here.
 
 The carrier (particle) truth is ``variance.avg.dat / 2``. For each Br fraction
-and CNR_0 the naive (raw all-frames) and corrected (folded-normal subtraction,
+and CNR_0 the naive (raw all-frames) and corrected (``subtract`` scheme,
 sub-floor frames dropped only at the slope fit) power-law fits MSD = 2 D t^alpha
 are scored against that truth.
 
@@ -109,7 +109,7 @@ def build_or_load_calibration() -> BiasLookup:
 
 
 def validation_pass(case, trunc: BiasLookup, cnr0: float, n_seeds: int):
-    """Mean raw and folded-normal-corrected Gaussian-fit variance over seeds."""
+    """Mean raw and corrected Gaussian-fit variance over seeds."""
     peak0 = float(case.profiles[0].max())
     noise_sigma = peak0 / cnr0
     cnr_frame = case.profiles.max(axis=1) / noise_sigma
@@ -173,7 +173,7 @@ def write_report(results: list[CaseResult], n_frames: int, path: Path) -> None:
     lines = [
         "=" * 76,
         "Br-I halide-mixing validation -- HIGH-N (400k-walker) maps",
-        "folded-normal, Gaussian fit; carrier truth = particle 2nd moment / 2.",
+        "subtract, Gaussian fit; carrier truth = particle 2nd moment / 2.",
         "3000 nm box (no clipping), 3.0 ns window (per-frame CNR reaches ~1).",
         "=" * 76,
         f"n_seeds per CNR_0: {N_SEEDS};  frame stride: {STRIDE} ({n_frames} frames);"

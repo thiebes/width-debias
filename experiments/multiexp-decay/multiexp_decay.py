@@ -121,7 +121,7 @@ def residual_vs_cnr(exp, trunc: BiasLookup,
 
 def d_recovery(exp, trunc: BiasLookup,
                seed0: int) -> tuple[np.ndarray, np.ndarray]:
-    """<D>/D_true vs CNR_0 for the corrected (folded-normal) and naive (OLS)
+    """<D>/D_true vs CNR_0 for the corrected (subtract) and naive (OLS)
     fits. The corrected curve is decay-robust; the naive curve's bias onset
     shifts with the decay law, which is why CNR_0-indexed thresholds are
     decay-specific."""
