@@ -19,6 +19,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   variance, with the bound at zero confined to per-frame CNR below about 1,
   and its floor section counts the lookup's own error and sets the tolerance
   relative to the end-point MSD.
+- The experiment tables and figures name the corrected arm `subtract`, the
+  scheme's name, instead of "folded-normal"; regenerated with the current
+  library, their numbers are unchanged except the unbounded-fit comparison and
+  the noise-law tables, whose corrected arms now use the per-frame slope
+  weights (half the former spread at initial CNR 34 in the unbounded-fit
+  comparison; under shot noise with a matched calibration, a mean error of
+  0.025 against 0.046). The read-floor figure places read 0 at its true
+  position on a symmetric-logarithmic axis. The coverage check runs 13 initial CNR
+  values at 8000 runs each with standard errors: the `fit_D` covariance
+  interval covers 0.944 at D = 0.02 sigma_0^2/tau (nominal 0.95), because the
+  D-free lookup's per-frame variances are calibrated at the initial width and
+  the width grows, as the `fit_D` docstring notes.
 - The `MomentModel` docstring no longer calls the moment estimator unbiased to
   leading order: it is a ratio of two sums linear in the data, taken about an
   estimated centroid, so its bias is of order 1/CNR^2, the same order as a
