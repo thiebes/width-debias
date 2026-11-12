@@ -221,7 +221,7 @@ def run_shape(model_name: str) -> None:
     print("\n  Decile report (mean(D_hat) / D_true, averaged within each "
           "log-CNR_0 decile):")
     print(f"  {'CNR_0 range':<22}{'n':>4}  "
-          f"{'OLS':>10}{'inv-var':>10}{'folded':>10}{'mas':>10}")
+          f"{'OLS':>10}{'inv-var':>10}{'subtract':>10}{'mas':>10}")
     for b in range(10):
         mask = bin_idx == b
         if not mask.any():

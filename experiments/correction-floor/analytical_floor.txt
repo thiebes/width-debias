@@ -1,4 +1,4 @@
-Analytical floor of the folded-normal correction
+Analytical floor of the noise-bias correction
   Calibration: 30 log-spaced CNR_0 in (2.0, 100.0), 1000 runs/cell
   A = CNR^2 Var(sigma_hat) from the Fisher information; Monte Carlo check CNR^2 Var(sigma_hat^2) / 4, median over cells at CNR >= 8.0
   var_bias pooled into 24 log-CNR bins; a bin is resolved if |mean| exceeds 3.0 SE
@@ -37,7 +37,7 @@ Analytical floor of the folded-normal correction
    46.985      0.0000    0.0000      0.0000    1.16   1.56  (unresolved)
    61.387      0.0000    0.0001      0.0000    0.57   3.41  (unresolved)
    84.421      0.0001    0.0001      0.0000   17.87   8.34  (unresolved)
-  [gaussian: 373s]
+  [gaussian: 454s]
 
 === voigt ===
   A from the Fisher information (leading_order_terms): 0.0812 sigma_0^2
@@ -70,7 +70,7 @@ Analytical floor of the folded-normal correction
    46.985      0.0001    0.0002      0.0000    1.46   4.57  (unresolved)
    61.387     -0.0000    0.0001      0.0000   -0.28   6.31  (unresolved)
    84.421     -0.0000    0.0002      0.0000   -2.40  14.04  (unresolved)
-  [voigt: 508s]
+  [voigt: 596s]
 
 === generalized_gaussian_p1.5 ===
   A from the Fisher information (leading_order_terms): 0.1007 sigma_0^2
@@ -103,7 +103,7 @@ Analytical floor of the folded-normal correction
    46.985      0.0001    0.0001      0.0000    1.42   2.26  (unresolved)
    61.387      0.0001    0.0002      0.0000    2.13   6.87  (unresolved)
    84.421      0.0001    0.0001      0.0000    7.70   4.96  (unresolved)
-  [generalized_gaussian_p1.5: 624s]
+  [generalized_gaussian_p1.5: 740s]
 
 === generalized_gaussian_p4 ===
   A from the Fisher information (leading_order_terms): 0.0191 sigma_0^2
@@ -136,6 +136,6 @@ Analytical floor of the folded-normal correction
    46.985     -0.0000    0.0001      0.0000   -5.62   9.63  (unresolved)
    61.387      0.0000    0.0000      0.0000    6.96   4.91  (unresolved)
    84.421      0.0001    0.0001      0.0000   24.03  18.85  (unresolved)
-  [generalized_gaussian_p4: 355s]
+  [generalized_gaussian_p4: 410s]
 
-[total 31.0 min]
+[total 36.7 min]

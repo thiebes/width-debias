@@ -9,20 +9,20 @@ Dense parallel D-free calibration and test
   Calibration ready [0s]; lookup spans per-frame CNR 0.100 -> 100.0 (1200 data points)
 
   Test: 100 random log-distributed CNR_0 in [2.0, 100.0], 1000 runs/cell, seeds 50000 + i
-    [test] 10/100 ( 10%)  elapsed   237s  ETA 2132s
-    [test] 20/100 ( 20%)  elapsed   360s  ETA 1442s
-    [test] 30/100 ( 30%)  elapsed   567s  ETA 1322s
-    [test] 40/100 ( 40%)  elapsed   658s  ETA  987s
-    [test] 50/100 ( 50%)  elapsed   811s  ETA  811s
-    [test] 60/100 ( 60%)  elapsed   882s  ETA  588s
-    [test] 70/100 ( 70%)  elapsed   952s  ETA  408s
-    [test] 80/100 ( 80%)  elapsed  1092s  ETA  273s
-    [test] 90/100 ( 90%)  elapsed  1161s  ETA  129s
-    [test] 100/100 (100%)  elapsed  1259s  ETA    0s
-  Test done [1259s]
+    [test] 10/100 ( 10%)  elapsed   299s  ETA 2693s
+    [test] 20/100 ( 20%)  elapsed   424s  ETA 1697s
+    [test] 30/100 ( 30%)  elapsed   655s  ETA 1528s
+    [test] 40/100 ( 40%)  elapsed   750s  ETA 1125s
+    [test] 50/100 ( 50%)  elapsed   923s  ETA  923s
+    [test] 60/100 ( 60%)  elapsed  1000s  ETA  666s
+    [test] 70/100 ( 70%)  elapsed  1075s  ETA  461s
+    [test] 80/100 ( 80%)  elapsed  1209s  ETA  302s
+    [test] 90/100 ( 90%)  elapsed  1278s  ETA  142s
+    [test] 100/100 (100%)  elapsed  1387s  ETA    0s
+  Test done [1387s]
 
   Decile report (mean(D_hat) / D_true, averaged within each log-CNR_0 decile):
-  CNR_0 range              n         OLS   inv-var    folded       mas
+  CNR_0 range              n         OLS   inv-var  subtract       mas
   [ 2.00,  2.96]     8      71.145     4.339     0.989     2.135
   [ 2.96,  4.37]    16      60.425     2.279     0.932     1.208
   [ 4.37,  6.47]    11      42.793     1.773     1.105     1.176
@@ -34,7 +34,7 @@ Dense parallel D-free calibration and test
   [45.73, 67.62]    11       1.074     1.012     1.001     1.001
   [67.62, 100.00]    14       1.034     1.007     1.001     1.001
 
-  folded_normal: pooled mean(D_hat)/D_true - 1 per decile (inverse combined variance; calibration SE as one shared systematic)
+  subtract: pooled mean(D_hat)/D_true - 1 per decile (inverse combined variance; calibration SE as one shared systematic)
     [ 2.00,  2.96]  -0.0463 +/- 0.1532 (eval) +/- 0.1537 (cal); -0.21 SE
     [ 2.96,  4.37]  -0.0483 +/- 0.0595 (eval) +/- 0.0830 (cal); -0.47 SE
     [ 4.37,  6.47]  +0.0643 +/- 0.0440 (eval) +/- 0.0519 (cal); +0.95 SE
@@ -63,7 +63,7 @@ Dense parallel D-free calibration and test
   Overall mean |mean(D_hat)/D_true - 1| across all test points (and the value Monte Carlo error alone gives, corrected schemes):
                      ols: 21.935  (median 2.164)
         inverse_variance: 0.615  (median 0.119)
-           folded_normal: 0.080  (median 0.025)  null 0.095
+                subtract: 0.080  (median 0.025)  null 0.095
                      mas: 0.174  (median 0.032)  null 0.095
 
 ======================================================================
@@ -73,20 +73,20 @@ Dense parallel D-free calibration and test
   Calibration ready [0s]; lookup spans per-frame CNR 0.100 -> 100.0 (1200 data points)
 
   Test: 100 random log-distributed CNR_0 in [2.0, 100.0], 1000 runs/cell, seeds 1050000 + i
-    [test] 10/100 ( 10%)  elapsed   364s  ETA 3272s
-    [test] 20/100 ( 20%)  elapsed   559s  ETA 2238s
-    [test] 30/100 ( 30%)  elapsed   854s  ETA 1992s
-    [test] 40/100 ( 40%)  elapsed   985s  ETA 1478s
-    [test] 50/100 ( 50%)  elapsed  1196s  ETA 1196s
-    [test] 60/100 ( 60%)  elapsed  1290s  ETA  860s
-    [test] 70/100 ( 70%)  elapsed  1379s  ETA  591s
-    [test] 80/100 ( 80%)  elapsed  1538s  ETA  385s
-    [test] 90/100 ( 90%)  elapsed  1616s  ETA  180s
-    [test] 100/100 (100%)  elapsed  1736s  ETA    0s
-  Test done [1736s]
+    [test] 10/100 ( 10%)  elapsed   379s  ETA 3414s
+    [test] 20/100 ( 20%)  elapsed   687s  ETA 2749s
+    [test] 30/100 ( 30%)  elapsed  1064s  ETA 2483s
+    [test] 40/100 ( 40%)  elapsed  1234s  ETA 1851s
+    [test] 50/100 ( 50%)  elapsed  1515s  ETA 1515s
+    [test] 60/100 ( 60%)  elapsed  1646s  ETA 1097s
+    [test] 70/100 ( 70%)  elapsed  1760s  ETA  754s
+    [test] 80/100 ( 80%)  elapsed  1969s  ETA  492s
+    [test] 90/100 ( 90%)  elapsed  2069s  ETA  230s
+    [test] 100/100 (100%)  elapsed  2220s  ETA    0s
+  Test done [2220s]
 
   Decile report (mean(D_hat) / D_true, averaged within each log-CNR_0 decile):
-  CNR_0 range              n         OLS   inv-var    folded       mas
+  CNR_0 range              n         OLS   inv-var  subtract       mas
   [ 2.00,  2.96]     7       1.130     2.556     0.486     1.241
   [ 2.96,  4.37]    17       4.539     2.304     0.840     1.265
   [ 4.37,  6.47]     9       5.882     1.839     0.990     1.179
@@ -98,7 +98,7 @@ Dense parallel D-free calibration and test
   [45.73, 67.62]    12       1.093     1.018     1.003     1.002
   [67.62, 100.00]    12       1.038     1.005     1.000     0.999
 
-  folded_normal: pooled mean(D_hat)/D_true - 1 per decile (inverse combined variance; calibration SE as one shared systematic)
+  subtract: pooled mean(D_hat)/D_true - 1 per decile (inverse combined variance; calibration SE as one shared systematic)
     [ 2.00,  2.96]  -0.5565 +/- 0.1407 (eval) +/- 0.1362 (cal); -2.84 SE
     [ 2.96,  4.37]  -0.1461 +/- 0.0587 (eval) +/- 0.0861 (cal); -1.40 SE
     [ 4.37,  6.47]  +0.0170 +/- 0.0523 (eval) +/- 0.0566 (cal); +0.22 SE
@@ -127,7 +127,7 @@ Dense parallel D-free calibration and test
   Overall mean |mean(D_hat)/D_true - 1| across all test points (and the value Monte Carlo error alone gives, corrected schemes):
                      ols: 1.923  (median 0.531)
         inverse_variance: 0.482  (median 0.118)
-           folded_normal: 0.111  (median 0.027)  null 0.090
+                subtract: 0.111  (median 0.027)  null 0.090
                      mas: 0.112  (median 0.030)  null 0.090
 
 ======================================================================
@@ -137,20 +137,20 @@ Dense parallel D-free calibration and test
   Calibration ready [0s]; lookup spans per-frame CNR 0.100 -> 100.0 (1200 data points)
 
   Test: 100 random log-distributed CNR_0 in [2.0, 100.0], 1000 runs/cell, seeds 2050000 + i
-    [test] 10/100 ( 10%)  elapsed   559s  ETA 5033s
-    [test] 20/100 ( 20%)  elapsed   744s  ETA 2975s
-    [test] 30/100 ( 30%)  elapsed   899s  ETA 2097s
-    [test] 40/100 ( 40%)  elapsed  1039s  ETA 1559s
-    [test] 50/100 ( 50%)  elapsed  1137s  ETA 1137s
-    [test] 60/100 ( 60%)  elapsed  1234s  ETA  823s
-    [test] 70/100 ( 70%)  elapsed  1311s  ETA  562s
-    [test] 80/100 ( 80%)  elapsed  1405s  ETA  351s
-    [test] 90/100 ( 90%)  elapsed  1461s  ETA  162s
-    [test] 100/100 (100%)  elapsed  1528s  ETA    0s
-  Test done [1528s]
+    [test] 10/100 ( 10%)  elapsed   778s  ETA 7004s
+    [test] 20/100 ( 20%)  elapsed  1042s  ETA 4166s
+    [test] 30/100 ( 30%)  elapsed  1241s  ETA 2897s
+    [test] 40/100 ( 40%)  elapsed  1431s  ETA 2146s
+    [test] 50/100 ( 50%)  elapsed  1564s  ETA 1564s
+    [test] 60/100 ( 60%)  elapsed  1700s  ETA 1133s
+    [test] 70/100 ( 70%)  elapsed  1801s  ETA  772s
+    [test] 80/100 ( 80%)  elapsed  1934s  ETA  483s
+    [test] 90/100 ( 90%)  elapsed  2011s  ETA  223s
+    [test] 100/100 (100%)  elapsed  2100s  ETA    0s
+  Test done [2101s]
 
   Decile report (mean(D_hat) / D_true, averaged within each log-CNR_0 decile):
-  CNR_0 range              n         OLS   inv-var    folded       mas
+  CNR_0 range              n         OLS   inv-var  subtract       mas
   [ 2.00,  2.96]     5       6.334     6.082     0.556     3.769
   [ 2.96,  4.37]     3      12.127     2.432     0.806     1.370
   [ 4.37,  6.47]     9      14.548     1.895     1.026     1.235
@@ -162,7 +162,7 @@ Dense parallel D-free calibration and test
   [45.73, 67.62]    18       1.129     1.023     1.002     1.002
   [67.62, 100.00]    18       1.040     1.010     1.002     1.001
 
-  folded_normal: pooled mean(D_hat)/D_true - 1 per decile (inverse combined variance; calibration SE as one shared systematic)
+  subtract: pooled mean(D_hat)/D_true - 1 per decile (inverse combined variance; calibration SE as one shared systematic)
     [ 2.00,  2.96]  -0.4204 +/- 0.2843 (eval) +/- 0.2210 (cal); -1.17 SE
     [ 2.96,  4.37]  -0.2007 +/- 0.1667 (eval) +/- 0.1062 (cal); -1.02 SE
     [ 4.37,  6.47]  +0.0589 +/- 0.0574 (eval) +/- 0.0625 (cal); +0.69 SE
@@ -191,7 +191,7 @@ Dense parallel D-free calibration and test
   Overall mean |mean(D_hat)/D_true - 1| across all test points (and the value Monte Carlo error alone gives, corrected schemes):
                      ols: 3.853  (median 0.728)
         inverse_variance: 0.480  (median 0.092)
-           folded_normal: 0.084  (median 0.019)  null 0.074
+                subtract: 0.084  (median 0.019)  null 0.074
                      mas: 0.199  (median 0.020)  null 0.074
 
 ======================================================================
@@ -201,20 +201,20 @@ Dense parallel D-free calibration and test
   Calibration ready [0s]; lookup spans per-frame CNR 0.100 -> 100.0 (1200 data points)
 
   Test: 100 random log-distributed CNR_0 in [2.0, 100.0], 1000 runs/cell, seeds 3050000 + i
-    [test] 10/100 ( 10%)  elapsed   266s  ETA 2394s
-    [test] 20/100 ( 20%)  elapsed   393s  ETA 1571s
-    [test] 30/100 ( 30%)  elapsed   599s  ETA 1398s
-    [test] 40/100 ( 40%)  elapsed   694s  ETA 1041s
-    [test] 50/100 ( 50%)  elapsed   849s  ETA  849s
-    [test] 60/100 ( 60%)  elapsed   918s  ETA  612s
-    [test] 70/100 ( 70%)  elapsed   978s  ETA  419s
-    [test] 80/100 ( 80%)  elapsed  1078s  ETA  269s
-    [test] 90/100 ( 90%)  elapsed  1127s  ETA  125s
-    [test] 100/100 (100%)  elapsed  1197s  ETA    0s
-  Test done [1197s]
+    [test] 10/100 ( 10%)  elapsed   363s  ETA 3270s
+    [test] 20/100 ( 20%)  elapsed   533s  ETA 2130s
+    [test] 30/100 ( 30%)  elapsed   819s  ETA 1911s
+    [test] 40/100 ( 40%)  elapsed   947s  ETA 1421s
+    [test] 50/100 ( 50%)  elapsed  1163s  ETA 1163s
+    [test] 60/100 ( 60%)  elapsed  1256s  ETA  837s
+    [test] 70/100 ( 70%)  elapsed  1336s  ETA  573s
+    [test] 80/100 ( 80%)  elapsed  1473s  ETA  368s
+    [test] 90/100 ( 90%)  elapsed  1539s  ETA  171s
+    [test] 100/100 (100%)  elapsed  1636s  ETA    0s
+  Test done [1636s]
 
   Decile report (mean(D_hat) / D_true, averaged within each log-CNR_0 decile):
-  CNR_0 range              n         OLS   inv-var    folded       mas
+  CNR_0 range              n         OLS   inv-var  subtract       mas
   [ 2.00,  2.96]    12      -3.078    -0.932     0.573    -0.904
   [ 2.96,  4.37]    13      -1.977     0.213     0.794     0.229
   [ 4.37,  6.47]     9      -0.653     0.799     0.925     0.784
@@ -226,7 +226,7 @@ Dense parallel D-free calibration and test
   [45.73, 67.62]    12       1.023     1.005     1.001     1.001
   [67.62, 100.00]     8       1.005     1.001     0.999     0.999
 
-  folded_normal: pooled mean(D_hat)/D_true - 1 per decile (inverse combined variance; calibration SE as one shared systematic)
+  subtract: pooled mean(D_hat)/D_true - 1 per decile (inverse combined variance; calibration SE as one shared systematic)
     [ 2.00,  2.96]  -0.4099 +/- 0.0499 (eval) +/- 0.0632 (cal); -5.09 SE
     [ 2.96,  4.37]  -0.1924 +/- 0.0360 (eval) +/- 0.0448 (cal); -3.35 SE
     [ 4.37,  6.47]  -0.0633 +/- 0.0248 (eval) +/- 0.0263 (cal); -1.75 SE
@@ -255,7 +255,7 @@ Dense parallel D-free calibration and test
   Overall mean |mean(D_hat)/D_true - 1| across all test points (and the value Monte Carlo error alone gives, corrected schemes):
                      ols: 1.180  (median 0.356)
         inverse_variance: 0.366  (median 0.029)
-           folded_normal: 0.099  (median 0.020)  null 0.049
+                subtract: 0.099  (median 0.020)  null 0.049
                      mas: 0.363  (median 0.027)  null 0.049
 
-[total wall time: 95.3 min]
+[total wall time: 122.4 min]

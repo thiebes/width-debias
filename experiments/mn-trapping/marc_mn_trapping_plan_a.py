@@ -2,7 +2,7 @@
 
 Per-frame variance recovery on the noiseless diffusion map of the 0.51% Mn
 sample from Magdaleno et al. 2025 (ACS Nanosci. Au). For each frame in
-Marc's noiseless diffmap, ask whether the folded-normal-corrected fitted
+Marc's noiseless diffmap, ask whether the corrected fitted
 variance matches the noiseless fit.
 
 This version uses the **joint (CNR, sigma^2) calibration** loaded from
@@ -94,7 +94,7 @@ def per_frame_cnr_known(noiseless: np.ndarray, noise_sigma: float) -> np.ndarray
 def validation_pass(noiseless: np.ndarray, x_arr: np.ndarray, fit_fn,
                     trunc_model: BiasLookup, cnr0: float, n_seeds: int,
                     peak0: float, seed_base: int = 0):
-    """Per-frame raw and folded-normal-corrected variance over n_seeds.
+    """Per-frame raw and corrected variance over n_seeds.
 
     The BiasLookup carries the joint (CNR, sigma^2) lookup; calling
     ``corrected_variance("subtract", ...)`` invokes the fixed-point

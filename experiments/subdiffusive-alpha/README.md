@@ -10,7 +10,7 @@ anomalous exponent alpha, not only D, on the `AnomalousExperiment` bed
 
 - `subdiffusive_alpha.py [profile_model] [--quick] [--floor F]` -- sweeps true
   alpha in {0.6, 0.8, 1.0, 1.2} x CNR0 and fits `MSD = 2 D t^alpha`, comparing
-  the naive all-frames fit against folded-normal + the per-frame CNR floor cut.
+  the naive all-frames fit against `subtract` + the per-frame CNR floor cut.
 
 ## Data
 

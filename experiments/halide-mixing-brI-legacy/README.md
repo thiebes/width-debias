@@ -13,7 +13,7 @@ stress test. The clean high-statistics Br-I bed is
 ## Contents
 
 - `br_data.py` -- loader; reads the diffmaps directly from the pshare.
-- `br_halide_validation.py` -- Gaussian fit + folded-normal + floor cut; naive vs
+- `br_halide_validation.py` -- Gaussian fit + `subtract` + floor cut; naive vs
   corrected vs particle truth across three Br fractions and a CNR0 sweep.
 - `rerun/` -- instructions and helpers for running and averaging multiple
   simulation instances (`average_diffmaps.py`, `run_instances.sh`, `README.md`).

@@ -10,8 +10,8 @@ Two figures:
 
 * mechanism -- for one strong non-Fickian regime at one moderate CNR_0, the
   per-frame variance sigma^2(t): the noise-free reference, the uncorrected mean
-  (which lifts above the reference at the low-CNR late frames -- the truncation
-  bias), and the folded-normal-corrected mean. Shows what the noise correction
+  (which lifts above the reference at the low-CNR late frames -- the noise
+  bias), and the corrected mean. Shows what the noise correction
   does, and that on this bed the divergence sits mostly in the excluded
   below-floor region (the reason this is not a poster panel).
 * distortion-alphas -- across the density-coupling sweep, three anomalous
@@ -57,7 +57,7 @@ from width_debias.weights import corrected_variance  # noqa: E402
 # Okabe-Ito roles (see plot_style.md; match scripts/poster_figures.py).
 BLUE = "#0072B2"    # truth / noise-free reference
 GOLD = "#E69F00"    # recorded-emission moment (intermediate)
-GREEN = "#009E73"   # folded-normal corrected
+GREEN = "#009E73"   # corrected (subtract)
 RED = "#D55E00"     # uncorrected / naive-fit (biased)
 INCH = 1.0 / 2.54
 
@@ -140,7 +140,7 @@ def _emission_frames(A: float):
 
 
 def fig_mechanism() -> None:
-    """Variance trajectory: raw lift vs folded recovery at one CNR_0."""
+    """Variance trajectory: raw lift vs corrected recovery at one CNR_0."""
     if not os.path.exists(CALIBRATION):
         print(f"[skip mechanism: build {CALIBRATION} first]")
         return
@@ -168,7 +168,7 @@ def fig_mechanism() -> None:
         ax.axvspan(times[below][0], times[-1], color="0.85", alpha=0.5, lw=0)
     ax.plot(times, ref, "-", lw=2, color=BLUE, label="noise-free reference")
     ax.plot(times, mean_raw, "o-", lw=2, color=RED, label="uncorrected")
-    ax.plot(times, mean_cor, "s-", lw=2, color=GREEN, label="folded-normal")
+    ax.plot(times, mean_cor, "s-", lw=2, color=GREEN, label="subtract")
     ax.set_xlabel("time (ns)", fontsize=FONT)
     ax.set_ylabel(r"variance  $\sigma^2$  (μm$^2$)", fontsize=FONT)
     ax.set_ylim(0.0, float(np.nanmax(ref) * 2.2))

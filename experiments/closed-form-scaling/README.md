@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Test the dimensional/CRLB scaling claim that the folded-normal bias `bias/sigma^2`
+Test the dimensional/CRLB scaling claim that the noise bias `bias/sigma^2`
 is a function of `s = CNR*sqrt(sigma/dx)` alone, not CNR alone. The test is
 the empirical check on the closed-form scaling argument.
 

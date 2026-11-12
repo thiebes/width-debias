@@ -1,17 +1,17 @@
-"""Diagnose the high-spread folded-normal overcorrection on the Saha bed.
+"""Diagnose the high-spread overcorrection of the ``subtract`` scheme on the Saha bed.
 
-At low CNR_0 and high spread, folded-normal pulls the recovered alpha below the
+At low CNR_0 and high spread, the correction pulls the recovered alpha below the
 noise-free-fit reference. The shape-mismatch explanation is ruled out (the Saha
 emission profile is near-Gaussian, beta ~ 1.93), so this script tests the next
 hypothesis: the 2-D calibration over-estimates the per-frame variance bias at
-the low-CNR late frames and folded therefore over-subtracts.
+the low-CNR late frames and the correction therefore over-subtracts.
 
 Per frame at several operating points it compares two quantities:
 
 * B_actual  -- the real noise-induced Gaussian-fit bias, measured by Monte Carlo
                on the actual Saha profile: E[sigma_hat^2] - sigma^2_ref, where
                sigma^2_ref is the noise-free fit variance.
-* B_calib   -- what folded-normal actually subtracts: the mean over the same
+* B_calib   -- what the correction actually subtracts: the mean over the same
                realisations of model.var_bias(cnr, sigma_hat^2) (the 2-D lookup
                with its fixed-point inversion, exactly as `corrected_variance`
                calls it).

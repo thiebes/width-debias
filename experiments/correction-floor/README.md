@@ -10,12 +10,12 @@ and inside a full diffusion experiment.
 
 - `per_profile_floor.py [profile_model]` -- isolated single-profile sweep
   (50,000 fits per CNR cell); residual `mean(sigma_tilde^2) - sigma^2_true`.
-- `analytical_floor.py [MODEL ...]` -- tests the folded-normal prediction
+- `analytical_floor.py [MODEL ...]` -- tests the leading-order prediction
   `var_bias = A/CNR^2` against the binned calibration and reports where it
   breaks; `A` comes from the exact Fisher information of the width fit, with
   the Monte Carlo estimator spread at high CNR as a check.
 - `per_frame_in_diffusion_experiment.py [profile_model]` -- the per-frame
-  folded-normal / MAS corrections inside a 12-frame diffusion experiment.
+  `subtract` / MAS corrections inside a 12-frame diffusion experiment.
 - `render_floor_panel.py` -- renders the floor figure
   (`poster_panel5_floor.png`) from this set's `per_profile_floor_*.txt`; uses
   `scripts/poster_style.py`.
@@ -71,7 +71,7 @@ per-profile CNR 1.16 up, |residual| is at most 0.006 σ₀² (Gaussian), 0.008 �
 (Voigt), and 0.004 σ₀² (p = 1.5), and p = 4 stays within 0.005 σ₀² from 0.89
 up. The p = 4 fit reads low at deep CNR (raw mean 0.53 σ₀² at CNR 0.05).
 
-The folded-normal model (`analytical_floor.py`, 30 CNR₀ cells of 1000 runs)
+The leading-order model (`analytical_floor.py`, 30 CNR₀ cells of 1000 runs)
 takes `A` from the exact Fisher information of the width fit: 0.0564
 (Gaussian), 0.0812 (Voigt), 0.1007 (p = 1.5), and 0.0191 (p = 4) σ₀². The
 Monte Carlo estimator spread at CNR ≥ 8 agrees to a Fisher / Monte Carlo ratio

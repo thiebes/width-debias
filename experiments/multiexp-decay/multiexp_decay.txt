@@ -1,5 +1,5 @@
 ==============================================================================
-Multi-exponential decay: is the folded-normal correction invalidated?
+Multi-exponential decay: is the noise-bias correction invalidated?
 ==============================================================================
 Fickian D = 0.02 sigma0^2/tau; Gaussian fit; standard geometry.
 calibration: D-free (calibrate_d_free, D = 0), Gaussian, 60 CNR0 in [2, 100] x 1500 runs, seeds 1 + i (shared cache calibration_subdiffusive.npz).

@@ -188,7 +188,7 @@ Dense sweep (`dense_calibration_and_test_four_shapes.txt`; cached 5000-run
 calibration over 100 CNR₀ cells, then 100 random log-distributed test CNR₀ in
 [2, 100] × 1000 runs per shape, seeds offset by 10⁶ per shape). Pooled over all
 100 test points, with the calibration SE as one shared systematic, the
-folded-normal D/D_ref − 1 is +0.0012 ± 0.0037 (Gaussian), +0.0016 ± 0.0043
+`subtract` D/D_ref − 1 is +0.0012 ± 0.0037 (Gaussian), +0.0016 ± 0.0043
 (Voigt), +0.0026 ± 0.0046 (p = 1.5), and −0.0004 ± 0.0022 (p = 4), each within
 0.6 combined SE. In the CNR₀ 2 to 3 decile the corrected D reads low on Voigt
 (decile mean 0.49; pooled −0.56, 2.8 combined SE) and p = 4 (0.57; −0.41, 5.1
@@ -196,8 +196,8 @@ SE). The last frames there sit near per-frame CNR 0.1, far below the floor,
 where the subtraction over-corrects. MAS reads high below CNR₀ about 6.5 on
 Gaussian, Voigt, and p = 1.5 (pooled +0.13 to +2.7), and on p = 4 it reads low
 (−0.73 at CNR₀ 3 to 4.4, −1.83 at CNR₀ 2 to 3), so MAS fails in both directions
-depending on the shape. Folded-normal is the default. The overall mean
-|⟨D̂⟩/D_ref − 1|, folded-normal against MAS, is 0.080 against 0.174 (Gaussian),
+depending on the shape. `subtract` is the default. The overall mean
+|⟨D̂⟩/D_ref − 1|, `subtract` against MAS, is 0.080 against 0.174 (Gaussian),
 0.111 against 0.112 (Voigt), 0.084 against 0.199 (p = 1.5), and 0.099 against
 0.363 (p = 4); Monte Carlo error alone would give 0.095, 0.090, 0.074, and
 0.049.

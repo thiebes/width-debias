@@ -166,7 +166,7 @@ def main() -> None:
 
     lines = [
         "=" * 70,
-        "Disordered NC-solid validation (Solari et al.) -- folded-normal",
+        "Disordered NC-solid validation (Solari et al.) -- subtract",
         "Gaussian fit; reference = carrier 2nd moment (var_true); decay tau = "
         f"{cases[0].tau_ns:.0f} ns",
         "=" * 70,

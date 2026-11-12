@@ -1,5 +1,5 @@
 ======================================================================
-Disordered NC-solid validation (Solari et al.) -- folded-normal
+Disordered NC-solid validation (Solari et al.) -- subtract
 Gaussian fit; reference = carrier 2nd moment (var_true); decay tau = 7 ns
 ======================================================================
 n_seeds per CNR_0: 400;  reliable regime: per-frame CNR >= 1.0

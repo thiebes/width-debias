@@ -1,7 +1,7 @@
 # Saha reaction-diffusion test bed
 
 A Python port of Marc Meléndez's Saha reaction-diffusion model, used as a
-realistic non-Fickian test bed for the folded-normal truncation correction. The
+realistic non-Fickian test bed for the noise-bias correction. The
 model is the spatial extension of the Cutrupi et al. (2026) rate model: a single
 charge-pair population diffuses, and at every point the Saha equation sets the
 free-charge fraction, so excitons and free charges diffuse at different rates and
@@ -16,7 +16,7 @@ Antonella and Carlos free-exciton diffusion paper) are in the separate
 The correction does not improve the recovered exponent on this bed.
 `poster_saha_nonfickian.png` (no error bars; its generating script is not in this
 repo) shows the uncorrected alpha below the noise-free-fit reference (1.270) by
-0.034 at the lowest CNR_0 (about 12) and folded-normal further below it, by
+0.034 at the lowest CNR_0 (about 12) and `subtract` further below it, by
 0.055; the same order holds at CNR_0 about 18 and 25, and from CNR_0 40 up both
 are within 0.003 of the reference. Two properties limit what the bed
 demonstrates:
@@ -59,13 +59,13 @@ The bed supports three technical results:
   plus the non-truncated moment estimator), applies the noise-bias correction,
   flags the CNR floor, and reports how many non-positive MSD points the
   log-log exponent fit leaves out (`nonfickian_validation.txt`, CNR_0 60: 0 to
-  1 per regime on the moment path, none on the Gaussian + folded path).
+  1 per regime on the moment path, none on the Gaussian + `subtract` path).
 - `diagnose_overcorrection.py` — locates where the 2-D lookup starts to
   over-subtract (compares the measured per-frame fit bias against what the
   calibration subtracts, frame by frame, with a paired SE);
   `diagnose_overcorrection.txt` is its committed output.
 - `forward_fit_validation.py` — stage-2 forward-fit validation: recovers the
-  carrier transport by fitting the forward model, applying the folded-normal
+  carrier transport by fitting the forward model, applying the noise-bias
   correction to the low-CNR frames. Imports the `width_debias` library.
 - `distortion_figures.py` — illustration and diagnostic figures: the two gaps
   (carrier vs emission vs fit α) and the variance-trajectory mechanism.
