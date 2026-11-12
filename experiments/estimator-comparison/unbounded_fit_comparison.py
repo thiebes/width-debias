@@ -24,7 +24,7 @@ Two levels:
   fits.
 * **D-level (the deliverable).** A full diffusion experiment across a CNR_0
   sweep. Reports <D>/D_true (bias) and SD(D/D_true) (precision) for the bounded
-  fit + OLS (naive), the bounded fit + folded-normal (the method), the
+  fit + OLS (naive), the bounded fit + subtract (the method), the
   unbounded fit + OLS (no correction), and the moment estimator + OLS.
 
 All variances in sigma_0^2; D ratios are dimensionless.
@@ -139,15 +139,15 @@ def d_level_sweep():
     print(f"  D = {EXP.D} sigma_0^2/tau (L_D/FWHM_0 ~ 0.085), "
           f"{D_N_RUNS} runs/CNR_0\n")
 
-    print(f"  Building D-free folded-normal calibration "
+    print(f"  Building D-free calibration "
           f"({CAL_CNR0_GRID.size} CNR_0, {CAL_N_RUNS} runs/cell)...", flush=True)
     t0 = time.time()
     trunc = calibrate_d_free(CAL_CNR0_GRID, n_runs=CAL_N_RUNS, seed=1,
                              model=GaussianModel())
     print(f"  Calibration done [{time.time() - t0:.0f}s]", flush=True)
 
-    # Bounded fit: OLS (naive) and folded-normal (the method), from one sweep.
-    print("  Bounded Gaussian fit (OLS + folded-normal)...", flush=True)
+    # Bounded fit: OLS (naive) and subtract (the method), from one sweep.
+    print("  Bounded Gaussian fit (OLS + subtract)...", flush=True)
     bounded = evaluate(EXP, D_CNR0_GRID, trunc, n_runs=D_N_RUNS, seed=20000,
                        profile_model=GaussianModel())
     print("  Unbounded Gaussian fit (OLS)...", flush=True)
@@ -160,33 +160,27 @@ def d_level_sweep():
 
     series = {
         "bounded+OLS":    (bounded["ols"].mean_bias, bounded["ols"].spread),
-        "bounded+folded": (bounded["subtract"].mean_bias,
+        "bounded+subtract": (bounded["subtract"].mean_bias,
                            bounded["subtract"].spread),
         "unbounded+OLS":  (unb_mean, unb_sd),
         "moment+OLS":     (mom_mean, mom_sd),
     }
 
     print("\n  <D_est>/D_true   (1.000 = unbiased)")
-    print("  CNR_0 " + "".join(f"{k:>16}" for k in series))
+    print("  CNR_0 " + "".join(f"{k:>18}" for k in series))
     for i, c0 in enumerate(D_CNR0_GRID):
-        print(f"  {c0:5.0f} " + "".join(f"{series[k][0][i]:16.3f}"
+        print(f"  {c0:5.0f} " + "".join(f"{series[k][0][i]:18.3f}"
                                         for k in series))
     print("\n  SD(D_est/D_true)   (precision; lower = tighter)")
-    print("  CNR_0 " + "".join(f"{k:>16}" for k in series))
+    print("  CNR_0 " + "".join(f"{k:>18}" for k in series))
     for i, c0 in enumerate(D_CNR0_GRID):
-        print(f"  {c0:5.0f} " + "".join(f"{series[k][1][i]:16.3f}"
+        print(f"  {c0:5.0f} " + "".join(f"{series[k][1][i]:18.3f}"
                                         for k in series))
     return series
 
 
 # --- Figure ----------------------------------------------------------------
-SPAIN_CVD = {
-    "red":    "#D55E00",
-    "gold":   "#E69F00",
-    "blue":   "#0072B2",
-    "green":  "#009E73",
-    "purple": "#CC79A7",
-}
+DICE = {"blue": "#003f7f", "gold": "#f7941e", "green": "#0cce6b"}
 inch = 1 / 2.54
 
 
@@ -202,11 +196,13 @@ def make_figure(pf_rows, d_series):
     fs = 8
     fig, axes = plt.subplots(2, 2, layout="constrained",
                              figsize=(17 * inch, 14 * inch))
-    for ax in axes.flat:
+    for letter, ax in zip("abcd", axes.flat):
         ax.tick_params(axis="both", which="both", direction="in",
-                       top=True, right=True, labelsize=fs, length=4, width=1)
-    fig.patch.set_facecolor("w")
-    fig.patch.set_alpha(1)
+                       top=False, right=False, labelsize=fs, length=4, width=1)
+        ax.set_facecolor("white")
+        ax.text(0.03, 0.97, f"({letter})", transform=ax.transAxes, va="top",
+                fontsize=fs, fontweight="bold")
+    fig.patch.set_alpha(0)
 
     cnr = np.array([r[0] for r in pf_rows])
     bm = np.array([r[1] for r in pf_rows])
@@ -217,9 +213,9 @@ def make_figure(pf_rows, d_series):
     # Panel A: per-frame bias (mean fitted variance vs CNR).
     axA = axes[0, 0]
     axA.axhline(1.0, ls="--", c="k", lw=1)
-    axA.plot(cnr, bm, "-o", color=SPAIN_CVD["red"], lw=2, ms=3,
+    axA.plot(cnr, bm, "-o", color=DICE["blue"], lw=2, ms=3,
              label="bounded fit")
-    axA.plot(cnr, um, "-s", color=SPAIN_CVD["green"], lw=2, ms=3,
+    axA.plot(cnr, um, "-s", color=DICE["gold"], lw=2, ms=3,
              label="unbounded fit")
     axA.set_xscale("log")
     axA.set_xlabel("per-frame CNR", fontsize=fs)
@@ -228,9 +224,9 @@ def make_figure(pf_rows, d_series):
 
     # Panel B: per-frame precision (SD of fitted variance vs CNR).
     axB = axes[0, 1]
-    axB.plot(cnr, bsd, "-o", color=SPAIN_CVD["red"], lw=2, ms=3,
+    axB.plot(cnr, bsd, "-o", color=DICE["blue"], lw=2, ms=3,
              label="bounded fit")
-    axB.plot(cnr, usd, "-s", color=SPAIN_CVD["green"], lw=2, ms=3,
+    axB.plot(cnr, usd, "-s", color=DICE["gold"], lw=2, ms=3,
              label="unbounded fit")
     axB.set_xscale("log")
     axB.set_yscale("log")
@@ -244,9 +240,9 @@ def make_figure(pf_rows, d_series):
     # drawn and would squash the three width-fit curves. Its numbers are in the
     # printed table and the caption note instead (cf. moment_estimator_failure.py).
     d_style = {
-        "bounded+OLS":    (SPAIN_CVD["red"], "-o"),
-        "bounded+folded": (SPAIN_CVD["blue"], "-o"),
-        "unbounded+OLS":  (SPAIN_CVD["green"], "-s"),
+        "bounded+OLS":    (DICE["blue"], "-o"),
+        "bounded+subtract": (DICE["green"], "-o"),
+        "unbounded+OLS":  (DICE["gold"], "-s"),
     }
 
     # Panel C: D bias vs CNR_0.
@@ -257,7 +253,7 @@ def make_figure(pf_rows, d_series):
                  label=label)
     axC.set_xscale("log")
     axC.set_yscale("log")
-    axC.set_xlabel(r"initial CNR$_0$", fontsize=fs)
+    axC.set_xlabel(r"$\mathrm{CNR}_0$", fontsize=fs)
     axC.set_ylabel(r"$\langle D_{\mathrm{est}}\rangle\,/\,D_{\mathrm{true}}$",
                    fontsize=fs)
     axC.legend(frameon=False, fontsize=fs)
@@ -269,14 +265,23 @@ def make_figure(pf_rows, d_series):
                  label=label)
     axD.set_xscale("log")
     axD.set_yscale("log")
-    axD.set_xlabel(r"initial CNR$_0$", fontsize=fs)
+    axD.set_xlabel(r"$\mathrm{CNR}_0$", fontsize=fs)
     axD.set_ylabel(r"$\mathrm{SD}(D_{\mathrm{est}}/D_{\mathrm{true}})$",
                    fontsize=fs)
     axD.legend(frameon=False, fontsize=fs)
 
+    # Headroom at the top of every panel: the first data point sits in the
+    # upper-left corner, where the panel letter goes.
+    for ax in axes.flat:
+        lo, hi = ax.get_ylim()
+        if ax.get_yscale() == "log":
+            ax.set_ylim(lo, hi * 3.0)
+        else:
+            ax.set_ylim(lo, hi + 0.12 * (hi - lo))
+
     os.makedirs("output", exist_ok=True)
     out = os.path.join("output", "unbounded_fit_comparison.png")
-    fig.savefig(out, dpi=200)
+    fig.savefig(out, dpi=300)
     plt.close(fig)
     print(f"\nFigure written to {out}")
 

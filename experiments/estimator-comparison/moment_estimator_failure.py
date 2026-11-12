@@ -42,7 +42,7 @@ N_RUNS = 400
 COLUMNS = [
     ("gauss+OLS",      "gaussian", "ols"),
     ("gauss+inv-var",  "gaussian", "inverse_variance"),
-    ("gauss+folded",   "gaussian", "subtract"),
+    ("gauss+subtract",   "gaussian", "subtract"),
     ("gauss+MAS",      "gaussian", "mas"),
     ("moment+inv-var", "moment",   "inverse_variance"),
 ]
@@ -84,12 +84,17 @@ def main() -> None:
     for lab in labels:
         print(f"    {lab:<16} {np.nanmean(spread[lab]):.3f}")
 
-    print("\n  Reading: MAS gives the lowest bias and removes the deep-regime")
-    print("  overshoot that folded-normal shows at CNR_0 = 5. The moment")
-    print("  estimator is unbiased per frame but its profile-ratio form is")
-    print("  unstable -- a near-zero denominator produces wild, often negative")
-    print("  D. Removing the wall needs a stable non-truncated estimator")
-    print("  (CVE-style, on raw displacements), not an intensity-profile moment.")
+    # The verdict is computed, not written in: which corrected scheme is less
+    # biased depends on the draw, and the moment estimator's failure is counted.
+    gauss_labels = [lab for lab, m, _ in COLUMNS if m == "gaussian"]
+    best = min(gauss_labels, key=lambda lab: np.nanmean(np.abs(bias[lab] - 1.0)))
+    n_neg = int(np.sum(bias["moment+inv-var"] < 0))
+    print(f"\n  Reading: lowest mean |bias-1| among the Gaussian-fit schemes: {best}.")
+    print(f"  moment+inv-var: mean D negative at {n_neg} of {CNR0_GRID.size} CNR_0, "
+          f"mean spread {np.nanmean(spread['moment+inv-var']):.1f} against "
+          f"{np.nanmean(spread['gauss+subtract']):.1f} for gauss+subtract. The moment")
+    print("  estimator is a ratio of noisy sums with an estimated centroid (bias of")
+    print("  order 1/CNR^2); a near-zero denominator makes it unstable.")
 
     _plot(bias)
 
@@ -106,26 +111,31 @@ def _plot(bias) -> None:
     # The figure shows the four Gaussian-fit schemes on a log axis. The moment
     # estimator goes negative (unstable) and cannot be drawn on log y; its
     # failure is reported in the printed table instead.
+    # Spanish-flag palette (four series); the caption carries the title role.
     styles = {
-        "gauss+OLS":     ("tab:gray",   "o-"),
-        "gauss+inv-var": ("tab:orange", "o-"),
-        "gauss+folded":  ("tab:green",  "o-"),
-        "gauss+MAS":     ("tab:blue",   "o-"),
+        "gauss+OLS":      ("#540d6e", "o-"),   # indigo
+        "gauss+inv-var":  ("#9E7900", "o-"),   # flag yellow, deep variant for lines
+        "gauss+subtract": ("#0077c8", "o-"),   # blue
+        "gauss+MAS":      ("#4a7729", "o-"),   # fern green
     }
-    fig, ax = plt.subplots(figsize=(6.4, 4.6))
+    inch, font = 1 / 2.54, 8
+    fig, ax = plt.subplots(figsize=(12 * inch, 9 * inch), layout="constrained")
+    fig.patch.set_alpha(0)
+    ax.set_facecolor("white")
     for lab, (color, ls) in styles.items():
-        ax.plot(CNR0_GRID, bias[lab], ls, color=color, label=lab)
+        ax.plot(CNR0_GRID, bias[lab], ls, color=color, lw=2, ms=4, label=lab)
     ax.axhline(1.0, ls="--", c="k", lw=1, label="unbiased")
     ax.set_xscale("log")
     ax.set_yscale("log")
-    ax.set_xlabel("initial CNR$_0$")
-    ax.set_ylabel("$\\langle D_{est}\\rangle\\,/\\,D_{true}$")
-    ax.set_title("Bias in $D$: MAS-gated correction vs the alternatives")
-    ax.legend(fontsize=8)
-    fig.tight_layout()
+    ax.set_xlabel(r"$\mathrm{CNR}_0$", fontsize=font)
+    ax.set_ylabel(r"$\langle \hat{D} \rangle / D_\mathrm{true}$", fontsize=font)
+    ax.tick_params(axis="both", which="both", direction="in", top=False,
+                   right=False, labelsize=font)
+    ax.legend(fontsize=font, frameon=False)
     os.makedirs("output", exist_ok=True)
     out = os.path.join("output", "method_comparison.png")
-    fig.savefig(out, dpi=150)
+    fig.savefig(out, dpi=300)
+    plt.close(fig)
     print(f"\nFigure written to {out}")
 
 

@@ -24,34 +24,35 @@ Per-frame mechanism: isolated profiles at sigma^2 = 1 sigma_0^2
 D-level head-to-head: full diffusion experiment
   D = 0.02 sigma_0^2/tau (L_D/FWHM_0 ~ 0.085), 2500 runs/CNR_0
 
-  Building D-free folded-normal calibration (50 CNR_0, 1500 runs/cell)...
-  Calibration done [1080s]
-  Bounded Gaussian fit (OLS + folded-normal)...
+  Building D-free calibration (50 CNR_0, 1500 runs/cell)...
+  Calibration done [1660s]
+  Bounded Gaussian fit (OLS + subtract)...
   Unbounded Gaussian fit (OLS)...
   Moment estimator (OLS)...
 
   <D_est>/D_true   (1.000 = unbiased)
-  CNR_0      bounded+OLS  bounded+folded   unbounded+OLS      moment+OLS
-      4           55.451           1.062          10.888     -121719.644
-      6           28.403           0.886           9.256      -15308.951
-      9           16.703           0.843           7.357     -312018.636
-     13            5.798           1.049           4.470        -947.393
-     21            1.618           1.016           1.524        -240.927
-     34            1.199           0.999           1.199         -15.645
-     55            1.080           1.027           1.080          -2.555
-     90            1.024           1.021           1.024          -0.432
+  CNR_0        bounded+OLS  bounded+subtract     unbounded+OLS        moment+OLS
+      4             55.451             1.029            10.888       -121719.644
+      6             28.403             0.885             9.256        -15308.951
+      9             16.703             0.823             7.357       -312018.636
+     13              5.798             1.009             4.470          -947.393
+     21              1.618             1.028             1.524          -240.927
+     34              1.199             1.013             1.199           -15.645
+     55              1.080             1.009             1.080            -2.555
+     90              1.024             1.003             1.024            -0.432
 
   SD(D_est/D_true)   (precision; lower = tighter)
-  CNR_0      bounded+OLS  bounded+folded   unbounded+OLS      moment+OLS
-      4          132.444          13.900          61.012     4569944.200
-      6           80.891           5.686          46.161      284917.104
-      9           64.316           3.045          32.878    15171818.578
-     13           25.111           2.004          24.003        9165.770
-     21            4.854           1.159           3.551        6318.582
-     34            1.752           1.029           1.752         198.029
-     55            1.005           0.554           1.005          10.330
-     90            0.604           0.355           0.604           5.374
+  CNR_0        bounded+OLS  bounded+subtract     unbounded+OLS        moment+OLS
+      4            132.444             8.271            61.012       4569944.200
+      6             80.891             3.769            46.161        284917.104
+      9             64.316             2.181            32.878      15171818.578
+     13             25.111             1.405            24.003          9165.770
+     21              4.854             0.814             3.551          6318.582
+     34              1.752             0.488             1.752           198.029
+     55              1.005             0.306             1.005            10.330
+     90              0.604             0.186             0.604             5.374
+Results saved to output\unbounded_fit_comparison.npz
 
 Figure written to output\unbounded_fit_comparison.png
 
-[total 62.3 min]
+[total 85.6 min]
