@@ -1,27 +1,33 @@
 ==============================================================================
 Coverage / interval check -- does the reported CI on D cover the truth?
 ==============================================================================
-D_true = 0.02 sigma0^2/tau, Gaussian, standard geometry; 8000 runs/cell, 200 bootstrap.
+D_true = 0.02 sigma0^2/tau, Gaussian, standard geometry; 8000 runs/cell, 2000 bootstrap.
 calibration: D-free (calibrate_d_free, D = 0), Gaussian, 60 CNR0 in [2, 100] x 1500 runs, seeds 1 + i (shared cache calibration_subdiffusive.npz); evaluation seeds 90000 + 100 k for CNR0 index k, bootstrap seed + 7.
 0.95 intervals. Coverage = fraction containing D_true.
-subtract is de-biased (coverage meaningful); inverse_variance is biased (contrast).
+subtract is de-biased; inverse_variance is the uncorrected contrast.
+median sub/iv = median D_hat / D_true for subtract / inverse_variance.
 narrowness = D_se/SD(D_hat) (<1 = covariance CI too narrow).
-infl = sqrt(Var_full/Var_diag): how much the shared sigma_hat^2_0
-       correlation alone should widen the slope CI (>1 = correlation matters).
-SEs: batch means over 8 sub-ensembles (narrow, infl); binomial (coverages).
+SEs: batch means over 8 sub-ensembles (narrowness); binomial (coverages; cov SE is the covariance interval's, the others are alike).
+SEs are conditional on the one calibration, whose Monte Carlo error is shared by every cell.
 
-   CNR0 | minCNR | bias fn/iv |  SD/D |  narrow +/- SE   | infl +/- SE     |  skew | cover cov/boot/iv (SE)
+   CNR0 | minCNR | median sub/iv |  SD/D |  narrow +/- SE   |  skew | cover cov/boot/iv (cov SE)
   (cover nominal = 0.95)
-    5.0 |   0.25 | 0.72/1.57  |  4.61 |  1.003 +/- 0.016 | 0.864 +/- 0.001 |  0.56 | 0.952/0.949/0.953 (0.002)
-    6.4 |   0.32 | 0.88/1.39  |  3.30 |  0.974 +/- 0.011 | 0.871 +/- 0.001 |  0.46 | 0.946/0.944/0.943 (0.003)
-    8.1 |   0.40 | 0.90/1.24  |  2.51 |  0.950 +/- 0.020 | 0.874 +/- 0.001 |  0.80 | 0.946/0.949/0.941 (0.003)
-   10.3 |   0.51 | 0.93/1.20  |  1.84 |  0.974 +/- 0.008 | 0.880 +/- 0.001 |  0.16 | 0.943/0.942/0.940 (0.003)
-   13.1 |   0.65 | 0.98/1.14  |  1.41 |  0.973 +/- 0.011 | 0.883 +/- 0.001 |  0.21 | 0.946/0.942/0.943 (0.003)
-   16.7 |   0.83 | 0.90/1.07  |  1.09 |  0.944 +/- 0.026 | 0.885 +/- 0.001 |  1.69 | 0.940/0.947/0.940 (0.003)
-   21.2 |   1.06 | 0.96/1.05  |  0.82 |  0.970 +/- 0.009 | 0.890 +/- 0.001 |  0.06 | 0.945/0.940/0.944 (0.003)
-   27.0 |   1.34 | 1.02/1.06  |  0.64 |  0.961 +/- 0.011 | 0.890 +/- 0.000 |  0.06 | 0.941/0.937/0.940 (0.003)
-   34.3 |   1.71 | 1.00/1.03  |  0.50 |  0.957 +/- 0.006 | 0.891 +/- 0.001 |  0.05 | 0.939/0.938/0.936 (0.003)
-   43.7 |   2.18 | 1.01/1.03  |  0.38 |  0.976 +/- 0.006 | 0.891 +/- 0.000 |  0.02 | 0.946/0.943/0.944 (0.003)
-   55.6 |   2.77 | 1.00/1.01  |  0.30 |  0.962 +/- 0.007 | 0.891 +/- 0.000 |  0.03 | 0.941/0.943/0.942 (0.003)
-   70.7 |   3.52 | 1.01/1.01  |  0.24 |  0.974 +/- 0.004 | 0.891 +/- 0.001 |  0.04 | 0.942/0.940/0.942 (0.003)
-   90.0 |   4.48 | 1.00/1.00  |  0.19 |  0.971 +/- 0.010 | 0.892 +/- 0.001 |  0.03 | 0.943/0.940/0.943 (0.003)
+    5.0 |   0.25 |    0.72/1.57  |  4.61 |  1.003 +/- 0.016 |  0.56 | 0.952/0.954/0.953 (0.002)
+    6.4 |   0.32 |    0.88/1.39  |  3.30 |  0.974 +/- 0.011 |  0.46 | 0.946/0.950/0.943 (0.003)
+    8.1 |   0.40 |    0.90/1.24  |  2.51 |  0.950 +/- 0.020 |  0.80 | 0.946/0.955/0.941 (0.003)
+   10.3 |   0.51 |    0.93/1.20  |  1.84 |  0.974 +/- 0.008 |  0.16 | 0.943/0.949/0.940 (0.003)
+   13.1 |   0.65 |    0.98/1.14  |  1.41 |  0.973 +/- 0.011 |  0.21 | 0.946/0.953/0.943 (0.003)
+   16.7 |   0.83 |    0.90/1.07  |  1.09 |  0.944 +/- 0.026 |  1.69 | 0.940/0.955/0.940 (0.003)
+   21.2 |   1.06 |    0.96/1.05  |  0.82 |  0.970 +/- 0.009 |  0.06 | 0.945/0.950/0.944 (0.003)
+   27.0 |   1.34 |    1.02/1.06  |  0.64 |  0.961 +/- 0.011 |  0.06 | 0.941/0.947/0.940 (0.003)
+   34.3 |   1.71 |    1.00/1.03  |  0.50 |  0.957 +/- 0.006 |  0.05 | 0.939/0.945/0.936 (0.003)
+   43.7 |   2.18 |    1.01/1.03  |  0.38 |  0.976 +/- 0.006 |  0.02 | 0.946/0.950/0.944 (0.003)
+   55.6 |   2.77 |    1.00/1.01  |  0.30 |  0.962 +/- 0.007 |  0.03 | 0.941/0.952/0.942 (0.003)
+   70.7 |   3.52 |    1.01/1.01  |  0.24 |  0.974 +/- 0.004 |  0.04 | 0.942/0.948/0.942 (0.003)
+   90.0 |   4.48 |    1.00/1.00  |  0.19 |  0.971 +/- 0.010 |  0.03 | 0.943/0.949/0.943 (0.003)
+
+pooled coverage over 13 cells, covariance, subtract: 0.9438 +/- 0.0007
+pooled coverage over 13 cells, bootstrap, subtract: 0.9505 +/- 0.0007
+pooled coverage over 13 cells, covariance, inverse_variance: 0.9425 +/- 0.0007
+pooled narrowness from CNR0 21 up (7 cells): 0.9687 +/- 0.0025 (inverse-variance weights), 0.9674 +/- 0.0028 (plain mean)
+normal coverage implied by the weighted narrowness: 0.9424

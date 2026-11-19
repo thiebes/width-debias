@@ -1,6 +1,6 @@
-Narrowness attribution -- why D_se / SD(D_hat) is about 0.97
-D_true = 0.02 sigma0^2/tau, Gaussian, standard geometry; slope weights 1/frame_variance from the D-free lookup
-calibration: shared cache calibration_subdiffusive.npz (coverage_check.load_calibration)
+Narrowness attribution -- why D_se / SD(D_hat) falls below 1
+D_true = 0.02 sigma0^2/tau, Gaussian, standard geometry; slope weights from msd_and_weights (1/frame_variance from the D-free lookup)
+calibration: D-free (calibrate_d_free, D = 0), Gaussian, 60 CNR0 in [2, 100] x 1500 runs, seeds 1 + i (shared cache calibration_subdiffusive.npz); evaluation seeds 555000 + 1000 k for cell k
 measured/lookup = ensemble Var(sigma_hat^2) / lookup frame_variance at the frame's CNR
 
 CNR0 10.3  (3000 runs, seed 555000; 0 non-finite realisations dropped)
@@ -63,4 +63,4 @@ CNR0 90  (3000 runs, seed 557000; 0 non-finite realisations dropped)
   D_se/SD, realised                      0.991 +/- 0.013
   largest |correlation| between frames   0.052
 
-Exponent of measured/lookup = (sigma^2/sigma0^2)^k over 33 frames with per-frame CNR >= 1: k = 1.36 +/- 0.13 (sigma^3 scaling: k = 1.5)
+Exponent of measured/lookup = (sigma^2/sigma0^2)^k over 33 frames with per-frame CNR >= 1: k = 1.36 +/- 0.18 (robust SE; 0.13 assuming equal scatter); sigma^3 scaling: k = 1.5

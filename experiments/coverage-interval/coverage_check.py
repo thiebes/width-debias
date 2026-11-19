@@ -3,9 +3,9 @@
 The validation so far checks the *mean* <D_hat>/D_true, not whether a per-
 measurement confidence interval on D_hat covers D_true at its nominal rate. This
 script does the interval check, on the de-biased estimator (coverage is only
-meaningful once the estimator is unbiased -- a confidence interval around a
-biased D can never cover the truth, which is why ``inverse_variance`` is shown
-here only as the failing contrast).
+meaningful once the estimator is unbiased; ``inverse_variance`` is shown as the
+uncorrected contrast, whose interval covers less as its bias grows against the
+spread of a single measurement).
 
 The standard covariance interval ``D_hat +/- 1.96 * D_se`` (``D_se`` from the
 weighted-least-squares slope covariance, ``fit.fit_D``) treats the MSD points
@@ -27,14 +27,20 @@ For each CNR_0 the script reports, over many realisations:
 * the skew of D_hat (its sampling distribution is right-skewed at low CNR, so a
   symmetric interval is doubly wrong there);
 * the coverage of a parametric bootstrap interval that resamples each frame's
-  ``sigma_hat^2`` (including the shared t=0 frame), which restores the
-  correlation the covariance interval drops and yields a percentile interval
-  that also follows the skew.
+  ``sigma_hat^2`` (including the shared t=0 frame) and takes a percentile
+  interval, which also follows the skew. It uses 2000 resamples: with B
+  resamples and interpolated percentile bounds, even an exact bootstrap covers
+  only about 0.95 (B - 1) / (B + 1), which is 0.940 at B = 200 and 0.949 at
+  B = 2000.
 
 The per-frame variances used to resample are measured from the ensemble here, to
 isolate the methodological question (given correct per-frame variances, does the
 covariance interval under-cover, and does the bootstrap fix it); in practice they
 come from each frame's own fit covariance or the calibration.
+
+The SEs are conditional on the one calibration: ``D_se`` and the weights come
+from the shared lookup, so its Monte Carlo error moves every cell's interval
+together and is not in the pooled SEs.
 
 Run from the repository root::
 
@@ -48,6 +54,7 @@ from __future__ import annotations
 
 import os
 import sys
+from math import erf, sqrt
 from pathlib import Path
 
 import numpy as np
@@ -64,7 +71,7 @@ OUTPUT = Path(__file__).resolve().parents[2] / "output"
 OUTPUT.mkdir(exist_ok=True)
 CAL_PATH = OUTPUT / "calibration_subdiffusive.npz"   # shared standard-geometry cache
 
-# Spain CVD (Okabe-Ito); see plot_style.md.
+# DICE palette; see plot_style.md.
 COV_BLUE = "#003f7f"       # covariance interval (DICE blue)
 BOOT_GOLD = "#f7941e"      # bootstrap interval (DICE gold)
 IV_GREEN = "#0cce6b"       # inverse-variance, the biased contrast (DICE green)
@@ -79,9 +86,10 @@ GEOMETRY = dict(sigma0=1.0, tau=1.0, half_window=6.0, n_pixels=241,
 # SE is about 1 / sqrt(2 N_RUNS) = 0.008, small enough to read a trend in it.
 CNR0_SWEEP = tuple(np.round(np.geomspace(5.0, 90.0, 13), 1))
 N_RUNS = 8000
-N_BOOT = 200
+N_BOOT = 2000              # 200 would cap even an exact bootstrap at 0.940
 N_BATCH = 8                # sub-ensembles for the batch-means SEs
-BOOT_CHUNK = 1000          # realisations per bootstrap block (bounds memory)
+BOOT_CHUNK = 200           # realisations per bootstrap block (bounds memory)
+POOL_FROM_CNR0 = 21.0      # pool the narrowness where every frame has CNR >= 1
 Z = 1.959964               # two-sided 0.95 normal quantile
 CAL_CNR0 = np.geomspace(2.0, 100.0, 60)
 N_RUNS_CAL = 1500
@@ -139,18 +147,18 @@ def coverage_at(cnr0: float, trunc: BiasLookup, seed: int) -> dict:
 
     # Point estimates per realisation (de-biased and biased).
     corrected = ens.variance - var_bias
-    msd_fn = corrected - corrected[:, [0]]
-    D_fn, D_se = wls_slope(msd_fn, t, w)                 # D_se scalar (shared)
+    msd_sub = corrected - corrected[:, [0]]
+    D_sub, D_se = wls_slope(msd_sub, t, w)               # D_se scalar (shared)
     msd_iv = ens.variance - ens.variance[:, [0]]
     D_iv, _ = wls_slope(msd_iv, t, w)
 
     half = Z * D_se
-    hit_cov = np.abs(D_fn - D_TRUE) <= half
+    hit_cov = np.abs(D_sub - D_TRUE) <= half
     hit_iv = np.abs(D_iv - D_TRUE) <= half
-    sd = float(np.std(D_fn[np.isfinite(D_fn)]))
+    sd = float(np.std(D_sub[np.isfinite(D_sub)]))
 
-    # Ensemble-measured per-frame variance Var(sigma_hat^2_i) (the bootstrap's
-    # resampling scale, and the attribution input).
+    # Ensemble-measured per-frame variance Var(sigma_hat^2_i), the bootstrap's
+    # resampling scale.
     vfr = np.nanvar(ens.variance, axis=0, ddof=1)
 
     # Parametric bootstrap: resample each frame's sigma_hat^2 (incl. the shared
@@ -168,15 +176,9 @@ def coverage_at(cnr0: float, trunc: BiasLookup, seed: int) -> dict:
         lo, hi = np.percentile(D_b, [2.5, 97.5], axis=1)
         hit_boot[start:start + block.shape[0]] = (lo <= D_TRUE) & (D_TRUE <= hi)
 
-    # Batch means over N_BATCH sub-ensembles give the SEs of the two ratios.
+    # Batch means over N_BATCH sub-ensembles give the SE of the narrowness.
     batches = np.array_split(np.arange(N_RUNS), N_BATCH)
-    narrow_b = [D_se / np.std(D_fn[b]) for b in batches]
-    infl_b = [_inflation(np.nanvar(ens.variance[b], axis=0, ddof=1), t, w)
-              for b in batches]
-
-    def _binom(hit):
-        p = float(np.mean(hit))
-        return p, float(np.sqrt(p * (1.0 - p) / hit.size))
+    narrow_b = [D_se / np.std(D_sub[b]) for b in batches]
 
     cover_cov, cover_cov_se = _binom(hit_cov)
     cover_iv, cover_iv_se = _binom(hit_iv)
@@ -184,31 +186,55 @@ def coverage_at(cnr0: float, trunc: BiasLookup, seed: int) -> dict:
     return dict(cnr0=cnr0, min_cnr=float(cnr.min()), D_se=D_se, sd=sd,
                 narrowness=D_se / sd if sd > 0 else np.nan,
                 narrowness_se=float(np.std(narrow_b, ddof=1) / np.sqrt(N_BATCH)),
-                corr_inflation=_inflation(vfr, t, w),
-                corr_inflation_se=float(np.std(infl_b, ddof=1) / np.sqrt(N_BATCH)),
-                skew=_skew(D_fn), bias_fn=float(np.median(D_fn)) / D_TRUE,
-                bias_iv=float(np.median(D_iv)) / D_TRUE,
+                skew=_skew(D_sub), median_sub=float(np.median(D_sub)) / D_TRUE,
+                median_iv=float(np.median(D_iv)) / D_TRUE,
                 cover_cov=cover_cov, cover_cov_se=cover_cov_se,
                 cover_iv=cover_iv, cover_iv_se=cover_iv_se,
                 cover_boot=cover_boot, cover_boot_se=cover_boot_se)
 
 
-def _inflation(vfr: np.ndarray, t: np.ndarray, w: np.ndarray) -> float:
-    """How much the shared sigma_hat^2_0 should widen the slope CI.
+def _binom(hit: np.ndarray) -> tuple[float, float]:
+    """Fraction of hits and its binomial SE."""
+    p = float(np.mean(hit))
+    return p, float(np.sqrt(p * (1.0 - p) / hit.size))
 
-    From the measured per-frame variances: the diagonal model treats the MSD
-    points as independent (Var(MSD_i) = vfr_i + v0); the full model adds the v0
-    cross-covariance shared by every point. Returns the ratio of slope SEs.
+
+def _normal_coverage(ratio: float) -> float:
+    """Coverage of D_hat +/- Z * D_se for a normal D_hat with D_se = ratio * SD."""
+    return float(erf(Z * ratio / sqrt(2.0)))
+
+
+def pooled(rows: list[dict]) -> list[str]:
+    """Pooled coverages and narrowness, computed here rather than by hand.
+
+    The coverages are plain means over the cells (each cell has the same number
+    of runs), with SE sqrt(sum se^2) / n. The narrowness is pooled where every
+    frame keeps per-frame CNR >= 1 (CNR0 >= POOL_FROM_CNR0), weighted by its
+    inverse batch-mean variance, beside the plain mean; the normal coverage it
+    implies is 2 Phi(Z * ratio) - 1. All of them are conditional on the one
+    calibration (module docstring).
     """
-    g = w > 0
-    v0 = float(vfr[0]); ti = t[g]; n = int(g.sum())
-    wi = 1.0 / (vfr[g] + v0)
-    sw_a = wi.sum(); swt_a = (wi * ti).sum(); swtt_a = (wi * ti * ti).sum()
-    var_diag = sw_a / (sw_a * swtt_a - swt_a ** 2)
-    cmat = np.diag(vfr[g]) + v0 * np.ones((n, n))        # C_ii=vfr_i+v0, C_ij=v0
-    xmat = np.column_stack([np.ones(n), ti])
-    var_full = float(np.linalg.inv(xmat.T @ np.linalg.inv(cmat) @ xmat)[1, 1])
-    return float(np.sqrt(var_full / var_diag)) if var_diag > 0 else np.nan
+    lines = []
+    for key, label in (("cover_cov", "covariance, subtract"),
+                       ("cover_boot", "bootstrap, subtract"),
+                       ("cover_iv", "covariance, inverse_variance")):
+        p = np.array([r[key] for r in rows])
+        se = np.array([r[key + "_se"] for r in rows])
+        lines.append(f"pooled coverage over {len(rows)} cells, {label}: "
+                     f"{p.mean():.4f} +/- {np.sqrt((se ** 2).sum()) / len(rows):.4f}")
+    sel = [r for r in rows if r["cnr0"] >= POOL_FROM_CNR0]
+    ratio = np.array([r["narrowness"] for r in sel])
+    w = 1.0 / np.array([r["narrowness_se"] for r in sel]) ** 2
+    r_w, r_w_se = float((w * ratio).sum() / w.sum()), float(1.0 / np.sqrt(w.sum()))
+    r_plain = float(ratio.mean())
+    r_plain_se = float(ratio.std(ddof=1) / np.sqrt(ratio.size))
+    lines += [
+        f"pooled narrowness from CNR0 {POOL_FROM_CNR0:g} up ({len(sel)} cells): "
+        f"{r_w:.4f} +/- {r_w_se:.4f} (inverse-variance weights), "
+        f"{r_plain:.4f} +/- {r_plain_se:.4f} (plain mean)",
+        f"normal coverage implied by the weighted narrowness: {_normal_coverage(r_w):.4f}",
+    ]
+    return lines
 
 
 def write_report(rows: list[dict], path: Path) -> None:
@@ -223,26 +249,27 @@ def write_report(rows: list[dict], path: Path) -> None:
         f"(shared cache {CAL_PATH.name}); evaluation seeds {SEED} + 100 k for "
         "CNR0 index k, bootstrap seed + 7.",
         "0.95 intervals. Coverage = fraction containing D_true.",
-        "subtract is de-biased (coverage meaningful); inverse_variance is "
-        "biased (contrast).",
+        "subtract is de-biased; inverse_variance is the uncorrected contrast.",
+        "median sub/iv = median D_hat / D_true for subtract / inverse_variance.",
         "narrowness = D_se/SD(D_hat) (<1 = covariance CI too narrow).",
-        "infl = sqrt(Var_full/Var_diag): how much the shared sigma_hat^2_0",
-        "       correlation alone should widen the slope CI (>1 = correlation matters).",
-        f"SEs: batch means over {N_BATCH} sub-ensembles (narrow, infl); binomial "
-        "(coverages).",
+        f"SEs: batch means over {N_BATCH} sub-ensembles (narrowness); binomial "
+        "(coverages; cov SE is the covariance interval's, the others are alike).",
+        "SEs are conditional on the one calibration, whose Monte Carlo error is "
+        "shared by every cell.",
         "",
-        "   CNR0 | minCNR | bias fn/iv |  SD/D |  narrow +/- SE   | infl +/- SE     |  skew | "
-        "cover cov/boot/iv (SE)",
+        "   CNR0 | minCNR | median sub/iv |  SD/D |  narrow +/- SE   |  skew | "
+        "cover cov/boot/iv (cov SE)",
         "  (cover nominal = 0.95)",
     ]
     for r in rows:
         lines.append(
             f"  {r['cnr0']:5.1f} | {r['min_cnr']:6.2f} | "
-            f"{r['bias_fn']:.2f}/{r['bias_iv']:.2f}  | "
+            f"   {r['median_sub']:.2f}/{r['median_iv']:.2f}  | "
             f"{r['sd'] / D_TRUE:5.2f} |  {r['narrowness']:5.3f} +/- {r['narrowness_se']:.3f} | "
-            f"{r['corr_inflation']:5.3f} +/- {r['corr_inflation_se']:.3f} | {r['skew']:5.2f} | "
+            f"{r['skew']:5.2f} | "
             f"{r['cover_cov']:.3f}/{r['cover_boot']:.3f}/{r['cover_iv']:.3f} "
             f"({r['cover_cov_se']:.3f})")
+    lines += [""] + pooled(rows)
     report = "\n".join(lines)
     print(report)
     path.write_text(report + "\n", encoding="utf-8")
@@ -279,13 +306,11 @@ def make_figure(rows: list[dict], path: Path) -> None:
     axB.axhline(1.0, color=NOMINAL_GREY, lw=1.0, ls=":", label="SE = SD")
     axB.errorbar(cnr0, col("narrowness"), yerr=col("narrowness_se"), fmt="o-",
                  color=COV_BLUE, lw=2, ms=4, capsize=2,
-                 label=r"covariance SE / SD(D) (deployed)")
-    axB.errorbar(cnr0, col("corr_inflation"), yerr=col("corr_inflation_se"),
-                 fmt="s-", color=BOOT_GOLD, lw=2, ms=4, capsize=2,
-                 label=r"correlation inflation $\sqrt{V_{\rm full}/V_{\rm diag}}$")
-    axB.set_ylabel("SE diagnostics (ratio)", fontsize=FONT)
-    # Room below the curves for the legend, and above 1 for the panel letter.
-    axB.set_ylim(min(0.80, col("corr_inflation").min() - 0.06), 1.04)
+                 label=r"covariance SE / SD(D)")
+    axB.set_ylabel("covariance SE / realised SD (ratio)", fontsize=FONT)
+    # Room below the curve for the legend, and above 1 for the panel letter.
+    lowest_b = (col("narrowness") - 2 * col("narrowness_se")).min()
+    axB.set_ylim(min(0.86, lowest_b - 0.04), 1.06)
 
     for letter, ax in zip("ab", (axA, axB)):
         ax.set_xscale("log")
@@ -299,7 +324,8 @@ def make_figure(rows: list[dict], path: Path) -> None:
         ax.set_facecolor("white")
         ax.text(0.03, 0.97, f"({letter})", transform=ax.transAxes, va="top",
                 fontsize=FONT, fontweight="bold")
-    fig.patch.set_alpha(0)
+    fig.patch.set_facecolor("white")
+    fig.patch.set_alpha(1)
     fig.savefig(path, dpi=300)
     plt.close(fig)
     print(f"\nSaved figure: {path.name}")

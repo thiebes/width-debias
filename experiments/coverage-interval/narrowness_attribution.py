@@ -48,12 +48,14 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "src"))
 
 from width_debias import Experiment, GaussianModel  # noqa: E402
 from width_debias.montecarlo import run_ensemble  # noqa: E402
-from coverage_check import (CAL_PATH, D_TRUE, GEOMETRY, OUTPUT,  # noqa: E402
-                            load_calibration)
+from width_debias.weights import msd_and_weights  # noqa: E402
+from coverage_check import (CAL_CNR0, CAL_PATH, CNR0_SWEEP, D_TRUE,  # noqa: E402
+                            GEOMETRY, N_RUNS_CAL, OUTPUT, load_calibration)
 
-CNR0_CELLS = (10.3, 34.3, 90.0)
+CNR0_CELLS = tuple(float(CNR0_SWEEP[k]) for k in (3, 8, 12))   # 10.3, 34.3, 90.0
 N_RUNS = 3000
 SEED = 555000              # cell k uses SEED + 1000 k; independent of coverage_check
+SIGMA3_EXPONENT = 1.5      # Var(sigma_hat^2) at fixed CNR grows as sigma^3 = (sigma^2)^1.5
 
 
 def attribution_at(cnr0: float, trunc, seed: int) -> tuple[list[str], np.ndarray, np.ndarray]:
@@ -72,15 +74,16 @@ def attribution_at(cnr0: float, trunc, seed: int) -> tuple[list[str], np.ndarray
 
     # The deployed fit is a weighted line through every frame (frame 0
     # included), so the slope of MSD = v - v_0 equals the slope of v; its
-    # operator row a gives Var(slope) = a C a^T for any covariance C.
-    w = 1.0 / fv_lookup
+    # operator row a gives Var(slope) = a C a^T for any covariance C. The
+    # weights are the library's own (1 / frame_variance at each frame's CNR).
+    _, w = msd_and_weights("subtract", ens.variance[0], cnr, trunc)
     x = np.column_stack([np.ones_like(t), t])
     xtwx_inv = np.linalg.inv(x.T @ (w[:, None] * x))
     a = (xtwx_inv @ (x.T * w))[1]
     d_se = float(np.sqrt(xtwx_inv[1, 1])) / 2.0
     finite = np.all(np.isfinite(ens.variance), axis=1)
     rows = ens.variance[finite]
-    scale = (v_true / GEOMETRY["sigma0"] ** 2) ** 1.5
+    scale = (v_true / GEOMETRY["sigma0"] ** 2) ** SIGMA3_EXPONENT
     sd_scaled = float(np.sqrt(a @ (fv_lookup * scale * a))) / 2.0
     sd_diag = float(np.sqrt(a @ (fv_measured * a))) / 2.0
     sd_real = float(np.std(rows @ a / 2.0, ddof=1))
@@ -109,10 +112,12 @@ def attribution_at(cnr0: float, trunc, seed: int) -> tuple[list[str], np.ndarray
 def main() -> None:
     trunc = load_calibration()
     lines = [
-        "Narrowness attribution -- why D_se / SD(D_hat) is about 0.97",
+        "Narrowness attribution -- why D_se / SD(D_hat) falls below 1",
         f"D_true = {D_TRUE} sigma0^2/tau, Gaussian, standard geometry; slope weights "
-        "1/frame_variance from the D-free lookup",
-        f"calibration: shared cache {CAL_PATH.name} (coverage_check.load_calibration)",
+        "from msd_and_weights (1/frame_variance from the D-free lookup)",
+        f"calibration: D-free (calibrate_d_free, D = 0), Gaussian, {len(CAL_CNR0)} CNR0 in "
+        f"[{CAL_CNR0[0]:g}, {CAL_CNR0[-1]:g}] x {N_RUNS_CAL} runs, seeds 1 + i "
+        f"(shared cache {CAL_PATH.name}); evaluation seeds {SEED} + 1000 k for cell k",
         "measured/lookup = ensemble Var(sigma_hat^2) / lookup frame_variance at the "
         "frame's CNR",
         "",
@@ -126,16 +131,22 @@ def main() -> None:
         log_ratio.append(y)
 
     # ln(measured/lookup) = k ln(sigma^2 / sigma_0^2), through the origin: at the
-    # calibration width the lookup should be right. The SE is from the residual
-    # scatter, which carries both the ensemble's and the lookup's Monte Carlo error.
+    # calibration width the lookup should be right. The SEs are from the residual
+    # scatter, which carries both the ensemble's and the lookup's Monte Carlo
+    # error. That scatter is not equal across frames (low-CNR frames scatter
+    # more), so the heteroscedasticity-robust (HC1) SE is the one to quote; the
+    # equal-scatter SE is printed beside it.
     x = np.concatenate(log_v)
     y = np.concatenate(log_ratio)
     k_hat = float(x @ y / (x @ x))
     resid = y - k_hat * x
-    k_se = float(np.sqrt(resid @ resid / (x.size - 1) / (x @ x)))
-    lines.append(f"Exponent of measured/lookup = (sigma^2/sigma0^2)^k over {x.size} frames "
-                 f"with per-frame CNR >= 1: k = {k_hat:.2f} +/- {k_se:.2f} "
-                 "(sigma^3 scaling: k = 1.5)")
+    n = x.size
+    k_se = float(np.sqrt(resid @ resid / (n - 1) / (x @ x)))
+    k_se_robust = float(np.sqrt(n / (n - 1) * np.sum(x ** 2 * resid ** 2)) / (x @ x))
+    lines.append(f"Exponent of measured/lookup = (sigma^2/sigma0^2)^k over {n} frames "
+                 f"with per-frame CNR >= 1: k = {k_hat:.2f} +/- {k_se_robust:.2f} "
+                 f"(robust SE; {k_se:.2f} assuming equal scatter); "
+                 f"sigma^3 scaling: k = {SIGMA3_EXPONENT}")
     report = "\n".join(lines)
     print(report)
     (OUTPUT / "narrowness_attribution.txt").write_text(report + "\n", encoding="utf-8")
