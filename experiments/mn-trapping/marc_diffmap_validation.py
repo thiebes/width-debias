@@ -18,8 +18,9 @@ profile is a mixture, so no single peaked shape matches it. Two paths are
 reported:
 
   * **Moment estimator.** The second moment, with no lower bound on the width,
-    closes the shape gap to the PL moment by construction (its noiseless value
-    equals ``case.var_true``). It is not corrected here; its cost is variance.
+    closes most of the shape gap to the PL moment (its noiseless value lies
+    within 0.007 μm² of ``case.var_true`` undoped and within 0.0002 μm²
+    doped). It is not corrected here; its cost is variance.
     On these maps that cost is severe -- under realistic noise the cross-seed
     SD reaches order 1e5 μm² and the NaN fraction about 0.2, so the bare moment
     is not usable here. The practical path to the carrier distribution for this
@@ -77,7 +78,7 @@ DICE_GREEN = "#0cce6b"
 VOIGT_GAMMA = 0.01        # must match the Voigt calibration build
 CNR_GRID = (10.0, 20.0, 50.0, 100.0, 200.0)
 N_SEEDS = 15
-FLOOR_CNR = 1.0           # per-frame CNR above which the correction is reliable
+FLOOR_CNR = 1.0           # frames are scored at or above this per-frame CNR
 
 # (key, label, colour, calibration file, fit function) -- one per estimator.
 ESTIMATORS = [
@@ -136,10 +137,12 @@ def main() -> None:
         "(var_true, emission-weighted; not the carrier moment).",
         "Moment estimator closes the shape gap to the PL moment; single-shape",
         "fits + correction = noise-debiased but shape-gap-limited.",
-        "Calibration: joint (CNR, sigma^2) grid per estimator (named below).",
+        "Calibration: joint (CNR, sigma^2) grid per estimator (named below),",
+        "100 CNR x 100 sigma x 1000 runs per cell, seed 2026 "
+        "(scripts/build_calibration.py).",
         "=" * 72,
         f"n_seeds per CNR_0: {N_SEEDS} (seed int(CNR_0) * 1000 + s);  "
-        f"reliable regime: per-frame CNR >= {FLOOR_CNR}",
+        f"scored frames: per-frame CNR >= {FLOOR_CNR}",
         "Noise correction = |corrected - noiseless fit| (isolates distortion 1).",
         "Shape gap = mean|noiseless fit - PL 2nd moment| per frame.",
         "PL residual = |corrected - var_true| (noise and shape gap together).",

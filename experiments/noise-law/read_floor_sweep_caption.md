@@ -12,8 +12,9 @@ photon-limited data and rises with the floor to 14.4 at 4 counts and 20.7 to
 26.0 at 8 to 32 counts, above its value on pure white noise (18.6, gold dotted
 line). `subtract` with a calibration built at the same read floor (green) stays
 at 0.014 to 0.025 up to 2 counts, rises to 0.12 to 0.13 at 4 and 8 counts, and
-to 0.97 to 1.27 at 16 and 32, where the CNR₀ 3 cell starts below per-frame CNR
-1 (0.55 and 0.28 at frame 0). `subtract` with the default white-noise
+to 0.97 to 1.27 at 16 and 32, where even the first frame of the CNR₀ 3 cell
+is below per-frame CNR 1 (0.55 and 0.28); the rise is consistent with frames
+below the correction's floor, but the table does not separate the cells. `subtract` with the default white-noise
 calibration (blue) stays at 0.21 to 0.35 at every read floor, against 0.098
 when it is applied to white data (blue dotted line); on photon-limited data it
 over-subtracts, and D̂ goes negative at CNR₀ 3 (`shot_noise_validation.txt`).

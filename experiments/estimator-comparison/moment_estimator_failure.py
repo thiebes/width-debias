@@ -6,7 +6,7 @@ Compares, on identical simulated data:
 * Gaussian-fit estimator + inverse-variance weighting
 * Gaussian-fit estimator + noise-bias correction (hard subtraction)
 * Gaussian-fit estimator + MAS-style correction (gated subtraction)
-* Moment estimator + inverse-variance weighting (the non-truncated route)
+* Moment estimator + inverse-variance weighting (no lower bound on the width)
 
 The noise-bias correction removes the bias but can overcorrect in the
 deepest noise. Two alternatives target that: the MAS-style gated subtraction
@@ -15,11 +15,16 @@ no lower bound and takes no correction -- at the cost of higher variance).
 The table reports both bias and spread so the bias-variance trade-off is
 visible.
 
+The calibration here is the legacy D-aware one (``sweep_stats`` and
+``BiasLookup.from_stats`` at the evaluation D), not ``calibrate_d_free``; the
+caption says so.
+
 Run from the repository root::
 
-    .venv/Scripts/python.exe experiments/estimator-comparison/moment_estimator_failure.py
+    .venv/Scripts/python.exe experiments/estimator-comparison/moment_estimator_failure.py > output/method_comparison.txt
 
-Writes ``output/method_comparison.png``.
+Writes ``output/method_comparison.png``; the printed table is committed as
+``method_comparison.txt``.
 """
 from __future__ import annotations
 
@@ -57,7 +62,12 @@ def _run(model, seed_cal, seed_eval):
 
 def main() -> None:
     print("width-debias method comparison")
-    print(f"  experiment: D={EXP.D}, n_frames={EXP.n_frames}, {N_RUNS} runs/CNR_0\n")
+    print(f"  experiment: D={EXP.D}, n_frames={EXP.n_frames}, {N_RUNS} runs/CNR_0")
+    print(f"  calibration: legacy D-aware (sweep_stats + BiasLookup.from_stats at "
+          f"D = {EXP.D}), {CNR0_GRID.size} CNR_0 x {N_RUNS} runs, seeds 1 + i, "
+          "per profile model")
+    print("  evaluation seeds 20000 + i for CNR_0 index i (the same realisations "
+          "for both models)\n")
 
     print("Running Gaussian-fit estimator ...")
     gauss = _run(GaussianModel(), seed_cal=1, seed_eval=20000)
@@ -120,7 +130,8 @@ def _plot(bias) -> None:
     }
     inch, font = 1 / 2.54, 8
     fig, ax = plt.subplots(figsize=(12 * inch, 9 * inch), layout="constrained")
-    fig.patch.set_alpha(0)
+    fig.patch.set_facecolor("white")
+    fig.patch.set_alpha(1)
     ax.set_facecolor("white")
     for lab, (color, ls) in styles.items():
         ax.plot(CNR0_GRID, bias[lab], ls, color=color, lw=2, ms=4, label=lab)

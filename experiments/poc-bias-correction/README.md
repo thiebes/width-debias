@@ -54,9 +54,7 @@ weighting alone leaves no cell beyond 2 SE.
 
 Tables: `poc_demo_gaussian.txt`, `poc_demo_voigt.txt`,
 `poc_demo_generalized_gaussian_p1.5.txt`, `poc_demo_generalized_gaussian_p4.txt`.
-`poc_demo_generalized_gaussian.txt` and its figure are a p = 2 run (a Gaussian
-profile with the generalized-Gaussian fitter's tighter `var_max`), included for
-reference. Figures: `poc_demo.png` (Gaussian), `poc_demo_voigt.png`,
+Figures: `poc_demo.png` (Gaussian), `poc_demo_voigt.png`,
 `poc_demo_generalized_gaussian_p1.5.png`, `poc_demo_generalized_gaussian_p4.png`,
 each with a `_caption.md`.
 

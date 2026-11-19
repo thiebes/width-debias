@@ -3,9 +3,10 @@ Marc Mn diffusion-map validation -- reference: PL second moment
 (var_true, emission-weighted; not the carrier moment).
 Moment estimator closes the shape gap to the PL moment; single-shape
 fits + correction = noise-debiased but shape-gap-limited.
-Calibration: joint (CNR, sigma^2) grid per estimator (named below).
+Calibration: joint (CNR, sigma^2) grid per estimator (named below),
+100 CNR x 100 sigma x 1000 runs per cell, seed 2026 (scripts/build_calibration.py).
 ========================================================================
-n_seeds per CNR_0: 15 (seed int(CNR_0) * 1000 + s);  reliable regime: per-frame CNR >= 1.0
+n_seeds per CNR_0: 15 (seed int(CNR_0) * 1000 + s);  scored frames: per-frame CNR >= 1.0
 Noise correction = |corrected - noiseless fit| (isolates distortion 1).
 Shape gap = mean|noiseless fit - PL 2nd moment| per frame.
 PL residual = |corrected - var_true| (noise and shape gap together).

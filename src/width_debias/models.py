@@ -233,9 +233,11 @@ class MomentModel:
     amplifies tail noise, and the ratio becomes unstable where the total
     intensity passes through zero at low CNR.
 
-    The estimator assumes the profile is centred near x = 0, which the
-    simulation guarantees; a production implementation would track the
-    centroid. ``noise_free_series`` reuses the Gaussian profile -- the moment
+    The centroid is estimated, but the window and its edge baseline are fixed
+    and symmetric about x = 0, so the estimator assumes the profile sits near
+    the window's centre, which the simulation guarantees; a production
+    implementation would centre the window on the profile.
+    ``noise_free_series`` reuses the Gaussian profile -- the moment
     estimator is the *estimator* under test, applied to ordinary Gaussian
     data.
     """
@@ -319,9 +321,9 @@ class UnboundedGaussianModel:
     negative variances stay rare. The unbounded fit is therefore not a
     substitute for the correction. The estimator is Gaussian-specific (a signed
     precision has no clean meaning for the Voigt or generalized-Gaussian shape);
-    the shape-general unbounded counterpart is the linear, catastrophically
-    noisy :class:`MomentModel`, which is the one estimator that does robustly
-    admit negative variances.
+    the shape-general unbounded counterpart is the catastrophically noisy
+    :class:`MomentModel` (a ratio of sums linear in the data), which is the
+    one estimator that does robustly admit negative variances.
     """
 
     name = "unbounded_gaussian"

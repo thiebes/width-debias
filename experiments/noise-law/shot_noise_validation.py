@@ -17,9 +17,9 @@ anchored by real data on the pshare:
 
 For each noise law this script asks the two questions an expert panel raised:
 
-  CORRECTNESS -- with a calibration built under the SAME law, is the bias
+  correctness -- with a calibration built under the same law, is the bias
     removed (as it is for white)?
-  ROBUSTNESS  -- does the DEFAULT white-noise calibration, applied to data of
+  robustness  -- does the default white-noise calibration, applied to data of
     another law, still de-bias D, or must the calibration be rebuilt?
 
 Everything runs through the same audited calibrate/evaluate path (`validate.py`)
@@ -77,8 +77,8 @@ def _mad(curve: np.ndarray) -> float:
 def main() -> None:
     print("The subtract correction across transport-microscopy noise laws")
     print(f"  D_true = {D_TRUE} sigma_0^2/tau")
-    print(f"  calibration: {CAL_CNR0.size} CNR_0 in [2, 80], {N_CAL} runs/cell")
-    print(f"  evaluation:  {EVAL_CNR0.size} CNR_0 in [3, 60], {N_EVAL} runs/cell")
+    print(f"  calibration: calibrate_d_free (D = 0), {CAL_CNR0.size} CNR_0 in [2, 80], {N_CAL} runs/cell, seeds 1 + i")
+    print(f"  evaluation:  {EVAL_CNR0.size} CNR_0 in [3, 60], {N_EVAL} runs/cell, seeds 20000 + i")
     print(f"  workers = {os.environ.get('WIDTH_DEBIAS_WORKERS', '(serial)')}")
 
     # One calibration per noise law (matched). The white calibration is the
@@ -128,9 +128,9 @@ def main() -> None:
               f"{_mad(r['folded_matched']):>16.3f} "
               f"{_mad(r['folded_white']):>20.3f}")
     print("\nReading: 'subtract matched' small => the correction works under that "
-          "law given a matched calibration (CORRECTNESS).")
+          "law given a matched calibration (the correctness test).")
     print("'subtract white-calib' close to 'subtract matched' => the default white "
-          "calibration transfers to that law (ROBUSTNESS); far => recalibrate.")
+          "calibration transfers to that law (the robustness test); far => recalibrate.")
     print("Real techniques: stroboSCAT / transient absorption ~ white; "
           "TCSPC / direct PL imaging ~ shot/Poisson.")
 

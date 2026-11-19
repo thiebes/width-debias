@@ -3,16 +3,17 @@
 This note derives why the diffusion coefficient is overestimated and what the
 correct fix is. A width fitted to a noisy profile scatters about the true
 width; squaring it adds the width's estimation variance to the fitted
-variance. In the regime where the correction works (per-frame CNR above about
-1) the fit's lower bound does not bind: the bounded and unbounded fits return
-the same widths and the same biased D (`experiments/estimator-comparison`).
-Below it, `experiments/boundary-diagnostic/diagnose_boundary.py` found the
+variance. Above a per-frame CNR of about 1.5 the fit's lower bound does not
+bind: the bounded and unbounded fits return the same widths and the same
+biased D (`experiments/estimator-comparison`). The correction itself works
+down to a per-frame CNR of about 1 (Section 9). Below about 1,
+`experiments/boundary-diagnostic/diagnose_boundary.py` found the
 fitted-variance distribution strictly interior and right-skewed with no
 delta-mass at the lower bound for the Gaussian, Voigt, and generalized-Gaussian
 p = 1.5 and p = 4 fits (a pile-up of 0.05 to 0.06 of fits at the bound appears
 only at CNR ≈ 1 for Voigt and p = 1.5) — **reflection, not clipping**. The
-model below covers both regimes, and the reflection does not change its
-result.
+model below covers both regimes, and in the model the reflection does not
+change the result (Section 1).
 
 ## 1. Model
 
@@ -31,8 +32,12 @@ square of a Gaussian,
 A fitted width cannot be negative. Where `X_i < 0` has appreciable probability
 (per-frame CNR below about 1), the fit reports `|X_i|`: it reflects that mass
 rather than clipping it. Reflection leaves the square unchanged,
-`|X_i|² = X_i²`, so the moments below hold with or without the bound; the
-folded-normal model and the unbounded one give the same fitted variance.
+`|X_i|² = X_i²`, so in this model the moments below hold with or without the
+bound, and the folded and unbounded estimates have the same square. A real
+unbounded fit is a different estimator from the unbounded `X_i` of the model:
+below a per-frame CNR of about 1.5 its fitted variance departs from the
+bounded fit's, slightly at 1.16 (1.0695 against 1.0715 σ₀²) and strongly at
+0.3 (2.03 against 5.63 σ₀²; `experiments/estimator-comparison`).
 `σ̂²_i / s_i²` is a non-central χ²₁ with non-centrality `(σ_i/s_i)²` —
 continuous, strictly positive, right-skewed, the shape the diagnostic saw.
 
@@ -57,14 +62,17 @@ of the profile model on the pixel grid (`width_debias.fisher`). For a 1-D
 Gaussian at a fixed pixel spacing `dx` and peak-defined CNR, `s² ∝ σ dx / CNR²`.
 The Monte Carlo spread of the fitted width reproduces the Fisher `A` to 0.986
 to 1.006 on four shapes (Section 9). Because the CNR falls frame by frame,
-`s_i²` grows with time (Section 4). Below per-frame CNR about 1.2 the
-higher-order terms take over and the bias exceeds `A / CNR²` (Section 9); a
-calibration against matched simulations carries them, which is why the
-package calibrates `var_bias(CNR)` rather than using `A / CNR²` alone.
+`s_i²` grows with time (Section 4). Near a per-frame CNR of 1 the
+higher-order terms take over and the bias departs from `A / CNR²`
+(Section 9): from about 1.2 on Gaussian, p = 1.5 and p = 4, and from about
+0.85 on Voigt; it rises above `A / CNR²` on Gaussian, Voigt and p = 1.5 and
+turns negative on p = 4. A calibration against matched simulations carries these
+terms, which is why the package calibrates `var_bias(CNR)` rather than using
+`A / CNR²` alone.
 
-`BiasLookup` also reports a dimensionless readout of the width's
-signal-to-noise `α_i = σ_i / s_i`: the truncation fraction, the mass of the
-latent estimate below zero,
+The model also gives a dimensionless readout of the width's signal-to-noise
+`α_i = σ_i / s_i`: the truncation fraction, the mass of the latent estimate
+below zero,
 
     p_i = P(X_i < 0) = Φ(−α_i),     so   α_i = −Φ⁻¹(p_i).
 
@@ -79,7 +87,10 @@ comes from the per-frame CNR. That is why the weighting takes the per-frame CNR
 as its input, not `p`. In the correctable regime `p` is negligible: at leading
 order the Gaussian fit at `σ = σ_0` has `α ≈ 4.2` at per-frame CNR 1
 (`p ≈ 10⁻⁵`), so the bound matters only below CNR 1, where the higher-order
-terms also take over.
+terms also take over. This model `p` is not the `p` that `BiasLookup`
+reports: the lookup's `p` is the empirical fraction of calibration
+realisations with `MSD ≤ 0` at that frame, which depends on the frame's true
+MSD as well as its CNR.
 
 ## 4. Why the bias reaches D, and why a weight alone cannot remove it
 
@@ -147,12 +158,14 @@ for all `u ≥ 0` and increasing — the correction **cannot drive the variance
 negative**. The gate is ≈ 1 when the frame is well above the noise (full `s²`
 subtraction, matching `subtract`) and → 0 when it is noise dominated (the
 frame is left uncorrected rather than overshot). On the narrow `CNR₀ ∈ [5,90]`
-sweep (`experiments/estimator-comparison/moment_estimator_failure.py`), `mas`
-gave the lowest bias of any
-scheme — mean |⟨D⟩/D_ref − 1| = 0.089 vs `subtract` 0.116 — and
-removed the deep-regime overshoot.
+sweep (`experiments/estimator-comparison/moment_estimator_failure.py`, table
+`method_comparison.txt`, legacy D-aware calibration), `mas` and `subtract` lie
+within 0.03 of each other from CNR₀ 8 up and depart together below it (2.76
+and 2.68 at CNR₀ 5; 0.80 and 0.77 at CNR₀ 8, where the last frames fall below
+per-frame CNR 0.5); mean |⟨D⟩/D_ref − 1| is 0.298 against 0.292. On that sweep
+the gate neither helps nor hurts.
 
-**On the wider `CNR₀ ∈ [2,100]` sweep the ranking reverses.**
+**On the wider `CNR₀ ∈ [2,100]` sweep `subtract` is the more robust.**
 At low CNR₀ the MAS gate switches the correction off where the noise bias is
 large. On `experiments/dfree-calibration/dense_calibration_and_test.py`'s
 100-point sweep on four shapes (a cached 5000-run calibration over 100 CNR₀
@@ -162,9 +175,10 @@ pooled over all 100 test points, with the calibration SE as one shared
 systematic, is within 0.6 combined SE of zero on every shape. MAS reads high
 below CNR₀ about 6.5 on Gaussian, Voigt, and p = 1.5 (pooled +0.13 to +2.7)
 and low on p = 4 (−0.73 at CNR₀ 3 to 4.4, −1.83 at CNR₀ 2 to 3), so it fails
-in a direction set by the shape. `subtract` reads low only in the CNR₀ 2 to 3
-decile, on Voigt (decile mean 0.49) and p = 4 (0.57), where the last frames
-sit near per-frame CNR 0.1, far below the floor of Section 9. The overall mean
+in a direction set by the shape. `subtract` reads low in the CNR₀ 2 to 3
+decile on Voigt (decile mean 0.49) and p = 4 (0.57), and on p = 4 also at
+CNR₀ 3 to 4.4 (0.79, −3.4 combined SE); in those deciles the last frames sit
+at per-frame CNR 0.1 to 0.2, far below the floor of Section 9. The overall mean
 |⟨D̂⟩/D_ref − 1|, `subtract` against MAS, is 0.080 against 0.174 (Gaussian),
 0.111 against 0.112 (Voigt), 0.084 against 0.199 (p = 1.5), and 0.099 against
 0.363 (p = 4); Monte Carlo error alone would give 0.095, 0.090, 0.074, and
@@ -319,7 +333,8 @@ p = 1.5 reach 1.6 and 2.3 σ_0², and the flat-topped p = 4 fit reads *low*
 (E[raw] 0.53 σ_0² at CNR 0.05), so for p = 4 the correction adds to the
 variance there. (The table `per_profile_floor_genGauss.txt` is the p = 2
 generalized-Gaussian fit, a Gaussian profile under that fitter's tighter
-bound, run with an earlier 1000-run lookup and floor rule.)
+bound, run with a 1000-run lookup and the fixed floor rule |z| > 2 and
+|residual| > 0.01 σ₀².)
 
 ### Analytical handle on where the model breaks
 
@@ -397,7 +412,8 @@ lookup of Section 8; both are experimental.
   +0.019 ± 0.014, and +0.049 ± 0.016 for α = 0.6, 0.8, 1.0, and 1.2, against
   +0.024 to +0.081 naive (z 2.2 to 4.9). The SEs leave out the shared
   calibration error, so the α = 1.2 residual (z = 3.0) is not yet tested
-  against it. Below CNR₀ 21 the naive fit pins at the ballistic α = 2.0. The
+  against it. Below CNR₀ 21, and at CNR₀ 21 for α = 1.2, the naive fit pins at
+the ballistic α = 2.0. The
   exponent is read from the mean trajectory (§4's bias carries into the
   slope's curvature, not only its slope).
 - **Decay law.** The correction subtracts

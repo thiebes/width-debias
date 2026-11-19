@@ -19,14 +19,13 @@ frames but cannot remove a mean bias present in every point.
 The package corrects each profile's fitted width, and the MSD and D follow. It
 subtracts a Monte Carlo calibrated bias `var_bias(CNR)` from each frame's fitted
 variance before the slope fit, keyed on the per-frame CNR; in the same
-simulation the corrected fit returns 1.00 times the reference. The calibration
+simulation the corrected fit returns 1.01 times the reference. The calibration
 is built at D = 0, so it does not require a prior value of D. Removing the
 fit's lower bound on the width does not help: above a per-frame CNR of about
 1.5 the bounded and unbounded fits are identical, and both carry the full bias.
 Below a per-frame CNR of about 1 the fits spread into a broad upper tail and the
 correction no longer holds (see [On real data](#on-real-data)). The derivation,
-which reaches the same additive form from a folded-normal model of the width
-estimate, is in
+which obtains the additive form from the width's estimation variance, is in
 [`docs/DERIVATION.md`](https://github.com/thiebes/width-debias/blob/v0.4.1/docs/DERIVATION.md).
 
 ## Install
@@ -142,10 +141,12 @@ calibration's geometry but does not check it against the data.
   initial CNR the combined SE is large, so those cells constrain the bias only
   loosely (`experiments/dfree-calibration`).
 - The correction holds above a per-frame CNR of about 1 (0.89 to 1.51 depending
-  on shape, for a residual within 0.3 of the end-point MSD at
+  on shape: the lowest CNR at which the residual plus two combined standard
+  errors stays within 0.3 of the end-point MSD 2 D t_max at
   D = 0.02 sigma_0^2/tau), where the leading-order bias model
-  `var_bias = A / CNR^2` itself breaks (`experiments/correction-floor`). With single-exponential decay to
-  3 tau, every frame stays above the floor from an initial CNR of about 20.
+  `var_bias = A / CNR^2` itself breaks (`experiments/correction-floor`). With
+  single-exponential decay to 3 tau, every frame stays above the floor from an
+  initial CNR of about 20.
 - It corrects the anomalous exponent of subdiffusive transport as well as D
   (`experiments/subdiffusive-alpha`, `experiments/nc-solid`).
 

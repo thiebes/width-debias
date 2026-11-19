@@ -13,12 +13,12 @@ in count units, added in quadrature to the local shot variance) from 0 upward.
 For each `r` it reports, summarised as mean |mean(D_hat)/D_true - 1| over the
 CNR_0 sweep:
 
-  OLS raw            -- the uncorrected bias, climbing from ~0 (pure shot) toward
-                        the white level as the pedestal grows.
+  OLS raw            -- the uncorrected bias, climbing from ~0 (pure shot) as
+                        the pedestal grows, past the white level at large r.
   subtract, matched  -- the correction with a calibration built at the same read
-                        floor (CORRECTNESS).
+                        floor (the correctness test).
   subtract, white cal -- the shipped white calibration applied to this data
-                        (ROBUSTNESS): it over-corrects at small r and is
+                        (the robustness test): it over-corrects at small r and is
                         correct only on white data.
 
 The pure-white case is run as the large-r reference. Reading the read floor in
@@ -72,7 +72,7 @@ def _mad(curve: np.ndarray) -> float:
 
 
 def _plot(ols: np.ndarray, matched: np.ndarray, white: np.ndarray,
-          ols_white: float, subtract_white: float, path: str) -> None:
+          ols_on_white: float, subtract_on_white: float, path: str) -> None:
     """Bias against read floor, three curves, with the white-noise levels marked.
 
     The read-floor axis is symmetric-logarithmic (linear below 1 count), so
@@ -94,16 +94,16 @@ def _plot(ols: np.ndarray, matched: np.ndarray, white: np.ndarray,
             label="subtract, white calibration")
     ax.plot(READ_FLOORS, matched, "o-", color=green, lw=2,
             label="subtract, matched calibration")
-    ax.axhline(ols_white, color=gold, ls=":", lw=1.2)
-    ax.axhline(subtract_white, color=blue, ls=":", lw=1.2)
+    ax.axhline(ols_on_white, color=gold, ls=":", lw=1.2)
+    ax.axhline(subtract_on_white, color=blue, ls=":", lw=1.2)
     ax.set_xscale("symlog", linthresh=1.0, linscale=0.5)
     ax.set_yscale("log")
     ax.set_xlim(-0.15, 1.25 * READ_FLOORS[-1])
-    values = np.concatenate([ols, matched, white, [ols_white, subtract_white]])
+    values = np.concatenate([ols, matched, white, [ols_on_white, subtract_on_white]])
     ax.set_ylim(0.6 * np.nanmin(values), 2.2 * np.nanmax(values))
-    ax.text(0.0, ols_white * 1.12, "OLS on white noise", color=gold,
+    ax.text(0.0, ols_on_white * 1.12, "OLS on white noise", color=gold,
             fontsize=font, ha="left", va="bottom")
-    ax.text(1.2 * READ_FLOORS[-1], subtract_white / 1.12,
+    ax.text(1.2 * READ_FLOORS[-1], subtract_on_white / 1.12,
             "subtract on white noise", color=blue, fontsize=font,
             ha="right", va="top")
     ax.xaxis.set_major_locator(FixedLocator(READ_FLOORS))
@@ -124,8 +124,8 @@ def _plot(ols: np.ndarray, matched: np.ndarray, white: np.ndarray,
 def main() -> None:
     print("MSD-slope bias vs detector read floor (pure shot -> pure white)")
     print(f"  D_true = {D_TRUE} sigma_0^2/tau")
-    print(f"  calibration: {CAL_CNR0.size} CNR_0 in [2, 80], {N_CAL} runs/cell")
-    print(f"  evaluation:  {EVAL_CNR0.size} CNR_0 in [3, 60], {N_EVAL} runs/cell")
+    print(f"  calibration: calibrate_d_free (D = 0), {CAL_CNR0.size} CNR_0 in [2, 80], {N_CAL} runs/cell, seeds 1 + i")
+    print(f"  evaluation:  {EVAL_CNR0.size} CNR_0 in [3, 60], {N_EVAL} runs/cell, seeds 20000 + i")
     print(f"  read floors (counts): {READ_FLOORS.tolist()}")
     print(f"  workers = {os.environ.get('WIDTH_DEBIAS_WORKERS', '(serial)')}")
 

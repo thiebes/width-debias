@@ -96,30 +96,30 @@ def diagnostic_report(model_name: str, trunc: BiasLookup) -> None:
     print(f"\n=== {model_name}: per-frame diagnostic with DENSE calibration ===",
           flush=True)
     for cnr0 in CNR0_REPORT:
-        fn = per_frame_diagnostic(exp, cnr0, trunc, scheme="subtract",
-                                  n_runs=N_RUNS_DIAG, seed=30000,
-                                  profile_model=pmodel)
+        sub = per_frame_diagnostic(exp, cnr0, trunc, scheme="subtract",
+                                   n_runs=N_RUNS_DIAG, seed=30000,
+                                   profile_model=pmodel)
         mas = per_frame_diagnostic(exp, cnr0, trunc, scheme="mas",
                                    n_runs=N_RUNS_DIAG, seed=30000,
                                    profile_model=pmodel)
         print(f"\n  CNR_0 = {cnr0:g}  "
-              f"(per-frame CNR {fn.cnr[0]:.2f} -> {fn.cnr[-1]:.2f})",
+              f"(per-frame CNR {sub.cnr[0]:.2f} -> {sub.cnr[-1]:.2f})",
               flush=True)
         print(f"  {'frame':>5}{'CNR':>8}{'sig2_true':>11}"
-              f"{'E[raw]':>10}{'E[FN]':>10}{'resid_FN':>11}"
-              f"{'SE_FN':>9}"
+              f"{'E[raw]':>10}{'E[sub]':>10}{'resid_sub':>11}"
+              f"{'SE_sub':>9}"
               f"{'E[mas]':>10}{'resid_mas':>11}{'SE_mas':>9}",
               flush=True)
         for f in range(exp.n_frames):
-            print(f"  {f:>5}{fn.cnr[f]:>8.2f}{fn.true_variance[f]:>11.4f}"
-                  f"{fn.mean_raw[f]:>10.4f}"
-                  f"{fn.mean_corrected[f]:>10.4f}{fn.residual[f]:>+11.4f}"
-                  f"{fn.residual_se[f]:>9.4f}"
+            print(f"  {f:>5}{sub.cnr[f]:>8.2f}{sub.true_variance[f]:>11.4f}"
+                  f"{sub.mean_raw[f]:>10.4f}"
+                  f"{sub.mean_corrected[f]:>10.4f}{sub.residual[f]:>+11.4f}"
+                  f"{sub.residual_se[f]:>9.4f}"
                   f"{mas.mean_corrected[f]:>10.4f}{mas.residual[f]:>+11.4f}"
                   f"{mas.residual_se[f]:>9.4f}",
                   flush=True)
-        print(f"  residual range: FN [{np.nanmin(fn.residual):+.4f}, "
-              f"{np.nanmax(fn.residual):+.4f}] sigma_0^2;  "
+        print(f"  residual range: subtract [{np.nanmin(sub.residual):+.4f}, "
+              f"{np.nanmax(sub.residual):+.4f}] sigma_0^2;  "
               f"mas [{np.nanmin(mas.residual):+.4f}, "
               f"{np.nanmax(mas.residual):+.4f}] sigma_0^2",
               flush=True)

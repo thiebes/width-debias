@@ -13,6 +13,6 @@ D-free calibration (7 CNR₀ × 400 runs, seeds independent of the evaluation).
 The vertical axis is symmetric-logarithmic: linear between −2 and 2,
 logarithmic above. OLS reads 46 times D_true at CNR₀ 5. `subtract` lies
 within 2 combined SE (evaluation and calibration) of 1 in all 7 cells,
-including 2.67 ± 0.86 at CNR₀ 5, where the last frames fall below per-frame
+including 2.67 ± 0.86 at CNR₀ 5, where the last frame falls below per-frame
 CNR 0.3; inverse-variance weighting leaves 1 of 7 cells beyond 2 SE. Table:
 `poc_demo_gaussian.txt`.

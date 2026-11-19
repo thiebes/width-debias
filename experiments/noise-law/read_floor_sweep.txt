@@ -1,7 +1,7 @@
 MSD-slope bias vs detector read floor (pure shot -> pure white)
   D_true = 0.02 sigma_0^2/tau
-  calibration: 30 CNR_0 in [2, 80], 1000 runs/cell
-  evaluation:  8 CNR_0 in [3, 60], 1000 runs/cell
+  calibration: calibrate_d_free (D = 0), 30 CNR_0 in [2, 80], 1000 runs/cell, seeds 1 + i
+  evaluation:  8 CNR_0 in [3, 60], 1000 runs/cell, seeds 20000 + i
   read floors (counts): [0.0, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0]
   workers = 4
 

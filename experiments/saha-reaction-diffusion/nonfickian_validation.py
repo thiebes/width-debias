@@ -235,7 +235,7 @@ def first_stage_trajectories(regime: Regime, cnr0: float,
 
     Returns a dict of mean trajectories over realisations:
 
-    * ``moment`` -- the non-truncated moment estimator (targets the
+    * ``moment`` -- the moment estimator, with no lower bound (targets the
       recorded-emission moment; no correction);
     * ``gauss_folded`` -- the Gaussian fit with the noise-bias correction
       (targets the noise-free Gaussian fit; isolates distortion 1). ``None``

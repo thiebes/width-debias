@@ -124,7 +124,7 @@ variance of the fitted width matches the bound to within 2–6 % (`crlb.py`).
    `efficiency_check.py` compares the spread of the corrected D̂ with √CRLB on
    Gaussian, Voigt, and generalized-Gaussian (p = 1.5, p = 4) profiles. A fit of
    the corrected widths against time, with every frame weighted by
-   1 / Var(σ̂_i²) and the intercept free, reaches 0.98 to 1.08 × √CRLB from
+   1 / Var(σ̂_i²) and the intercept free, reaches 0.95 to 1.10 × √CRLB from
    CNR₀ 21 with no systematic shift of the mean; the library slope fit uses
    these weights. The remaining imprecision is the CRLB itself (see
    `README.md`, this folder).

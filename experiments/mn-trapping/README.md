@@ -57,13 +57,15 @@ CNR₀ (seed int(CNR₀) × 1000 + s), joint calibration per estimator; residual
 are the mean over frames with per-frame CNR ≥ 1 of |seed-mean width −
 reference|.
 
-- **Noise.** Where every frame has per-frame CNR ≥ 1.8 (0.51% and 0.81% Mn at
-  CNR₀ 100 and 200, 4.04% Mn from CNR₀ 20), the raw and corrected widths lie
-  0.0001 to 0.005 μm² from the noiseless fit, and the correction changes that
-  distance by at most 0.0005 μm². At these CNR₀ the noise bias is small
-  against the 15-seed scatter, so the bed bounds the correction's error rather
-  than resolving it. At 4.04% Mn and CNR₀ 10 every frame is still above CNR 1
-  (1.44 to 14), but raw and corrected both lie 0.03 to 0.08 μm² from the
+- **Noise.** Where every frame has per-frame CNR ≥ 1.8 (the cells whose
+  `min CNR` column is at least 1.8: 0.51% and 0.81% Mn at CNR₀ 100 and 200,
+  4.04% Mn from CNR₀ 20), the raw and corrected widths lie 0.0001 to
+  0.0053 μm² from the noiseless fit, and the correction changes that distance
+  by at most 0.00051 μm². The raw widths are already that close, so the noise
+  bias the correction removes there is no larger than the distance itself, and
+  the bed bounds the correction's error rather than resolving it. At 4.04% Mn
+  and CNR₀ 10 every frame is still above CNR 1 (1.44 to 10), but raw and
+  corrected both lie 0.03 to 0.08 μm² from the
   noiseless fit, and the correction moves that by at most 0.005 μm². At CNR₀ 50
   (0.51% and 0.81% Mn, 189 to 223 of 250 frames above CNR 1) the correction
   lowers the distance by 0.014 to 0.016 μm² (Gaussian, from 0.105 and 0.115)

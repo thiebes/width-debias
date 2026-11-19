@@ -21,8 +21,9 @@ The framework point the bed makes concrete: a forward fit is unbiased only when
 the model's observable matches the measurement's. The model predicts the
 emission second moment, so:
 
-* feeding it the moment-estimator measurement (which is the emission second
-  moment, approximately unbiased) recovers the true De, Df and the carrier alpha;
+* feeding it the moment-estimator measurement (which targets the emission
+  second moment, though as a ratio of noisy sums it carries a bias of order
+  1/CNR^2) recovers the true De, Df and the carrier alpha;
 * feeding it the Gaussian-fit-plus-correction measurement (which converges to
   the noise-free Gaussian fit, not the emission moment, because the noise-bias
   correction removes the noise bias but not the shape gap) recovers biased De, Df

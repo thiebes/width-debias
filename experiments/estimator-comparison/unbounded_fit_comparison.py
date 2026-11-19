@@ -88,7 +88,8 @@ def isolated_stats(cnr: float, model, n_runs: int, seed: int):
 
 def per_frame_sweep():
     print("Per-frame mechanism: isolated profiles at sigma^2 = 1 sigma_0^2")
-    print(f"  {PF_N_RUNS} fits per CNR cell\n")
+    print(f"  {PF_N_RUNS} fits per CNR cell, seeds 7000 + i "
+          "(the same profiles for both fits)\n")
     header = (f"  {'CNR':>7}{'bnd mean':>10}{'bnd SD':>9}"
               f"{'unb mean':>10}{'unb SD':>9}{'unb neg':>9}{'unb NaN':>9}")
     print(header)
@@ -137,10 +138,12 @@ def d_ols(exp: Experiment, grid: np.ndarray, profile_model, n_runs: int,
 def d_level_sweep():
     print("\nD-level head-to-head: full diffusion experiment")
     print(f"  D = {EXP.D} sigma_0^2/tau (L_D/FWHM_0 ~ 0.085), "
-          f"{D_N_RUNS} runs/CNR_0\n")
+          f"{D_N_RUNS} runs/CNR_0, evaluation seeds 20000 + i "
+          "(the same realisations for every arm)\n")
 
-    print(f"  Building D-free calibration "
-          f"({CAL_CNR0_GRID.size} CNR_0, {CAL_N_RUNS} runs/cell)...", flush=True)
+    print(f"  Building D-free calibration (calibrate_d_free, "
+          f"{CAL_CNR0_GRID.size} CNR_0, {CAL_N_RUNS} runs/cell, seeds 1 + i)...",
+          flush=True)
     t0 = time.time()
     trunc = calibrate_d_free(CAL_CNR0_GRID, n_runs=CAL_N_RUNS, seed=1,
                              model=GaussianModel())

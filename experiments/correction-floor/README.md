@@ -84,10 +84,12 @@ exceeds the leading term on Gaussian (ratio 2.0 at CNR 1.18, up to 8.9 at CNR
 Design rule: keep every frame's per-profile CNR above about 1 to 1.5.
 
 Result tables: `per_profile_floor_<model>.txt` (`genGauss` is a p = 2 run kept for
-reference, with a 1000-run calibration and the earlier floor rule
-(|z| > 2 and |residual| > 0.01 σ₀²);
+reference, with a 1000-run calibration and the fixed floor rule
+|z| > 2 and |residual| > 0.01 σ₀²;
 `genGauss_p1.5`, `genGauss_p4`), `analytical_floor.txt`,
-`per_frame_in_diffusion_experiment.txt`. The poster figure
+`per_frame_in_diffusion_experiment.txt` (run before the script printed the
+residual SE columns; its `FN` columns are the `subtract` correction). The
+poster figure
 `poster_panel5_floor.png` was rendered from the earlier Gaussian, Voigt, and
 p = 2 tables (1000-run calibration); `render_floor_panel.py` reads the committed
 tables, so a re-render uses the 5000-run Gaussian and Voigt tables above.

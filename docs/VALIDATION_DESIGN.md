@@ -145,8 +145,10 @@ avoid. The noise-bias correction's scope is distortion 1 only.
 - The second moment is sensitive to the tails and the integration window;
   compute it on the noise-free profile as the simulation produces it, on a wide
   enough window.
-- The moment estimator is unbiased only when negative values are admitted;
-  clipping negatives or leaving a positive background reintroduces a floor bias.
+- The moment estimator avoids a floor bias only when negative values are
+  admitted; clipping negatives or leaving a positive background reintroduces
+  one. Even then, as a ratio of noisy sums it carries a bias of order
+  1/CNR^2.
 
 ## Validation recipe
 
@@ -163,7 +165,7 @@ avoid. The noise-bias correction's scope is distortion 1 only.
 ## Where this lives in the code
 
 - Estimators (width extraction): `models.py` (`GaussianModel`, `VoigtModel`,
-  `GeneralizedGaussianModel`, and the non-truncated `MomentModel`).
+  `GeneralizedGaussianModel`, and `MomentModel`, which has no lower bound).
 - Noise correction and its calibration: `weights.py`, `bias_lookup.py`,
   `calibration.py`.
 - Per-frame and MSD-to-D fits, and the validation sweep: `fit.py`, `validate.py`.

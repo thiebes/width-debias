@@ -1,5 +1,5 @@
 Per-frame mechanism: isolated profiles at sigma^2 = 1 sigma_0^2
-  15000 fits per CNR cell
+  15000 fits per CNR cell, seeds 7000 + i (the same profiles for both fits)
 
       CNR  bnd mean   bnd SD  unb mean   unb SD  unb neg  unb NaN
      0.30    5.6322  20.4904    2.0339   9.5986   0.0173   0.0000
@@ -22,9 +22,9 @@ Per-frame mechanism: isolated profiles at sigma^2 = 1 sigma_0^2
     30.00    1.0000   0.0158    1.0000   0.0158   0.0000   0.0000
 
 D-level head-to-head: full diffusion experiment
-  D = 0.02 sigma_0^2/tau (L_D/FWHM_0 ~ 0.085), 2500 runs/CNR_0
+  D = 0.02 sigma_0^2/tau (L_D/FWHM_0 ~ 0.085), 2500 runs/CNR_0, evaluation seeds 20000 + i (the same realisations for every arm)
 
-  Building D-free calibration (50 CNR_0, 1500 runs/cell)...
+  Building D-free calibration (calibrate_d_free, 50 CNR_0, 1500 runs/cell, seeds 1 + i)...
   Calibration done [1660s]
   Bounded Gaussian fit (OLS + subtract)...
   Unbounded Gaussian fit (OLS)...

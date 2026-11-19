@@ -1,0 +1,38 @@
+width-debias method comparison
+  experiment: D=0.02, n_frames=12, 400 runs/CNR_0
+  calibration: legacy D-aware (sweep_stats + BiasLookup.from_stats at D = 0.02), 7 CNR_0 x 400 runs, seeds 1 + i, per profile model
+  evaluation seeds 20000 + i for CNR_0 index i (the same realisations for both models)
+
+Running Gaussian-fit estimator ...
+Running moment estimator ...
+
+  <D_est> / D_true   (1.000 = unbiased)
+  CNR_0       gauss+OLS  gauss+inv-var gauss+subtract      gauss+MAS moment+inv-var
+      5          46.308          3.205          2.681          2.759        -57.128
+      8          14.031          1.220          0.774          0.796        -10.368
+     13           7.155          1.048          0.980          0.982         -4.142
+     21           1.542          0.985          0.915          0.911         -1.779
+     34           1.163          1.019          1.017          1.001         -0.705
+     55           1.131          1.017          1.015          1.007          0.359
+     90           1.023          1.003          1.002          0.993          0.645
+
+  mean |bias-1|  (lower = less biased)
+    gauss+OLS        9.336
+    gauss+inv-var    0.361
+    gauss+subtract   0.292
+    gauss+MAS        0.298
+    moment+inv-var   11.445
+
+  mean spread  std(D_est/D_true)  (lower = more precise)
+    gauss+OLS        30.200
+    gauss+inv-var    3.232
+    gauss+subtract   3.232
+    gauss+MAS        3.232
+    moment+inv-var   72.897
+
+  Reading: lowest mean |bias-1| among the Gaussian-fit schemes: gauss+subtract.
+  moment+inv-var: mean D negative at 5 of 7 CNR_0, mean spread 72.9 against 3.2 for gauss+subtract. The moment
+  estimator is a ratio of noisy sums with an estimated centroid (bias of
+  order 1/CNR^2); a near-zero denominator makes it unstable.
+
+Figure written to output\method_comparison.png

@@ -1,7 +1,7 @@
 The subtract correction across transport-microscopy noise laws
   D_true = 0.02 sigma_0^2/tau
-  calibration: 30 CNR_0 in [2, 80], 1000 runs/cell
-  evaluation:  8 CNR_0 in [3, 60], 1000 runs/cell
+  calibration: calibrate_d_free (D = 0), 30 CNR_0 in [2, 80], 1000 runs/cell, seeds 1 + i
+  evaluation:  8 CNR_0 in [3, 60], 1000 runs/cell, seeds 20000 + i
   workers = 4
 
 Building matched calibrations at D = 0 ...
@@ -60,6 +60,6 @@ mean |bias - 1| over the sweep
   shot           0.215            0.025                0.276
   poisson        0.194            0.024                0.271
 
-Reading: 'subtract matched' small => the correction works under that law given a matched calibration (CORRECTNESS).
-'subtract white-calib' close to 'subtract matched' => the default white calibration transfers to that law (ROBUSTNESS); far => recalibrate.
+Reading: 'subtract matched' small => the correction works under that law given a matched calibration (the correctness test).
+'subtract white-calib' close to 'subtract matched' => the default white calibration transfers to that law (the robustness test); far => recalibrate.
 Real techniques: stroboSCAT / transient absorption ~ white; TCSPC / direct PL imaging ~ shot/Poisson.

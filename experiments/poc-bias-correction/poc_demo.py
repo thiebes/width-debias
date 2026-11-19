@@ -69,10 +69,10 @@ def main() -> None:
     print(f"  {N_RUNS} Monte Carlo runs per CNR_0; seeds: calibration {1 + offset} + i, "
           f"evaluation {20000 + offset} + i\n")
 
-    # Panel (a) diagnostic sweep at the experiment's own D: the MSD sign
+    # Panels (a) and (b) diagnostic sweep at the experiment's own D: the MSD sign
     # fraction and skewness need a nonzero true MSD, so this sweep cannot be
     # the D = 0 one. It is not used by the correction.
-    print("Diagnostic sweep for panel (a) ...")
+    print("Diagnostic sweep for panels (a) and (b) ...")
     stats = sweep_stats(EXP, CNR0_GRID, n_runs=N_RUNS, seed=1 + offset, model=pmodel)
 
     # The correction's calibration is D-free: the same sweep at D = 0, so the

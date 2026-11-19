@@ -56,7 +56,7 @@ The bed supports three technical results:
   `free-exciton-diffusion` repo.)
 - `nonfickian_validation.py` — the validation harness: builds regimes and their
   carrier / emission / fit reference α, runs the estimator paths (Gaussian fit
-  plus the non-truncated moment estimator), applies the noise-bias correction,
+  plus the moment estimator, which has no lower bound), applies the noise-bias correction,
   flags the CNR floor, and reports how many non-positive MSD points the
   log-log exponent fit leaves out (`nonfickian_validation.txt`, CNR_0 60: 0 to
   1 per regime on the moment path, none on the Gaussian + `subtract` path).
