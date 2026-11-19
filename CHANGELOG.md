@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `tests/test_quoted_numbers.py`, which recomputes each validation number
+  that the README, `docs/DERIVATION.md`, `docs/REPO_MAP.md`, set READMEs,
+  captions and library docstrings restate from the committed table that
+  produced it, checks every copy, and keeps superseded values out of all
+  documents except the changelog and the other history documents. A rerun
+  that changes a table fails the test until each copy is updated.
+
 ### Documentation
 
 - The validation numbers in the README, `docs/DERIVATION.md`, and the
