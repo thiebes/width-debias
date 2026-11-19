@@ -12,25 +12,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The validation numbers in the README, `docs/DERIVATION.md`, and the
   docstrings of `calibrate_d_free` and `msd_and_weights` come from the
   regenerated experiment sets, whose seeds are independent per profile shape:
-  4 of 140 cells beyond two combined standard errors (formerly 4 of 96 on
-  shared seeds), 0.95 to 1.10 x sqrt(CRLB) from initial CNR 21 (formerly 0.98
-  to 1.08), and a per-profile CNR floor of 0.89 to 1.51 depending on shape.
+  4 of 140 cells beyond two combined standard errors, keeping frames with
+  per-frame CNR >= 1 (5 of 140 with every frame), in place of the 4 of 96 the
+  `calibrate_d_free` docstring quoted from an earlier run on seeds shared
+  across shapes; 0.95 to 1.10 x sqrt(CRLB) from initial CNR 21 (formerly 0.98
+  to 1.08); and a per-profile CNR floor of 0.89 to 1.51 depending on shape.
 - `docs/DERIVATION.md` builds the model on the fitted width's estimation
-  variance, with the bound at zero confined to per-frame CNR below about 1,
-  and its floor section counts the lookup's own error and sets the tolerance
+  variance; above a per-frame CNR of about 1.5 the bound at zero does not
+  bind. Its floor section counts the lookup's own error and sets the tolerance
   relative to the end-point MSD.
 - The experiment tables and figures name the corrected arm `subtract`, the
-  scheme's name, instead of "folded-normal"; regenerated with the current
-  library, their numbers are unchanged except the unbounded-fit comparison and
-  the noise-law tables, whose corrected arms now use the per-frame slope
-  weights (half the former spread at initial CNR 34 in the unbounded-fit
-  comparison; under shot noise with a matched calibration, a mean error of
-  0.025 against 0.046). The read-floor figure places read 0 at its true
-  position on a symmetric-logarithmic axis. The coverage check runs 13 initial CNR
-  values at 8000 runs each with standard errors: the `fit_D` covariance
-  interval covers 0.944 at D = 0.02 sigma_0^2/tau (nominal 0.95), because the
-  D-free lookup's per-frame variances are calibrated at the initial width and
-  the width grows, as the `fit_D` docstring notes.
+  scheme's name, instead of "folded-normal". Regenerated with the current
+  library, their numbers are unchanged except in the unbounded-fit comparison
+  and the noise-law tables.
+- The unbounded-fit comparison and the noise-law tables use the per-frame slope
+  weights in their corrected arms: half the former spread at initial CNR 34 in
+  the unbounded-fit comparison, and under shot noise with a matched
+  calibration a mean error of 0.025 against 0.046. The read-floor figure places
+  read 0 at its true position on a symmetric-logarithmic axis.
+- The coverage check runs 13 initial CNR values at 8000 runs each, with
+  standard errors and pooled values printed by the script. The `fit_D`
+  covariance interval covers 0.944 at D = 0.02 sigma_0^2/tau (nominal 0.95),
+  because the D-free lookup's per-frame variances are calibrated at the
+  initial width while the width grows, as the `fit_D` docstring notes. A
+  parametric bootstrap with 2000 resamples and per-frame variances measured
+  over the ensemble covers 0.951.
+- The method comparison commits its table (`method_comparison.txt`), and its
+  figure keeps the legacy D-aware calibration, which its caption states.
+- The Mn-trapping bed names its reference as the emission-weighted PL second
+  moment, not the carrier moment, and its generalized-Gaussian arm as p = 2.
+  Where every frame has per-frame CNR >= 1.8, the raw and corrected widths lie
+  within 0.0053 square micrometres of the noiseless fit, so the bed bounds the
+  correction's error rather than resolving it.
+- The p = 2 proof-of-concept figure and table from 2026-06, made with the
+  earlier labels and no caption, are removed; they duplicated the Gaussian
+  result.
 - The `MomentModel` docstring no longer calls the moment estimator unbiased to
   leading order: it is a ratio of two sums linear in the data, taken about an
   estimated centroid, so its bias is of order 1/CNR^2, the same order as a
