@@ -2,7 +2,7 @@
 Disordered NC-solid validation (Solari et al.) -- subtract
 Gaussian fit; reference = carrier 2nd moment (var_true); decay tau = 7 ns
 ======================================================================
-n_seeds per CNR_0: 400;  reliable regime: per-frame CNR >= 1.0
+n_seeds per CNR_0: 400;  fitted frames: per-frame CNR >= 1.0 (frames below are dropped from the fit)
 
 ----------------------------------------------------------------------
 === small ===   noiseless fit [0.03982, 0.04375] um^2, shape gap 0.0001923 um^2

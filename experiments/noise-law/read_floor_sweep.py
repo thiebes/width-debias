@@ -71,7 +71,7 @@ def _mad(curve: np.ndarray) -> float:
     return float(np.nanmean(np.abs(curve - 1.0)))
 
 
-def _plot(ols: np.ndarray, matched: np.ndarray, white: np.ndarray,
+def _plot(ols: np.ndarray, matched: np.ndarray, white_cal: np.ndarray,
           ols_on_white: float, subtract_on_white: float, path: str) -> None:
     """Bias against read floor, three curves, with the white-noise levels marked.
 
@@ -90,7 +90,7 @@ def _plot(ols: np.ndarray, matched: np.ndarray, white: np.ndarray,
     fig.patch.set_alpha(0)
     ax.set_facecolor("white")
     ax.plot(READ_FLOORS, ols, "o-", color=gold, lw=2, label="uncorrected (OLS)")
-    ax.plot(READ_FLOORS, white, "s-", color=blue, lw=2,
+    ax.plot(READ_FLOORS, white_cal, "s-", color=blue, lw=2,
             label="subtract, white calibration")
     ax.plot(READ_FLOORS, matched, "o-", color=green, lw=2,
             label="subtract, matched calibration")
@@ -99,7 +99,7 @@ def _plot(ols: np.ndarray, matched: np.ndarray, white: np.ndarray,
     ax.set_xscale("symlog", linthresh=1.0, linscale=0.5)
     ax.set_yscale("log")
     ax.set_xlim(-0.15, 1.25 * READ_FLOORS[-1])
-    values = np.concatenate([ols, matched, white, [ols_on_white, subtract_on_white]])
+    values = np.concatenate([ols, matched, white_cal, [ols_on_white, subtract_on_white]])
     ax.set_ylim(0.6 * np.nanmin(values), 2.2 * np.nanmax(values))
     ax.text(0.0, ols_on_white * 1.12, "OLS on white noise", color=gold,
             fontsize=font, ha="left", va="bottom")
@@ -124,7 +124,8 @@ def _plot(ols: np.ndarray, matched: np.ndarray, white: np.ndarray,
 def main() -> None:
     print("MSD-slope bias vs detector read floor (pure shot -> pure white)")
     print(f"  D_true = {D_TRUE} sigma_0^2/tau")
-    print(f"  calibration: calibrate_d_free (D = 0), {CAL_CNR0.size} CNR_0 in [2, 80], {N_CAL} runs/cell, seeds 1 + i")
+    print(f"  calibration: calibrate_d_free (D = 0), {CAL_CNR0.size} CNR_0 in [2, 80], "
+          f"{N_CAL} runs/cell, seeds 1 + i")
     print(f"  evaluation:  {EVAL_CNR0.size} CNR_0 in [3, 60], {N_EVAL} runs/cell, seeds 20000 + i")
     print(f"  read floors (counts): {READ_FLOORS.tolist()}")
     print(f"  workers = {os.environ.get('WIDTH_DEBIAS_WORKERS', '(serial)')}")
@@ -136,7 +137,7 @@ def main() -> None:
                                  **GEOM)
 
     exp = Experiment(D=D_TRUE, **GEOM)
-    ols, subtract_matched, subtract_white = [], [], []
+    ols, subtract_matched, subtract_white_cal = [], [], []
     for r in READ_FLOORS:
         model = ShotNoise(read=float(r), poisson=True)
         print(f"\n[read = {r:5.1f}] building matched calibration ...", flush=True)
@@ -146,21 +147,21 @@ def main() -> None:
                            noise_model=model)
         ols.append(_mad(r_match["ols"].mean_bias))
         subtract_matched.append(_mad(r_match["subtract"].mean_bias))
-        subtract_white.append(_mad(r_white["subtract"].mean_bias))
+        subtract_white_cal.append(_mad(r_white["subtract"].mean_bias))
         print(f"  OLS raw {ols[-1]:.3f} | subtract matched {subtract_matched[-1]:.3f} "
-              f"| subtract white-cal {subtract_white[-1]:.3f}")
+              f"| subtract white-cal {subtract_white_cal[-1]:.3f}")
 
     # The pure-white limit, for reference.
     print("\n[white limit] evaluating white data with the white calibration ...",
           flush=True)
     r_w = evaluate(exp, EVAL_CNR0, white_cal, n_runs=N_EVAL,
                    noise_model=WhiteNoise())
-    ols_white = _mad(r_w["ols"].mean_bias)
-    subtract_white_white = _mad(r_w["subtract"].mean_bias)
+    ols_on_white = _mad(r_w["ols"].mean_bias)
+    subtract_on_white = _mad(r_w["subtract"].mean_bias)
 
     ols = np.array(ols)
     subtract_matched = np.array(subtract_matched)
-    subtract_white = np.array(subtract_white)
+    subtract_white_cal = np.array(subtract_white_cal)
 
     print("\n" + "=" * 72)
     print("mean |mean(D_hat)/D_true - 1| over the CNR_0 sweep, vs read floor")
@@ -169,12 +170,12 @@ def main() -> None:
           f"{'subtract white-cal':>18}")
     for i, r in enumerate(READ_FLOORS):
         print(f"  {r:>6.1f} {ols[i]:>10.3f} {subtract_matched[i]:>16.3f} "
-              f"{subtract_white[i]:>18.3f}")
-    print(f"  {'white':>6} {ols_white:>10.3f} {'-':>16} "
-          f"{subtract_white_white:>18.3f}")
+              f"{subtract_white_cal[i]:>18.3f}")
+    print(f"  {'white':>6} {ols_on_white:>10.3f} {'-':>16} "
+          f"{subtract_on_white:>18.3f}")
 
     path = os.path.join(OUTPUT, "read_floor_sweep.png")
-    _plot(ols, subtract_matched, subtract_white, ols_white, subtract_white_white,
+    _plot(ols, subtract_matched, subtract_white_cal, ols_on_white, subtract_on_white,
           path)
     print(f"\nSaved {os.path.basename(path)}")
 

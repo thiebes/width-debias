@@ -33,7 +33,7 @@ Set ``WIDTH_DEBIAS_WORKERS=0`` to use all cores.
 
 Usage::
 
-    .venv/Scripts/python.exe scripts/unbounded_fit_comparison.py
+    .venv/Scripts/python.exe experiments/estimator-comparison/unbounded_fit_comparison.py
 """
 from __future__ import annotations
 

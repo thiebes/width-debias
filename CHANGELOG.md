@@ -48,7 +48,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   per-frame CNR >= 1 (0.967 of the realised spread), beside the coverage
   measured in those cells (0.942).
 - The method comparison commits its table (`method_comparison.txt`), and its
-  figure keeps the legacy D-aware calibration, which its caption states.
+  figure keeps the legacy D-aware calibration, which its caption states. Its
+  script prints both corrected schemes' mean |bias - 1| and their largest
+  per-cell difference from initial CNR 8 up, instead of naming the lower one,
+  whose order depends on the draw, and its docstring matches the table.
+- The nc-solid table header says that frames below the per-frame CNR floor
+  are dropped from the fit, where the Mn table only scores above it. The
+  read-floor script names its white-calibration and white-noise results
+  apart, and the unbounded-fit script gives its correct run path.
 - The Mn-trapping bed names its reference as the emission-weighted PL second
   moment, not the carrier moment, and its generalized-Gaussian arm as p = 2.
   Where every frame has per-frame CNR >= 1.8, the raw and corrected widths lie

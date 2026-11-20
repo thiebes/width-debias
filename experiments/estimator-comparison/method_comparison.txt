@@ -30,7 +30,8 @@ Running moment estimator ...
     gauss+MAS        3.232
     moment+inv-var   72.897
 
-  Reading: lowest mean |bias-1| among the Gaussian-fit schemes: gauss+subtract.
+  Reading: gauss+subtract and gauss+MAS give mean |bias-1| 0.292 and 0.298;
+  from CNR_0 8 up they differ by at most 0.022 in any cell.
   moment+inv-var: mean D negative at 5 of 7 CNR_0, mean spread 72.9 against 3.2 for gauss+subtract. The moment
   estimator is a ratio of noisy sums with an estimated centroid (bias of
   order 1/CNR^2); a near-zero denominator makes it unstable.

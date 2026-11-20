@@ -170,8 +170,8 @@ def main() -> None:
         "Gaussian fit; reference = carrier 2nd moment (var_true); decay tau = "
         f"{cases[0].tau_ns:.0f} ns",
         "=" * 70,
-        f"n_seeds per CNR_0: {N_SEEDS};  reliable regime: per-frame "
-        f"CNR >= {FLOOR_CNR}",
+        f"n_seeds per CNR_0: {N_SEEDS};  fitted frames: per-frame "
+        f"CNR >= {FLOOR_CNR} (frames below are dropped from the fit)",
         "",
     ]
     fig_rows = {}

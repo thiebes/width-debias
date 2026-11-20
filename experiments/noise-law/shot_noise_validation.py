@@ -77,7 +77,8 @@ def _mad(curve: np.ndarray) -> float:
 def main() -> None:
     print("The subtract correction across transport-microscopy noise laws")
     print(f"  D_true = {D_TRUE} sigma_0^2/tau")
-    print(f"  calibration: calibrate_d_free (D = 0), {CAL_CNR0.size} CNR_0 in [2, 80], {N_CAL} runs/cell, seeds 1 + i")
+    print(f"  calibration: calibrate_d_free (D = 0), {CAL_CNR0.size} CNR_0 in [2, 80], "
+          f"{N_CAL} runs/cell, seeds 1 + i")
     print(f"  evaluation:  {EVAL_CNR0.size} CNR_0 in [3, 60], {N_EVAL} runs/cell, seeds 20000 + i")
     print(f"  workers = {os.environ.get('WIDTH_DEBIAS_WORKERS', '(serial)')}")
 

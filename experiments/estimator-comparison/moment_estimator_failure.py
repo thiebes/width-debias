@@ -8,12 +8,13 @@ Compares, on identical simulated data:
 * Gaussian-fit estimator + MAS-style correction (gated subtraction)
 * Moment estimator + inverse-variance weighting (no lower bound on the width)
 
-The noise-bias correction removes the bias but can overcorrect in the
-deepest noise. Two alternatives target that: the MAS-style gated subtraction
-(it switches off rather than overshooting), and the moment estimator (it has
-no lower bound and takes no correction -- at the cost of higher variance).
-The table reports both bias and spread so the bias-variance trade-off is
-visible.
+The noise-bias correction subtracts the calibrated bias from every frame. Two
+alternatives run on the same data: the MAS-style gated subtraction, which
+cannot drive a fitted variance negative because its gate turns the correction
+off in deep noise, and the moment estimator, which has no lower bound and takes
+no correction; it is a ratio of noisy sums about an estimated centroid, with a
+bias of order 1/CNR^2, and unstable where its denominator nears zero. The
+table reports bias and spread for each.
 
 The calibration here is the legacy D-aware one (``sweep_stats`` and
 ``BiasLookup.from_stats`` at the evaluation D), not ``calibrate_d_free``; the
@@ -94,12 +95,17 @@ def main() -> None:
     for lab in labels:
         print(f"    {lab:<16} {np.nanmean(spread[lab]):.3f}")
 
-    # The verdict is computed, not written in: which corrected scheme is less
-    # biased depends on the draw, and the moment estimator's failure is counted.
-    gauss_labels = [lab for lab, m, _ in COLUMNS if m == "gaussian"]
-    best = min(gauss_labels, key=lambda lab: np.nanmean(np.abs(bias[lab] - 1.0)))
+    # The reading is computed, not written in. The two corrected schemes are
+    # compared by their largest per-cell difference rather than by naming the
+    # lower mean |bias-1|, whose order depends on the draw when they are close;
+    # the moment estimator's failure is counted.
+    sub, mas = bias["gauss+subtract"], bias["gauss+MAS"]
+    from8 = CNR0_GRID >= 8.0
     n_neg = int(np.sum(bias["moment+inv-var"] < 0))
-    print(f"\n  Reading: lowest mean |bias-1| among the Gaussian-fit schemes: {best}.")
+    print(f"\n  Reading: gauss+subtract and gauss+MAS give mean |bias-1| "
+          f"{np.nanmean(np.abs(sub - 1.0)):.3f} and {np.nanmean(np.abs(mas - 1.0)):.3f};")
+    print(f"  from CNR_0 8 up they differ by at most "
+          f"{np.nanmax(np.abs(sub - mas)[from8]):.3f} in any cell.")
     print(f"  moment+inv-var: mean D negative at {n_neg} of {CNR0_GRID.size} CNR_0, "
           f"mean spread {np.nanmean(spread['moment+inv-var']):.1f} against "
           f"{np.nanmean(spread['gauss+subtract']):.1f} for gauss+subtract. The moment")

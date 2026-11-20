@@ -22,7 +22,7 @@ None. Fully synthetic.
 ## Run
 
 ```bash
-.venv/Scripts/python.exe experiments/estimator-comparison/moment_estimator_failure.py
+.venv/Scripts/python.exe experiments/estimator-comparison/moment_estimator_failure.py > output/method_comparison.txt
 .venv/Scripts/python.exe experiments/estimator-comparison/unbounded_fit_comparison.py
 ```
 
@@ -50,7 +50,7 @@ every CNR0 here; the figures leave it out and the tables carry it
 (`method_comparison.txt`, `unbounded_fit_comparison.txt`).
 
 Figures: `method_comparison.png`, `unbounded_fit_comparison.png`, each with a
-`_caption.md`; table `unbounded_fit_comparison.txt`.
+`_caption.md`; tables `method_comparison.txt` and `unbounded_fit_comparison.txt`.
 
 ## Depends on
 
