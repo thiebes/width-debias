@@ -19,8 +19,8 @@ Four schemes are compared:
                            leaves the raw inflation in place.
 
 The fitted variance carries an additive upward bias equal to the width's
-estimation variance (``docs/DERIVATION.md`` derives it from that variance),
-and that bias -- not extra scatter -- is what inflates D. A
+estimation variance (``docs/DERIVATION.md`` derives it from the scatter of
+the fitted width), and that bias -- not extra scatter -- is what inflates D. A
 reweighting of the slope fit cannot remove a mean bias present in every point;
 only the per-frame subtraction in ``subtract`` / ``mas`` can. They differ
 from ``inverse_variance`` *only* by that subtraction, so the comparison

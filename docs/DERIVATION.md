@@ -3,9 +3,10 @@
 This note derives why the diffusion coefficient is overestimated and what the
 correct fix is. A width fitted to a noisy profile scatters about the true
 width; squaring it adds the width's estimation variance to the fitted
-variance. Above a per-frame CNR of about 1.5 the fit's lower bound does not
-bind: the bounded and unbounded fits return the same widths and the same
-biased D (`experiments/estimator-comparison`). The correction itself works
+variance. Above a per-frame CNR of about 1.5 the bounded and unbounded fits
+agree: they return the same widths and the same biased D
+(`experiments/estimator-comparison`), and the bound itself carries
+negligible mass above about 1 (Section 3). The correction itself works
 down to a per-frame CNR of about 1 (Section 9). Below about 1,
 `experiments/boundary-diagnostic/diagnose_boundary.py` found the
 fitted-variance distribution strictly interior and right-skewed with no
@@ -33,7 +34,8 @@ A fitted width cannot be negative. Where `X_i < 0` has appreciable probability
 (per-frame CNR below about 1), the fit reports `|X_i|`: it reflects that mass
 rather than clipping it. Reflection leaves the square unchanged,
 `|X_i|² = X_i²`, so in this model the moments below hold with or without the
-bound, and the folded and unbounded estimates have the same square. A real
+bound, and the folded estimate `|X_i|` and the unbounded one `X_i` have the
+same square. A real
 unbounded fit is a different estimator from the unbounded `X_i` of the model:
 below a per-frame CNR of about 1.5 its fitted variance departs from the
 bounded fit's, slightly at 1.16 (1.0695 against 1.0715 σ₀²) and strongly at
@@ -71,8 +73,7 @@ terms, which is why the package calibrates `var_bias(CNR)` rather than using
 `A / CNR²` alone.
 
 The model also gives a dimensionless readout of the width's signal-to-noise
-`α_i = σ_i / s_i`: the truncation fraction, the mass of the latent estimate
-below zero,
+`α_i = σ_i / s_i`: the mass of the latent estimate below zero,
 
     p_i = P(X_i < 0) = Φ(−α_i),     so   α_i = −Φ⁻¹(p_i).
 
@@ -160,9 +161,9 @@ subtraction, matching `subtract`) and → 0 when it is noise dominated (the
 frame is left uncorrected rather than overshot). On the narrow `CNR₀ ∈ [5,90]`
 sweep (`experiments/estimator-comparison/moment_estimator_failure.py`, table
 `method_comparison.txt`, legacy D-aware calibration), `mas` and `subtract` lie
-within 0.03 of each other from CNR₀ 8 up and depart together below it (2.76
-and 2.68 at CNR₀ 5; 0.80 and 0.77 at CNR₀ 8, where the last frames fall below
-per-frame CNR 0.5); mean |⟨D⟩/D_ref − 1| is 0.298 against 0.292. On that sweep
+within 0.03 of each other from CNR₀ 8 up and depart from 1 together below
+it (2.76 and 2.68 at CNR₀ 5; 0.80 and 0.77 at CNR₀ 8, where the last frame
+falls below per-frame CNR 0.5); mean |⟨D⟩/D_ref − 1| is 0.298 against 0.292. On that sweep
 the gate neither helps nor hurts.
 
 **On the wider `CNR₀ ∈ [2,100]` sweep `subtract` is the more robust.**
@@ -175,10 +176,13 @@ pooled over all 100 test points, with the calibration SE as one shared
 systematic, is within 0.6 combined SE of zero on every shape. MAS reads high
 below CNR₀ about 6.5 on Gaussian, Voigt, and p = 1.5 (pooled +0.13 to +2.7)
 and low on p = 4 (−0.73 at CNR₀ 3 to 4.4, −1.83 at CNR₀ 2 to 3), so it fails
-in a direction set by the shape. `subtract` reads low in the CNR₀ 2 to 3
-decile on Voigt (decile mean 0.49) and p = 4 (0.57), and on p = 4 also at
-CNR₀ 3 to 4.4 (0.79, −3.4 combined SE); in those deciles the last frames sit
-at per-frame CNR 0.1 to 0.2, far below the floor of Section 9. The overall mean
+in a direction set by the shape. `subtract` departs from 1 by more than two
+combined SE in three deciles: CNR₀ 2 to 3 on Voigt (decile mean 0.49;
+pooled −0.56, combined SE 0.20, −2.8 SE) and on p = 4 (0.57; −0.41, 0.08,
+−5.1 SE), and CNR₀ 3 to 4.4 on p = 4 (0.79; −0.19, 0.06, −3.4 SE). In those
+deciles the last frames sit at per-frame CNR 0.1 to 0.2, far below the
+floor of Section 9. p = 1.5 reads 0.56 in its CNR₀ 2 to 3 decile, but at
+−1.2 combined SE. The overall mean
 |⟨D̂⟩/D_ref − 1|, `subtract` against MAS, is 0.080 against 0.174 (Gaussian),
 0.111 against 0.112 (Voigt), 0.084 against 0.199 (p = 1.5), and 0.099 against
 0.363 (p = 4); Monte Carlo error alone would give 0.095, 0.090, 0.074, and
@@ -413,8 +417,7 @@ lookup of Section 8; both are experimental.
   +0.024 to +0.081 naive (z 2.2 to 4.9). The SEs leave out the shared
   calibration error, so the α = 1.2 residual (z = 3.0) is not yet tested
   against it. Below CNR₀ 21, and at CNR₀ 21 for α = 1.2, the naive fit pins at
-the ballistic α = 2.0. The
-  exponent is read from the mean trajectory (§4's bias carries into the
+  the ballistic α = 2.0. The exponent is read from the mean trajectory (§4's bias carries into the
   slope's curvature, not only its slope).
 - **Decay law.** The correction subtracts
   `var_bias(per-frame CNR)`, so it depends on the per-frame CNR, not on how the

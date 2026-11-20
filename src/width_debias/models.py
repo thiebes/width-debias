@@ -313,17 +313,18 @@ class UnboundedGaussianModel:
     variance 1.038, 1.016, 1.010 sigma_0^2 at CNR 1.52, 2.0, 2.6, against 1.0),
     which the correction removes: there the wall question is moot, the
     correction is not. In the bias-prone band (per-frame CNR < ~1.5)
-    removing the wall only *partly* debiases the mean (e.g. at CNR 0.5 the mean
-    fitted variance falls from ~2.4 to ~1.6 sigma_0^2, still well above the true
-    1.0) and explodes the variance (the ``1 / b`` tail), because even without a
+    removing the wall only *partly* debiases the mean (at CNR 0.52 the mean
+    fitted variance falls from 2.64 to 1.76 sigma_0^2, still well above the true
+    1.0), and its spread, though smaller than the bounded fit's, stays large
+    (SD 5.97 against 10.06 sigma_0^2 at CNR 0.52), because even without a
     wall a nonlinear shape-matched fit overwhelmingly returns a positive width:
     a localised positive noise bump fits better than a global convex trend, so
     negative variances stay rare. The unbounded fit is therefore not a
     substitute for the correction. The estimator is Gaussian-specific (a signed
     precision has no clean meaning for the Voigt or generalized-Gaussian shape);
     the shape-general unbounded counterpart is the catastrophically noisy
-    :class:`MomentModel` (a ratio of sums linear in the data), which is the
-    one estimator that does robustly admit negative variances.
+    :class:`MomentModel` (the ratio of two sums that are linear in the data),
+    which is the one estimator that does robustly admit negative variances.
     """
 
     name = "unbounded_gaussian"

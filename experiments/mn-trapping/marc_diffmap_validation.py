@@ -18,9 +18,9 @@ profile is a mixture, so no single peaked shape matches it. Two paths are
 reported:
 
   * **Moment estimator.** The second moment, with no lower bound on the width,
-    closes most of the shape gap to the PL moment (its noiseless value lies
-    within 0.007 μm² of ``case.var_true`` undoped and within 0.0002 μm²
-    doped). It is not corrected here; its cost is variance.
+    closes most of the shape gap to the PL moment (its noiseless value differs
+    from ``case.var_true`` on average over frames by 0.007 μm² undoped and by
+    less than 0.0002 μm² doped). It is not corrected here; its cost is variance.
     On these maps that cost is severe -- under realistic noise the cross-seed
     SD reaches order 1e5 μm² and the NaN fraction about 0.2, so the bare moment
     is not usable here. The practical path to the carrier distribution for this
@@ -189,8 +189,8 @@ def main() -> None:
             lines.append("")
 
     # --- MomentModel: the estimator with no lower bound --------------------
-    # The second central moment equals the PL moment by construction, so it
-    # closes the shape gap -- but it is not corrected here and pays in noise
+    # The second central moment targets the PL moment and closes most of the
+    # shape gap -- but it is not corrected here and pays in noise
     # variance, which the x^2 weighting amplifies in the tails. We report the
     # cross-seed SD (instability) and the NaN fraction (frames where the
     # baseline-subtracted total goes <= 0, i.e. unusable) as the cost of that

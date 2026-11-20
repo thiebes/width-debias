@@ -23,7 +23,7 @@ need different tools:
 1. **Measurement noise**, and the bias it induces in a fitted width at low
    CNR. The fitted width scatters about the true width, so its square, the
    fitted variance, is biased high by the width's estimation variance (above a
-   per-frame CNR of about 1.5 the fit's lower bound does not bind). This is
+   per-frame CNR of about 1.5 the bounded and unbounded fits agree). This is
    what the noise-bias correction in this repository removes, and it is the
    only one of the three the correction addresses.
 2. **The instrument point-spread function.** The recorded profile is the

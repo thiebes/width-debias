@@ -18,9 +18,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   across shapes; 0.95 to 1.10 x sqrt(CRLB) from initial CNR 21 (formerly 0.98
   to 1.08); and a per-profile CNR floor of 0.89 to 1.51 depending on shape.
 - `docs/DERIVATION.md` builds the model on the fitted width's estimation
-  variance; above a per-frame CNR of about 1.5 the bound at zero does not
-  bind. Its floor section counts the lookup's own error and sets the tolerance
+  variance; the bounded and unbounded fits agree above a per-frame CNR of
+  about 1.5, and the bound itself carries negligible mass above about 1. Its
+  floor section counts the lookup's own error and sets the tolerance
   relative to the end-point MSD.
+- The README, `docs/DERIVATION.md`, and the `calibrate_d_free` and
+  `UnboundedGaussianModel` docstrings state the floor rule in full, the
+  criterion (two combined standard errors) behind the deciles where `subtract`
+  reads low, the frame filter behind "4 of 140", and the unbounded fit's mean
+  and spread at per-frame CNR 0.52 as the regenerated tables give them.
 - The experiment tables and figures name the corrected arm `subtract`, the
   scheme's name, instead of "folded-normal". Regenerated with the current
   library, their numbers are unchanged except in the unbounded-fit comparison
@@ -44,9 +50,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Where every frame has per-frame CNR >= 1.8, the raw and corrected widths lie
   within 0.0053 square micrometres of the noiseless fit, so the bed bounds the
   correction's error rather than resolving it.
-- The p = 2 proof-of-concept figure and table from 2026-06, made with the
-  earlier labels and no caption, are removed; they duplicated the Gaussian
-  result.
+- The p = 2 proof-of-concept figure and table from 2026-06 are removed: a
+  Gaussian profile under the generalized-Gaussian fitter's tighter
+  `var_max`, run with the earlier labels and the legacy calibration path,
+  and superseded by the p = 1.5 and p = 4 runs.
 - The `MomentModel` docstring no longer calls the moment estimator unbiased to
   leading order: it is a ratio of two sums linear in the data, taken about an
   estimated centroid, so its bias is of order 1/CNR^2, the same order as a

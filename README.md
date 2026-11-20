@@ -24,8 +24,8 @@ is built at D = 0, so it does not require a prior value of D. Removing the
 fit's lower bound on the width does not help: above a per-frame CNR of about
 1.5 the bounded and unbounded fits are identical, and both carry the full bias.
 Below a per-frame CNR of about 1 the fits spread into a broad upper tail and the
-correction no longer holds (see [On real data](#on-real-data)). The derivation,
-which obtains the additive form from the width's estimation variance, is in
+correction no longer holds (see [On real data](#on-real-data)). The derivation
+of the additive form is in
 [`docs/DERIVATION.md`](https://github.com/thiebes/width-debias/blob/v0.4.1/docs/DERIVATION.md).
 
 ## Install
@@ -126,10 +126,11 @@ calibration's geometry but does not check it against the data.
 
 ## What the validation shows
 
-- Above a per-frame CNR of about 1.5 the fit's lower bound does not bind: the
-  bounded and unbounded fits return the same widths and the same biased D
-  (`experiments/estimator-comparison`). Below it, the bounded fit reflects
-  rather than clips at the bound (`experiments/boundary-diagnostic`).
+- Above a per-frame CNR of about 1.5 the bounded and unbounded fits agree:
+  they return the same widths and the same biased D
+  (`experiments/estimator-comparison`). Below a per-frame CNR of about 1,
+  where the bound carries appreciable mass, the bounded fit reflects rather
+  than clips at it (`experiments/boundary-diagnostic`).
 - With the calibration's own Monte Carlo error included, 4 of 140 cells lie
   beyond two combined standard errors of the reference, about 6 expected by
   chance (Gaussian, Voigt, and generalized-Gaussian p = 1.5 and p = 4
@@ -141,9 +142,9 @@ calibration's geometry but does not check it against the data.
   initial CNR the combined SE is large, so those cells constrain the bias only
   loosely (`experiments/dfree-calibration`).
 - The correction holds above a per-frame CNR of about 1 (0.89 to 1.51 depending
-  on shape: the lowest CNR at which the residual plus two combined standard
-  errors stays within 0.3 of the end-point MSD 2 D t_max at
-  D = 0.02 sigma_0^2/tau), where the leading-order bias model
+  on shape: walking down from high CNR, the deepest CNR reached while every
+  cell satisfies |residual| + 2 combined SE <= 0.3 x 2 D t_max, which is
+  0.036 sigma_0^2 at D = 0.02 sigma_0^2/tau), where the leading-order bias model
   `var_bias = A / CNR^2` itself breaks (`experiments/correction-floor`). With
   single-exponential decay to 3 tau, every frame stays above the floor from an
   initial CNR of about 20.
