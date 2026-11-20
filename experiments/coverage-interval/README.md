@@ -57,7 +57,7 @@ per-frame variance exceeds the lookup's by (σ²/σ₀²)^k with k = 1.36 ± 0.1
 over the frames with per-frame CNR ≥ 1 (heteroscedasticity-robust SE; 0.13
 assuming equal scatter). The σ³ scaling alone predicts
 D_se / SD(D̂) of 0.964 to 0.971, and the correlation between frames is at
-most 0.05. The shortfall therefore grows with the width's growth, 2 D t_max;
+most 0.052. The shortfall therefore grows with the width's growth, 2 D t_max;
 the `fit_D` docstring notes the same effect at D = 0.1 σ₀²/τ. A width-scaled
 lookup (`frame_variance` with a width key) is the corresponding fix; it is
 not tested here.

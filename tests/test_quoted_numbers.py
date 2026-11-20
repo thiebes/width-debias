@@ -16,7 +16,6 @@ compared as printed, with a leading plus sign dropped and the Unicode minus
 read as a hyphen, so "+0.004 ± 0.008" and "0.004 +/- 0.008" both carry
 ("0.004", "0.008").
 
-The coverage-interval set is not covered yet: its text is under revision.
 """
 from __future__ import annotations
 
@@ -33,6 +32,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DFREE = "experiments/dfree-calibration"
 FLOOR = "experiments/correction-floor"
 ESTIMATOR = "experiments/estimator-comparison"
+COVERAGE = "experiments/coverage-interval"
 DFREE_SHAPES = ("gaussian", "voigt", "genGauss_p1.5", "genGauss_p4")
 ANALYTICAL_SHAPES = ("gaussian", "voigt", "generalized_gaussian_p1.5", "generalized_gaussian_p4")
 EFFICIENCY_SPECS = ("gaussian", "voigt", "generalized_gaussian:1.5", "generalized_gaussian:4")
@@ -240,6 +240,61 @@ def _poc_gaussian_cnr0_5() -> tuple[str, ...]:
     return _rounded(Decimal(subtract), 2), _rounded(Decimal(se), 2)
 
 
+def _coverage_rows() -> list[dict[str, Decimal]]:
+    """The per-cell rows of coverage_check.txt."""
+    rows = []
+    for line in _read(f"{COVERAGE}/coverage_check.txt").splitlines():
+        if re.match(r"^\s+\d+\.\d \|", line):
+            (cnr0, min_cnr, median_sub, median_iv, sd, narrow, narrow_se, skew,
+             cover_cov, cover_boot, cover_iv, cover_se) = (Decimal(v) for v in _numbers(line))
+            rows.append(dict(cnr0=cnr0, min_cnr=min_cnr, median_iv=median_iv, sd=sd,
+                             narrow=narrow, cover_cov=cover_cov, cover_boot=cover_boot,
+                             cover_iv=cover_iv))
+    return rows
+
+
+def _coverage_range(key: str, rows=None) -> tuple[str, ...]:
+    values = [row[key] for row in (rows or _coverage_rows())]
+    return str(min(values)), str(max(values))
+
+
+def _coverage_pooled(label: str) -> tuple[Decimal, ...]:
+    """Numbers of one pooled line of coverage_check.txt, found by its label."""
+    line = next(line for line in _read(f"{COVERAGE}/coverage_check.txt").splitlines()
+                if label in line)
+    return tuple(Decimal(v) for v in _numbers(line.split(label, 1)[1]))
+
+
+def _coverage_low_cells() -> list[dict[str, Decimal]]:
+    """Cells up to CNR_0 21, where the inverse-variance bias is quoted."""
+    return [row for row in _coverage_rows() if row["cnr0"] <= Decimal("21.2")]
+
+
+def _attribution() -> str:
+    return _read(f"{COVERAGE}/narrowness_attribution.txt")
+
+
+def _attribution_exponent() -> tuple[Decimal, ...]:
+    """k, its robust SE and its equal-scatter SE."""
+    return tuple(Decimal(v) for v in re.search(
+        r"k = ([\d.]+) \+/- ([\d.]+) \(robust SE; ([\d.]+) assuming", _attribution()).groups())
+
+
+def _attribution_sigma3_range() -> tuple[str, ...]:
+    values = [Decimal(v) for v in re.findall(r"sigma\^3 scaling of the lookup ([\d.]+)", _attribution())]
+    return str(min(values)), str(max(values))
+
+
+def _attribution_max_correlation() -> tuple[str, ...]:
+    return (str(max(Decimal(v) for v in re.findall(r"largest \|correlation\| between frames\s+([\d.]+)",
+                                                     _attribution()))),)
+
+
+def _attribution_last_width() -> tuple[str, ...]:
+    """sigma^2 at the last frame (t = 3 tau), in sigma_0^2."""
+    return (_rounded(_first(r"^\s+3\.00\s+([\d.]+)", _attribution()), 2),)
+
+
 # --------------------------------------------------------------------------
 # The claims
 # --------------------------------------------------------------------------
@@ -336,6 +391,56 @@ CLAIMS = [
     Claim("proof of concept, Gaussian CNR_0 5", _poc_gaussian_cnr0_5, {
         "experiments/poc-bias-correction/README.md": ("2.67 ± 0.86",),
         "experiments/poc-bias-correction/poc_demo_caption.md": ("2.67 ± 0.86 at CNR₀ 5",)}),
+    Claim("coverage, covariance interval per cell", lambda: _coverage_range("cover_cov"), {
+        f"{COVERAGE}/README.md": ("covers D_ref 0.939 to 0.952 of the",)}),
+    Claim("coverage, covariance interval pooled", lambda: tuple(
+        str(v) for v in _coverage_pooled("over 13 cells, covariance, subtract:")), {
+        f"{COVERAGE}/README.md": ("0.9438 ± 0.0007 pooled over the 13 cells",)}),
+    Claim("coverage, covariance interval pooled, rounded", lambda: (
+        _rounded(_coverage_pooled("over 13 cells, covariance, subtract:")[0], 3),), {
+        f"{COVERAGE}/coverage_check_caption.md": ("covariance interval covers 0.944 and",),
+        "docs/REPO_MAP.md": ("covariance interval covers 0.944 pooled over 13 CNR0",)}),
+    Claim("coverage, narrowness where every frame has CNR >= 1", lambda: tuple(
+        _rounded(v, 3) for v in _coverage_pooled("narrowness, plain mean:")), {
+        f"{COVERAGE}/README.md": ("D_se is 0.967 ± 0.003 of the realised",),
+        f"{COVERAGE}/coverage_check_caption.md": ("it is 0.967, with a cell-to-cell SE of 0.003",)}),
+    Claim("coverage, narrowness where every frame has CNR >= 1, value", lambda: (
+        _rounded(_coverage_pooled("narrowness, plain mean:")[0], 3),), {
+        "docs/REPO_MAP.md": ("its SE is 0.967 of the realised spread",)}),
+    Claim("coverage, narrowness per cell", lambda: _coverage_range("narrow"), {
+        f"{COVERAGE}/README.md": ("(0.944 to 1.003 per cell over the whole sweep)",)}),
+    Claim("coverage, implied and measured where every frame has CNR >= 1", lambda: (
+        _rounded(_coverage_pooled("implied by the narrowness for a normal D_hat:")[0], 3),
+        *(_rounded(v, 3) for v in _coverage_pooled("covariance coverage, subtract:")[:2])), {
+        f"{COVERAGE}/README.md": ("implies a coverage of 0.942, and the covariance interval covers "
+                                  "0.942 ± 0.001",)}),
+    Claim("coverage, bootstrap per cell and pooled", lambda: (
+        *_coverage_range("cover_boot"),
+        *(str(v) for v in _coverage_pooled("over 13 cells, bootstrap, subtract:"))), {
+        f"{COVERAGE}/README.md": ("covers 0.945 to 0.955, 0.9505 ± 0.0007 pooled",)}),
+    Claim("coverage, bootstrap pooled, rounded", lambda: (
+        _rounded(_coverage_pooled("over 13 cells, bootstrap, subtract:")[0], 3),), {
+        f"{COVERAGE}/coverage_check_caption.md": ("the bootstrap 0.951",),
+        "docs/REPO_MAP.md": ("per-frame variances covers 0.951",)}),
+    Claim("coverage, inverse-variance contrast per cell", lambda: _coverage_range("cover_iv"), {
+        f"{COVERAGE}/README.md": ("inverse-variance contrast covers 0.936 to 0.953",)}),
+    Claim("coverage, inverse-variance median to CNR_0 21",
+          lambda: _coverage_range("median_iv", _coverage_low_cells()), {
+              f"{COVERAGE}/README.md": ("(median 1.05 to 1.57 of D_ref",)}),
+    Claim("coverage, single-measurement SD to CNR_0 21",
+          lambda: _coverage_range("sd", _coverage_low_cells()), {
+              f"{COVERAGE}/README.md": ("(SD 0.82 to 4.61 of D_ref)",)}),
+    Claim("attribution, exponent k and its robust SE", lambda: tuple(str(v) for v in _attribution_exponent()[:2]), {
+        f"{COVERAGE}/README.md": ("k = 1.36 ± 0.18",)}),
+    Claim("attribution, equal-scatter SE of k", lambda: (str(_attribution_exponent()[2]),), {
+        f"{COVERAGE}/README.md": ("0.13 assuming equal scatter",)}),
+    Claim("attribution, sigma^3 prediction", _attribution_sigma3_range, {
+        f"{COVERAGE}/README.md": ("D_se / SD(D̂) of 0.964 to 0.971",)}),
+    Claim("attribution, largest correlation between frames", _attribution_max_correlation, {
+        f"{COVERAGE}/README.md": ("correlation between frames is at most 0.052",)}),
+    Claim("attribution, width at the last frame", _attribution_last_width, {
+        f"{COVERAGE}/README.md": ("the width grows to σ² = 1.12 σ₀²",),
+        f"{COVERAGE}/coverage_check_caption.md": ("width grows to 1.12 σ₀² by the last frame",)}),
 ]
 
 # Superseded values and the documents allowed to keep them as history.
