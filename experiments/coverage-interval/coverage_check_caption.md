@@ -10,9 +10,9 @@ variances measured over the ensemble), and the covariance interval on the
 uncorrected inverse-variance estimate (green); error bars are binomial SEs
 (0.0024) and the dotted line is the nominal 0.95. Pooled over the sweep, the
 covariance interval covers 0.944 and the bootstrap 0.951. (b) The covariance SE
-of D over the realised SD of D̂, with batch-mean SEs over 8 sub-ensembles:
-0.967 ± 0.003 averaged over the 7 cells whose every frame has per-frame CNR ≥
-1 (CNR₀ 21 to 90). The covariance interval runs about 0.03 narrow because the
+of D over the realised SD of D̂, with batch-mean SEs over 8 sub-ensembles as
+error bars. Averaged over the 7 cells whose every frame has per-frame CNR ≥ 1
+(CNR₀ 21 to 90) it is 0.967, with a cell-to-cell SE of 0.003. The covariance interval runs about 0.03 narrow because the
 lookup's per-frame variances are calibrated at σ₀², while the width grows to
 1.12 σ₀² by the last frame (`narrowness_attribution.txt`). The bootstrap
 resamples with the per-frame variances measured over the ensemble and covers

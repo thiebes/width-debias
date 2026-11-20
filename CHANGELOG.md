@@ -19,7 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   to 1.08); and a per-profile CNR floor of 0.89 to 1.51 depending on shape.
 - `docs/DERIVATION.md` builds the model on the fitted width's estimation
   variance; the bounded and unbounded fits agree above a per-frame CNR of
-  about 1.5, and the bound itself carries negligible mass above about 1. Its
+  about 1.5, and the bound itself carries negligible mass above about 1 (the
+  `fit` module docstring says the same). Its
   floor section counts the lookup's own error and sets the tolerance
   relative to the end-point MSD.
 - The README, `docs/DERIVATION.md`, and the `calibrate_d_free` and

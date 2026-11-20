@@ -10,8 +10,9 @@ A width fitted to a noisy profile scatters about the true width, so its
 square, the fitted variance, exceeds the true variance on average by the
 width's estimation variance. Carried through the MSD slope, that bias inflates
 D. The variance is bounded below (about one pixel squared), but above a
-per-frame CNR of about 1.5 the bound does not bind and plays no part in the
-bias; below that, noise can throw a fit to a broad profile and the fitted
+per-frame CNR of about 1.5 the bounded and unbounded fits agree, and the bound
+carries negligible mass above about 1, so it plays no part in the bias there;
+below that, noise can throw a fit to a broad profile and the fitted
 variance becomes right-skewed.
 
 The fitting here mirrors the validated DICE engine (Thiebes & Grumstrup, JCP

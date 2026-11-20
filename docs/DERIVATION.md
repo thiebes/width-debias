@@ -161,8 +161,8 @@ subtraction, matching `subtract`) and → 0 when it is noise dominated (the
 frame is left uncorrected rather than overshot). On the narrow `CNR₀ ∈ [5,90]`
 sweep (`experiments/estimator-comparison/moment_estimator_failure.py`, table
 `method_comparison.txt`, legacy D-aware calibration), `mas` and `subtract` lie
-within 0.03 of each other from CNR₀ 8 up and depart from 1 together below
-it (2.76 and 2.68 at CNR₀ 5; 0.80 and 0.77 at CNR₀ 8, where the last frame
+within 0.03 of each other from CNR₀ 8 up and depart from 1 together at and
+below CNR₀ 8 (2.76 and 2.68 at CNR₀ 5; 0.80 and 0.77 at CNR₀ 8, where the last frame
 falls below per-frame CNR 0.5); mean |⟨D⟩/D_ref − 1| is 0.298 against 0.292. On that sweep
 the gate neither helps nor hurts.
 
