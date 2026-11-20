@@ -7,17 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-
-- `tests/test_quoted_numbers.py`, which recomputes each validation number
-  that the README, `docs/DERIVATION.md`, `docs/REPO_MAP.md`, set READMEs,
-  captions and library docstrings restate from the committed table that
-  produced it, checks every copy, and keeps superseded values out of all
-  documents except the changelog and the other history documents. A rerun
-  that changes a table fails the test until each copy is updated.
-
 ### Documentation
 
+- `tests/test_quoted_numbers.py` recomputes validation numbers that the
+  README, `docs/DERIVATION.md`, `docs/REPO_MAP.md`, set READMEs, captions and
+  library docstrings restate, from the committed tables that produced them,
+  and checks each copy it lists; a copy it does not list is not checked. It
+  also keeps superseded values out of tracked documents other than the
+  changelog. A rerun that changes a table fails the test until each listed
+  copy, and its snippet in the test, are updated.
+- The high-N halide README, `docs/DERIVATION.md` and the `BiasLookup`
+  docstring give the measurement-level (smoothed) key's agreement with the
+  exact key as within 0.004 from initial CNR 15, and the iterated key's as
+  within 0.002, as `key_sensitivity.txt` gives them; they said 0.003.
 - The validation numbers in the README, `docs/DERIVATION.md`, and the
   docstrings of `calibrate_d_free` and `msd_and_weights` come from the
   regenerated experiment sets, whose seeds are independent per profile shape:

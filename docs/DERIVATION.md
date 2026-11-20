@@ -274,7 +274,8 @@ whose fit scatters high reads the lookup near the grid edge; a
 measurement-level key (a robust line through the measurement's own `σ̂²`) avoids
 that but assumes the form of `σ²(t)`. On the high-N Br-I bed (`σ²` growing about
 64-fold) the per-frame key leaves D at 0.89 to 0.96 of the reference at CNR₀ 15
-to 20 on the two slower-spreading maps (0.99 on the third), the measurement-level key matches the exact key to 0.003, and below
+to 20 on the two slower-spreading maps (0.99 on the third), the measurement-level
+(smoothed) key matches the exact key to within 0.004 from CNR₀ 15, and below
 CNR₀ 15 no key determines D (`experiments/halide-mixing-highn/key_sensitivity.py`).
 The joint calibration also needs several thousand runs per cell at low CNR.
 

@@ -176,11 +176,12 @@ python experiments/boundary-diagnostic/diagnose_boundary.py generalized_gaussian
 pytest
 ```
 
-`tests/test_quoted_numbers.py` checks the validation numbers quoted in this
-README, the docs, the set READMEs and the docstrings against the committed
-tables they come from. A number quoted outside its set folder gets a claim
-there, so a rerun that changes its table fails the tests until every copy is
-updated.
+`tests/test_quoted_numbers.py` checks the copies it lists of the validation
+numbers quoted in this README, the docs, the set READMEs and the docstrings
+against the committed tables they come from; a copy it does not list is not
+checked. When you quote a number outside its set folder, add the copy to a
+claim there, so a rerun that changes the table fails the tests until the copy
+is updated.
 
 ## Layout
 
