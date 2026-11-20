@@ -44,15 +44,16 @@ not included.
 With the library slope weights (per-frame Var(σ̂²) from the D-free lookup,
 frame 0 included), the covariance interval covers D_ref 0.939 to 0.952 of the
 time, 0.9438 ± 0.0007 pooled over the 13 cells, against the nominal 0.95. The
-shortfall is small but resolved. D_se is 0.969 ± 0.003 of the realised
-SD(D̂), pooled from CNR₀ 21 up with inverse-variance weights (0.967 ± 0.003
-as a plain mean; 0.944 to 1.003 per cell over the whole sweep), which for a
-normal D̂ implies a coverage of 0.942.
+shortfall is small but resolved. Over the 7 cells whose every frame has
+per-frame CNR ≥ 1 (CNR₀ 21 to 90), D_se is 0.967 ± 0.003 of the realised
+SD(D̂) as a plain mean (0.944 to 1.003 per cell over the whole sweep). For a
+normal D̂ that implies a coverage of 0.942, and the covariance interval
+covers 0.942 ± 0.001 in those cells.
 
 The cause is the width (`narrowness_attribution.py`). The lookup's per-frame
 variances are calibrated at σ₀², while here the width grows to σ² = 1.12 σ₀²
 by t = 3τ, and at a fixed CNR Var(σ̂²) grows about as σ³. The measured
-per-frame variance exceeds the lookup's by (σ²/σ₀²)^k with k = 1.36 ± 0.13
+per-frame variance exceeds the lookup's by (σ²/σ₀²)^k with k = 1.36 ± 0.18
 over the frames with per-frame CNR ≥ 1 (heteroscedasticity-robust SE; 0.13
 assuming equal scatter). The σ³ scaling alone predicts
 D_se / SD(D̂) of 0.964 to 0.971, and the correlation between frames is at
@@ -62,12 +63,15 @@ lookup (`frame_variance` with a width key) is the corresponding fix; it is
 not tested here.
 
 The parametric bootstrap (2000 resamples) covers 0.945 to 0.955, 0.9505 ±
-0.0007 pooled, at the nominal rate. It resamples each frame with the
-per-frame variance measured over the ensemble, which includes the width's
-growth, so it supports the attribution above; a single measurement does not
-have those variances, and the bootstrap here is a check, not a deployable
-interval. (With 200 resamples and percentile bounds, even an exact bootstrap
-would cover only about 0.940.) The shared σ̂²₀ is common-mode: with frame 0
+0.0007 pooled, at the nominal rate. Each resample adds Gaussian noise to
+every frame and the slope is linear in the frames, so its D is exactly
+normal and its percentile interval is symmetric. It resamples with the
+per-frame variances measured over the ensemble, so its nominal coverage
+shows that the shortfall lies in the per-frame variances the covariance
+interval uses, not in the interval's form; the attribution to the width's
+growth rests on `narrowness_attribution.py`. A single measurement does not
+have those variances, so the bootstrap here is a check, not a deployable
+interval. The shared σ̂²₀ is common-mode: with frame 0
 weighted it shifts the intercept and leaves the slope, so it does not widen
 the interval. The inverse-variance contrast covers 0.936 to 0.953, because at
 this D its bias

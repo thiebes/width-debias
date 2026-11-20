@@ -28,7 +28,11 @@ For each CNR_0 the script reports, over many realisations:
   symmetric interval is doubly wrong there);
 * the coverage of a parametric bootstrap interval that resamples each frame's
   ``sigma_hat^2`` (including the shared t=0 frame) and takes a percentile
-  interval, which also follows the skew. It uses 2000 resamples: with B
+  interval. Each resample adds Gaussian noise to every frame and the slope is
+  linear in the frames, so the resampled D is exactly normal about D_hat: the
+  percentile interval is symmetric and does not follow the skew, and its
+  coverage tests whether the per-frame variances it resamples with are right,
+  not why the covariance interval falls short. It uses 2000 resamples: with B
   resamples and interpolated percentile bounds, even an exact bootstrap covers
   only about 0.95 (B - 1) / (B + 1), which is 0.940 at B = 200 and 0.949 at
   B = 2000.
@@ -86,10 +90,10 @@ GEOMETRY = dict(sigma0=1.0, tau=1.0, half_window=6.0, n_pixels=241,
 # SE is about 1 / sqrt(2 N_RUNS) = 0.008, small enough to read a trend in it.
 CNR0_SWEEP = tuple(np.round(np.geomspace(5.0, 90.0, 13), 1))
 N_RUNS = 8000
-N_BOOT = 2000              # 200 would cap even an exact bootstrap at 0.940
+N_BOOT = 2000              # resamples; see the module docstring for the cap
 N_BATCH = 8                # sub-ensembles for the batch-means SEs
 BOOT_CHUNK = 200           # realisations per bootstrap block (bounds memory)
-POOL_FROM_CNR0 = 21.0      # pool the narrowness where every frame has CNR >= 1
+POOL_MIN_CNR = 1.0         # pool the cells whose every frame has this per-frame CNR
 Z = 1.959964               # two-sided 0.95 normal quantile
 CAL_CNR0 = np.geomspace(2.0, 100.0, 60)
 N_RUNS_CAL = 1500
@@ -204,35 +208,42 @@ def _normal_coverage(ratio: float) -> float:
     return float(erf(Z * ratio / sqrt(2.0)))
 
 
-def pooled(rows: list[dict]) -> list[str]:
+def _pooled_coverage(rows: list[dict], key: str) -> tuple[float, float]:
+    """Plain mean of one coverage over the cells (equal runs per cell), SE sqrt(sum se^2) / n."""
+    p = np.array([r[key] for r in rows])
+    se = np.array([r[key + "_se"] for r in rows])
+    return float(p.mean()), float(np.sqrt((se ** 2).sum()) / len(rows))
+
+
+def _pooled(rows: list[dict]) -> list[str]:
     """Pooled coverages and narrowness, computed here rather than by hand.
 
-    The coverages are plain means over the cells (each cell has the same number
-    of runs), with SE sqrt(sum se^2) / n. The narrowness is pooled where every
-    frame keeps per-frame CNR >= 1 (CNR0 >= POOL_FROM_CNR0), weighted by its
-    inverse batch-mean variance, beside the plain mean; the normal coverage it
-    implies is 2 Phi(Z * ratio) - 1. All of them are conditional on the one
-    calibration (module docstring).
+    Coverages are pooled over all cells, and again over the cells whose every
+    frame has per-frame CNR >= POOL_MIN_CNR, the cells the narrowness is pooled
+    over, so the measured coverage there stands beside the coverage the
+    narrowness implies for a normal D_hat (2 Phi(Z * ratio) - 1). The narrowness
+    is a plain mean with the SE of the cell-to-cell scatter: its batch-mean SEs
+    rest on 7 degrees of freedom each and estimate nearly equal values, so
+    weights built from them are noise and understate the SE. All of these are
+    conditional on the one calibration (module docstring).
     """
+    sel = [r for r in rows if r["min_cnr"] >= POOL_MIN_CNR]
     lines = []
     for key, label in (("cover_cov", "covariance, subtract"),
                        ("cover_boot", "bootstrap, subtract"),
                        ("cover_iv", "covariance, inverse_variance")):
-        p = np.array([r[key] for r in rows])
-        se = np.array([r[key + "_se"] for r in rows])
-        lines.append(f"pooled coverage over {len(rows)} cells, {label}: "
-                     f"{p.mean():.4f} +/- {np.sqrt((se ** 2).sum()) / len(rows):.4f}")
-    sel = [r for r in rows if r["cnr0"] >= POOL_FROM_CNR0]
+        mean, se = _pooled_coverage(rows, key)
+        lines.append(f"pooled coverage over {len(rows)} cells, {label}: {mean:.4f} +/- {se:.4f}")
     ratio = np.array([r["narrowness"] for r in sel])
-    w = 1.0 / np.array([r["narrowness_se"] for r in sel]) ** 2
-    r_w, r_w_se = float((w * ratio).sum() / w.sum()), float(1.0 / np.sqrt(w.sum()))
-    r_plain = float(ratio.mean())
-    r_plain_se = float(ratio.std(ddof=1) / np.sqrt(ratio.size))
+    r_mean = float(ratio.mean())
+    r_se = float(ratio.std(ddof=1) / np.sqrt(ratio.size))
+    cov_sel, cov_sel_se = _pooled_coverage(sel, "cover_cov")
     lines += [
-        f"pooled narrowness from CNR0 {POOL_FROM_CNR0:g} up ({len(sel)} cells): "
-        f"{r_w:.4f} +/- {r_w_se:.4f} (inverse-variance weights), "
-        f"{r_plain:.4f} +/- {r_plain_se:.4f} (plain mean)",
-        f"normal coverage implied by the weighted narrowness: {_normal_coverage(r_w):.4f}",
+        f"cells with every frame at per-frame CNR >= {POOL_MIN_CNR:g}: {len(sel)} "
+        f"(CNR0 {sel[0]['cnr0']:g} to {sel[-1]['cnr0']:g})",
+        f"  narrowness, plain mean: {r_mean:.4f} +/- {r_se:.4f}",
+        f"  covariance coverage, subtract: {cov_sel:.4f} +/- {cov_sel_se:.4f}; "
+        f"implied by the narrowness for a normal D_hat: {_normal_coverage(r_mean):.4f}",
     ]
     return lines
 
@@ -269,7 +280,7 @@ def write_report(rows: list[dict], path: Path) -> None:
             f"{r['skew']:5.2f} | "
             f"{r['cover_cov']:.3f}/{r['cover_boot']:.3f}/{r['cover_iv']:.3f} "
             f"({r['cover_cov_se']:.3f})")
-    lines += [""] + pooled(rows)
+    lines += [""] + _pooled(rows)
     report = "\n".join(lines)
     print(report)
     path.write_text(report + "\n", encoding="utf-8")

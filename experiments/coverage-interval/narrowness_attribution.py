@@ -55,7 +55,7 @@ from coverage_check import (CAL_CNR0, CAL_PATH, CNR0_SWEEP, D_TRUE,  # noqa: E40
 CNR0_CELLS = tuple(float(CNR0_SWEEP[k]) for k in (3, 8, 12))   # 10.3, 34.3, 90.0
 N_RUNS = 3000
 SEED = 555000              # cell k uses SEED + 1000 k; independent of coverage_check
-SIGMA3_EXPONENT = 1.5      # Var(sigma_hat^2) at fixed CNR grows as sigma^3 = (sigma^2)^1.5
+K_SIGMA_CUBED = 1.5        # exponent k of (sigma^2/sigma_0^2) when Var(sigma_hat^2) grows as sigma^3
 
 
 def attribution_at(cnr0: float, trunc, seed: int) -> tuple[list[str], np.ndarray, np.ndarray]:
@@ -83,7 +83,7 @@ def attribution_at(cnr0: float, trunc, seed: int) -> tuple[list[str], np.ndarray
     d_se = float(np.sqrt(xtwx_inv[1, 1])) / 2.0
     finite = np.all(np.isfinite(ens.variance), axis=1)
     rows = ens.variance[finite]
-    scale = (v_true / GEOMETRY["sigma0"] ** 2) ** SIGMA3_EXPONENT
+    scale = (v_true / GEOMETRY["sigma0"] ** 2) ** K_SIGMA_CUBED
     sd_scaled = float(np.sqrt(a @ (fv_lookup * scale * a))) / 2.0
     sd_diag = float(np.sqrt(a @ (fv_measured * a))) / 2.0
     sd_real = float(np.std(rows @ a / 2.0, ddof=1))
@@ -93,7 +93,7 @@ def attribution_at(cnr0: float, trunc, seed: int) -> tuple[list[str], np.ndarray
 
     lines = [f"CNR0 {cnr0:g}  ({N_RUNS} runs, seed {seed}; "
              f"{int((~finite).sum())} non-finite realisations dropped)",
-             "     t/tau  sigma^2  per-frame CNR  measured/lookup  (sigma^2)^1.5"]
+             f"     t/tau  sigma^2  per-frame CNR  measured/lookup  (sigma^2)^{K_SIGMA_CUBED:g}"]
     for i in range(t.size):
         lines.append(f"    {t[i]:6.2f}  {v_true[i]:7.3f}  {cnr[i]:13.2f}  "
                      f"{ratio[i]:15.3f}  {scale[i]:13.3f}")
@@ -146,7 +146,7 @@ def main() -> None:
     lines.append(f"Exponent of measured/lookup = (sigma^2/sigma0^2)^k over {n} frames "
                  f"with per-frame CNR >= 1: k = {k_hat:.2f} +/- {k_se_robust:.2f} "
                  f"(robust SE; {k_se:.2f} assuming equal scatter); "
-                 f"sigma^3 scaling: k = {SIGMA3_EXPONENT}")
+                 f"sigma^3 scaling: k = {K_SIGMA_CUBED}")
     report = "\n".join(lines)
     print(report)
     (OUTPUT / "narrowness_attribution.txt").write_text(report + "\n", encoding="utf-8")

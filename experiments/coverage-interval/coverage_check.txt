@@ -29,5 +29,6 @@ SEs are conditional on the one calibration, whose Monte Carlo error is shared by
 pooled coverage over 13 cells, covariance, subtract: 0.9438 +/- 0.0007
 pooled coverage over 13 cells, bootstrap, subtract: 0.9505 +/- 0.0007
 pooled coverage over 13 cells, covariance, inverse_variance: 0.9425 +/- 0.0007
-pooled narrowness from CNR0 21 up (7 cells): 0.9687 +/- 0.0025 (inverse-variance weights), 0.9674 +/- 0.0028 (plain mean)
-normal coverage implied by the weighted narrowness: 0.9424
+cells with every frame at per-frame CNR >= 1: 7 (CNR0 21.2 to 90)
+  narrowness, plain mean: 0.9674 +/- 0.0028
+  covariance coverage, subtract: 0.9424 +/- 0.0010; implied by the narrowness for a normal D_hat: 0.9420

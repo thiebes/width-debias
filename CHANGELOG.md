@@ -42,7 +42,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   because the D-free lookup's per-frame variances are calibrated at the
   initial width while the width grows, as the `fit_D` docstring notes. A
   parametric bootstrap with 2000 resamples and per-frame variances measured
-  over the ensemble covers 0.951.
+  over the ensemble covers 0.951; its resampled D is exactly normal, so its
+  coverage tests those per-frame variances, not the interval's form. The
+  narrowness is pooled as a plain mean over the cells whose every frame has
+  per-frame CNR >= 1 (0.967 of the realised spread), beside the coverage
+  measured in those cells (0.942).
 - The method comparison commits its table (`method_comparison.txt`), and its
   figure keeps the legacy D-aware calibration, which its caption states.
 - The Mn-trapping bed names its reference as the emission-weighted PL second
