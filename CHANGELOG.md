@@ -98,7 +98,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Fixes from the review of 0.4.0. The recommended path (`calibrate_d_free`, then
 `msd_and_weights("subtract")`, then `fit_D`) gives the same results for valid
-input: a probe of the paths the fft-cnr paper used gives 105 of 105 outputs
+input: a probe of the frozen paths gives 105 of 105 outputs
 byte-identical to 0.4.0, and a test pins the path's outputs to the 0.4.0
 values.
 
@@ -247,7 +247,7 @@ The first release.
 ## [0.3.0] - 2026-10-21
 
 Not tagged or published; 0.4.0 is the first release. The code at commit
-2836e6c, on which the fft-cnr paper's cases 27 to 30 were first run.
+2836e6c, on which an external validation study first ran.
 
 ### Added
 

@@ -1,13 +1,13 @@
 """Dense CNR-recovery sweep for the poster's fft-cnr panel (Panel 4).
 
-The sibling fft-cnr-paper case-11 sweep is the documented validation, but on a
+An external simulation study of fft-cnr ran this sweep on a
 coarse six-point CNR grid ([2, 5, 10, 20, 50, 100]); the poster's ratio plot
 (recovered / true CNR) reads as six connected dots. This reproduces the same
 experiment on a dense log-spaced CNR grid so the median curve and its
-interquartile band are smooth, and writes a poster-specific npz so the paper's
-canonical six-point result is left untouched.
+interquartile band are smooth, and writes a poster-specific npz so the
+external six-point result is left untouched.
 
-The clean profiles match case-11 exactly: a generalized-Gaussian family
+The clean profiles match the external sweep exactly: a generalized-Gaussian family
 ``amp * exp(-(|x - center| / scale) ** p)`` for p = 2 (Gaussian), 1.3 (heavy
 tail), and 4 (flat top), plus a true Voigt (Gaussian core + Lorentzian wings)
 that sits outside the generalized-Gaussian family and so tests genuine model
@@ -49,7 +49,7 @@ OUTPUT.mkdir(exist_ok=True)
 
 _SHOT = ShotNoise(read=0.0, poisson=True)   # photon-limited, no read floor
 
-# Geometry and shape parameters -- identical to case-11.
+# Geometry and shape parameters -- identical to the external sweep.
 N = 512
 AMP = 1.0                      # peak amplitude; noise_std = AMP / true_cnr
 SCALE = 25.0                   # generalized-Gaussian scale parameter (pixels)
@@ -57,13 +57,13 @@ VOIGT_SIGMA_G = 18.0           # Voigt Gaussian width
 VOIGT_GAMMA_L = 10.0           # Voigt Lorentzian half-width
 SHAPES = ["Gaussian (p=2)", "heavy-tail (p=1.3)", "flat-top (p=4)", "Voigt"]
 
-# Dense log-spaced CNR grid (was six points in case-11).
+# Dense log-spaced CNR grid (six points in the external sweep).
 TRUE_CNR = np.logspace(np.log10(2.0), np.log10(100.0), 30)
 N_TRIALS = 500
 
 
 def make_clean(shape: str) -> np.ndarray:
-    """Noise-free, peak-normalized profile of the requested shape (case-11 defs)."""
+    """Noise-free, peak-normalized profile of the requested shape (external sweep's definitions)."""
     x = np.arange(N, dtype=float)
     center = (N - 1) / 2.0
     if shape == "Gaussian (p=2)":

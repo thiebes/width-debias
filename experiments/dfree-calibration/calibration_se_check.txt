@@ -66,7 +66,7 @@ Interpolated rel_variance with / without the t = 0 points (fallback MSD-point we
   CNR_0    55: min 0.16 over 11 frames
   CNR_0    90: min 0.02 over 11 frames
 
-Paper triple (seeds 1, 101, 201) on this evaluation set: mean ratio 1.31; per CNR_0 (mean over D)
+External triple (seeds 1, 101, 201) on this evaluation set: mean ratio 1.31; per CNR_0 (mean over D)
       1.47    0.65    1.69    0.10    0.85    1.77    3.01    1.44    0.80
   fraction of the 816 triples from all 18 draws at or above it: 0.0895
   all 18 draws: mean ratio 0.93; per CNR_0 1.26 0.89 0.80 0.50 0.98 1.04 0.85 1.01 1.03

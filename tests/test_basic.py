@@ -664,7 +664,7 @@ def _finite_column_means(values):
 
 # Width-debias 0.4.0 (tag v0.4.0) on a small D-free calibration and one
 # application ensemble, both with t_max = 1 so every frame keeps a per-frame
-# CNR above 1.8. The fft-cnr paper's results rest on this path. Below the
+# CNR above 1.8. Results computed with 0.4.0 rest on this path. Below the
 # correction floor single fits wander, and a last-place rounding difference
 # between platforms can move the calibrated bias there by a few parts in 10^6.
 GOLDEN_040 = {

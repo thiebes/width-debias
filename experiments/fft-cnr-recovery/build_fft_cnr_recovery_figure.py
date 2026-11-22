@@ -9,11 +9,12 @@ values, the fft-cnr estimate (median plus interquartile / 5-95 spread) sits on t
 size recovers the true CNR -- so the four N series share one hue and separate by
 alpha (plot_style "related series"), reading as a single diagonal-hugging story.
 
-Data provenance: the estimates come from the sibling fft-cnr validation suite
-(`../fft-cnr-paper`, case 1, Gaussian 1-D). The full 1000-trial array is 2.3 MB and
+Data provenance: the estimates come from an external simulation study of fft-cnr
+(Gaussian 1-D profiles). The full 1000-trial array is 2.3 MB and
 is not committed here; this script reduces it to a tiny per-(N, CNR) summary
 (`fft_cnr_recovery_summary.npz`, committed) and plots from that. Delete the summary
-to force a re-reduction from the source. See DATASETS.md for the source pointer.
+to force a re-reduction from the source, which is read from the directory that
+WIDTH_DEBIAS_EXTERNAL_RESULTS names. See DATASETS.md.
 
 Run:
     .venv/Scripts/python.exe experiments/fft-cnr-recovery/build_fft_cnr_recovery_figure.py
@@ -36,9 +37,10 @@ import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.ticker import NullFormatter, ScalarFormatter  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
-# Repos sit side by side: repo root is parents[2]/width-debias, its sibling is
-# ../fft-cnr-paper. The full-trial validation array lives there (see DATASETS.md).
-SOURCE = HERE.parents[2] / "fft-cnr-paper" / "validation" / "results" / "case1_gaussian_1d.npz"
+# The full-trial source array is external; its directory comes from the
+# environment (see DATASETS.md).
+_EXTERNAL = os.environ.get("WIDTH_DEBIAS_EXTERNAL_RESULTS")
+SOURCE = Path(_EXTERNAL) / "case1_gaussian_1d.npz" if _EXTERNAL else None
 SUMMARY = HERE / "fft_cnr_recovery_summary.npz"
 FIGURE = HERE / "fft_cnr_recovery.png"
 
@@ -77,10 +79,11 @@ def _reduce_source() -> dict:
 def _load_summary() -> dict:
     """Return the committed per-(N, CNR) summary, reducing from source if absent."""
     if not SUMMARY.exists():
-        if not SOURCE.exists():
+        if SOURCE is None or not SOURCE.exists():
             raise FileNotFoundError(
                 f"Neither the committed summary ({SUMMARY.name}) nor the source "
-                f"array ({SOURCE}) is present. See DATASETS.md.")
+                f"array is present; set WIDTH_DEBIAS_EXTERNAL_RESULTS to the "
+                f"directory that holds it. See DATASETS.md.")
         summ = _reduce_source()
         np.savez(SUMMARY, **summ)
         print(f"Reduced {SOURCE.name} -> {SUMMARY.name}")

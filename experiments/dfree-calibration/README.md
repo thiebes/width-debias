@@ -27,10 +27,11 @@ back the corrected-bias curves.
   four validation shapes. The calibration takes about 2 h per shape (cached
   under `output/dense-calibration/`), the test under 1 h on 7 workers.
 - `calibration_se_check.py generate|analyse` -- tests `calibration_D_se`
-  against 16 independent calibrations on the fft-cnr paper's grid (48 CNR0,
+  against 16 independent calibrations on a 48-point grid (CNR0 1.5 to 150,
   1500 runs) applied to one fixed evaluation set; separates the bias and
   weight terms, checks per-point SE and within-ensemble correlation, and ranks
-  the paper's three seeds. `generate` is about 5 h on 8 cores (cached in
+  an external triple of calibrations (seeds 1, 101, 201) when
+  `WIDTH_DEBIAS_EXTERNAL_RESULTS` names the directory that holds it. `generate` is about 5 h on 8 cores (cached in
   `output/calibration-se-check/`).
 - `weights_check.py` -- compares two 1-D slope weightings (per-frame variance
   against the MSD-point lookup) on the cached draws of
@@ -151,15 +152,15 @@ measurements. On p = 4 the corrected D reads low at CNR₀ 3 and 4 for
 D ≤ 0.05 σ₀²/τ (0.65 to 0.87, up to 2.4 combined SE).
 
 `calibration_se_check` (`calibration_se_check.txt`; 16 calibration draws of
-1500 runs on the fft-cnr paper's grid, library slope weights): the propagated
+1500 runs on a 48-point CNR₀ grid, library slope weights): the propagated
 calibration SE holds. The observed / predicted variance of the cell mean,
 averaged over D, is 0.57 to 1.27 per CNR₀ (about ±0.37 expected per cell) and
 0.89 overall; per-point `var_bias` variance matches to 0.91 to 1.07; the weight
 term is at most 0.04 of the prediction from CNR₀ 5 up (0.07 and 0.22 at CNR₀ 2
 and 3). Over the 560 three-draw subsets the mean ratio has median 0.90 and a
-5th to 95th percentile range of 0.49 to 1.31. The fft-cnr paper's seed triple
-(1, 101, 201) gives 1.31 on this evaluation set; 0.09 of the 816 triples from
-all 18 draws lie at or above it.
+5th to 95th percentile range of 0.49 to 1.31. An external triple of
+calibrations on the same grid (seeds 1, 101, 201) gives 1.31 on this evaluation
+set; 0.09 of the 816 triples from all 18 draws lie at or above it.
 
 `weights_check` (`weights_check.txt`; the same 16 draws, 300 evaluation runs
 per cell): the library per-frame weights narrow the spread of D/D_in over

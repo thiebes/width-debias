@@ -73,9 +73,9 @@ TAU_SWEEP = (6.0, 14.0, 18.0)   # C16 / C12 / C8 thin-film lifetimes (ns)
 # floor worst case; pure shot (read=0) has clean wings where the width fit takes
 # its leverage, so the noise bias nearly vanishes; a read floor of a few
 # counts restores it. The label is what appears in the legend / cache key; the
-# colour keys the figure. See experiments/noise-law/ and the fft-cnr paper
-# cases 12/13 (the bias-governing CNR is the peak-local member, which
-# ShotNoise.cnr_frame returns as peak / sqrt(peak + read^2)).
+# colour keys the figure. See experiments/noise-law/ (the bias-governing CNR
+# is the peak-local member, which ShotNoise.cnr_frame returns as
+# peak / sqrt(peak + read^2)).
 NOISE_LAWS = (
     ("white", WhiteNoise(), "#003f7f"),
     ("shot, read=0", ShotNoise(read=0.0, poisson=True), "#0cce6b"),
@@ -314,7 +314,7 @@ def main():
     # --- noise-law comparison on the 'small' map ----------------------------
     # The white-noise bias above is the constant-floor worst case. Pure shot
     # noise has clean wings, so the noise bias should nearly vanish; a read
-    # floor of a few counts restores it. (fft-cnr paper cases 12/13.)
+    # floor of a few counts restores it (see experiments/noise-law/).
     def noise_row(label, cnr0):
         """Row for a noise law; white reuses the main small-map white result."""
         if label == "white":

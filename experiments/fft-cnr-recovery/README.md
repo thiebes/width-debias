@@ -2,19 +2,19 @@
 
 **Purpose** -- show that the per-frame CNR the correction consumes is itself
 measurable, by recovering the true CNR from noisy profiles with the open-source
-fft-cnr estimator. The underlying validation is the sibling fft-cnr paper's
-case 1; this set replots that result in the repository's figure palette.
+fft-cnr estimator. The estimates come from an external simulation study of the
+estimator; this set replots them in the repository's figure palette.
 
 **Contents**
 
-- `build_fft_cnr_recovery_figure.py` -- reduces the sibling repo's full-trial array
+- `build_fft_cnr_recovery_figure.py` -- reduces the external full-trial array
   to a small per-(N, CNR) summary and plots the recovered-vs-true CNR figure in
   the Spanish-flag palette.
 - `fft_cnr_recovery_summary.npz` -- committed small derived artifact: per-(N, CNR)
   median and 25/75, 5/95 percentiles over the 1000 trials (~120 floats).
 - `fft_cnr_recovery.png` + `fft_cnr_recovery_caption.md` -- the figure and caption.
 
-**Data** -- reduced from the sibling fft-cnr validation suite; the full array is not
+**Data** -- reduced from the external study's full-trial array, which is not
 committed. See [`DATASETS.md`](DATASETS.md).
 
 **Run**
@@ -23,14 +23,13 @@ committed. See [`DATASETS.md`](DATASETS.md).
 .venv/Scripts/python.exe experiments/fft-cnr-recovery/build_fft_cnr_recovery_figure.py
 ```
 
-No env vars needed (it plots a committed summary; it only touches the source array
-when the summary is absent).
+No env vars needed to plot the committed summary. Rebuilding the summary (delete
+it first) needs `WIDTH_DEBIAS_EXTERNAL_RESULTS` set to the directory that holds
+the source array.
 
 **Key result + figure** -- the fft-cnr estimate sits on the 1:1 line from CNR = 2 to
 100 across window sizes N = 128-1024 (worst case a slight underestimate at N = 128,
 CNR = 100). Figure `fft_cnr_recovery.png`, caption `fft_cnr_recovery_caption.md`.
 
-**Depends on** -- no in-repo helpers; reads the sibling repo's result array only to
+**Depends on** -- no in-repo helpers; reads the external result array only to
 build the committed summary.
-
-**See also** -- the sibling `fft-cnr-paper` validation case 1.

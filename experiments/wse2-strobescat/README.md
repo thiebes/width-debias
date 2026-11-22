@@ -43,10 +43,9 @@ establish what the correction does on real measurements.
 The calibration (`calibrate_d_free`) is keyed on the exact per-frame CNR, which
 simulation knows. This pipeline keys the correction on the CNR that `fft-cnr`
 estimates from each frame, and that key sets three things at once: the
-subtracted bias, the weight, and the floor cut. The combination is tested in
-simulation in the fft-cnr paper (`../fft-cnr-paper`, case 27: Gaussian, Voigt,
-and generalized-Gaussian p = 1.5 and p = 4 profiles, D 0.005 to 0.1, CNR_0 5 to
-90, 300 runs per cell).
+subtracted bias, the weight, and the floor cut. The combination was tested in
+a separate simulation study (Gaussian, Voigt, and generalized-Gaussian p = 1.5
+and p = 4 profiles, D 0.005 to 0.1, CNR_0 5 to 90, 300 runs per cell).
 
 - **Where the per-frame key holds.** With the exact key, the corrected mean D
   is within 0.85 to 1.15 of the reference in every cell from CNR_0 5 to 8 at
