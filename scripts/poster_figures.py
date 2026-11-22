@@ -3,7 +3,7 @@
 The panel render code lives with its figure -- schematics in `illustrations/`, data
 panels with their experiment under `experiments/` -- and this module is the
 orchestrator that calls them. The only panels defined here are the two fft-cnr
-recovery figures, which are sourced from the sibling `fft-cnr-paper` repo and so
+recovery figures, which read an external simulation study's results and so
 have no width-debias experiment to live in. Shared poster primitives (palette,
 axis style) come from `scripts/poster_style.py`.
 
@@ -46,16 +46,17 @@ from render_floor_panel import build as figure_floor  # noqa: E402
 OUTPUT = Path(__file__).resolve().parents[1] / "output"
 OUTPUT.mkdir(exist_ok=True)
 
-# The fft-cnr validation lives in the sibling repo; the Panel 4
-# CNR-recovery figure is restyled from its case-11 sweep. Prefer the dense
-# poster-local sweep (scripts/poster_fftcnr_dense.py) when present, so the ratio
-# curve is smooth; otherwise fall back to the sibling's canonical six-point file.
+# The Panel 4 CNR-recovery figure restyles an external simulation study's sweep
+# of fft-cnr over profile shapes. Prefer the dense poster-local sweep
+# (scripts/poster_fftcnr_dense.py) when present, so the ratio curve is smooth;
+# otherwise fall back to the external six-point file, read from the directory
+# that WIDTH_DEBIAS_EXTERNAL_RESULTS names.
 _FFTCNR_DENSE = OUTPUT / "case11_gengauss_cnr_sweep_dense.npz"
-_FFTCNR_CASE11 = (Path(__file__).resolve().parents[2] / "fft-cnr-paper"
-                  / "validation" / "results" / "case11_gengauss_cnr_sweep.npz")
-FFTCNR_NPZ = _FFTCNR_DENSE if _FFTCNR_DENSE.exists() else _FFTCNR_CASE11
+_EXTERNAL = os.environ.get("WIDTH_DEBIAS_EXTERNAL_RESULTS")
+_FFTCNR_SWEEP = Path(_EXTERNAL) / "case11_gengauss_cnr_sweep.npz" if _EXTERNAL else None
+FFTCNR_NPZ = _FFTCNR_DENSE if _FFTCNR_DENSE.exists() else _FFTCNR_SWEEP
 
-# Case-11 shape name -> (poster label, role colour); shared by the fft-cnr figures.
+# Sweep shape name -> (poster label, role colour); shared by the fft-cnr figures.
 _FFTCNR_STYLE = {
     "Gaussian (p=2)": ("Gaussian", ROLE1),
     "heavy-tail (p=1.3)": ("gen-Gaussian (heavy tail)", ROLE3),
@@ -64,17 +65,18 @@ _FFTCNR_STYLE = {
 }
 
 
-def figure_fftcnr(npz_path: Path) -> Path | None:
+def figure_fftcnr(npz_path: Path | None) -> Path | None:
     """Panel 4 (CNR-centric spine): fft-cnr recovers CNR across profile shapes.
 
-    Restyles the sibling fft-cnr-paper case-11 sweep (generalized-Gaussian fit
+    Restyles the fft-cnr shape sweep (generalized-Gaussian fit
     path -- the one width-debias uses) into the poster palette: the recovery
     ratio (estimated / true CNR) vs true CNR, median + interquartile band, one
     line per shape, centred on 1.0. The three poster-primary shapes carry roles
     1-3; the flat-top is a neutral secondary reference.
     """
-    if not npz_path.exists():
-        print(f"  (fft-cnr case-11 data not found at {npz_path} -- skipping "
+    if npz_path is None or not npz_path.exists():
+        print("  (fft-cnr sweep not found: no dense sweep in output/, and "
+              "WIDTH_DEBIAS_EXTERNAL_RESULTS is not set or lacks it -- skipping "
               "Panel 4 fft-cnr)")
         return None
     d = np.load(npz_path, allow_pickle=True)

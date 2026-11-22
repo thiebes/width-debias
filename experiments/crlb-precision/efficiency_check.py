@@ -36,7 +36,7 @@ divided by sqrt(CRLB), for three arms:
   coincide with the current package.
 
 Each arm is computed with every frame and with frames below per-frame CNR 1
-dropped (the floor the paper uses). A ratio of 1 is efficient. The bound holds
+dropped (the floor the validations use). A ratio of 1 is efficient. The bound holds
 for unbiased estimators, and the corrected D is unbiased within its SE across
 this grid (``docs/DERIVATION.md`` section 8), so the comparison is fair.
 
@@ -105,7 +105,7 @@ def _eval_path(spec: str) -> Path:
 
 def calibration(spec: str) -> BiasLookup:
     if spec == "gaussian" and GAUSS_CAL.exists():
-        # Draw 0 of the calibration-SE check: the paper's seed-1, 1500-run lookup.
+        # Draw 0 of the calibration-SE check: the seed-1, 1500-run lookup.
         sys.path.insert(0, str(ROOT / "experiments" / "dfree-calibration"))
         from calibration_se_check import _ensembles
         from width_debias.bias_lookup import frame_stats

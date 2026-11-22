@@ -1,23 +1,22 @@
 """Check the calibration SE propagated into D against independent calibration draws.
 
 ``weights.calibration_D_se`` predicts how far a corrected D moves when the D-free
-calibration is redrawn. The fft-cnr paper (case 27) found the draw-to-draw
-spread of three Gaussian calibrations about 1.4 times the prediction. This
-script tests the prediction with many draws over the paper's grid.
+calibration is redrawn. Three draws cannot resolve the ratio of the observed
+to the predicted spread (the analysis reports how widely three-draw subsets
+scatter), so this script tests the prediction with many draws over one grid.
 
 ``generate`` builds and caches the raw ensembles:
 
-* ``N_CAL`` independent D-free calibrations on the paper's grid (48 CNR_0 from
+* ``N_CAL`` independent D-free calibrations on a 48-point grid (CNR_0 from
   1.5 to 150, 1500 runs each); draw k uses base seed ``1 + 1000 k``, so draw 0
-  is the paper's seed-1 calibration and the seed ranges never overlap;
+  has seed 1 and the seed ranges never overlap;
 * one fixed evaluation set (D 0.005 to 0.1, CNR_0 2 to 90, 300 runs per cell).
 
 ``analyse`` applies every calibration to the same evaluation realizations
-(subtract, exact per-frame CNR key, frames below CNR 1 dropped, as in the
-paper), so the spread of a cell's mean over the draws is the calibration term
+(subtract, exact per-frame CNR key, frames below CNR 1 dropped), so the spread of a cell's mean over the draws is the calibration term
 alone. Per cell it reports observed / predicted variance for three arms:
 
-* ``full``    -- the draw's own lookup (what the paper measured);
+* ``full``    -- the draw's own lookup (what a user applies);
 * ``bias``    -- the draw's var_bias with the weights frozen at the pooled lookup
   (the term calibration_D_se propagates);
 * ``weights`` -- the pooled var_bias with the draw's own weights.
@@ -29,7 +28,9 @@ with a prediction made for the per-frame weights.
 
 It also checks the per-point SE (variance of each grid point over the draws
 against its recorded SE squared) and the correlation of the fitted variances
-between frames of one calibration ensemble.
+between frames of one calibration ensemble. With ``WIDTH_DEBIAS_EXTERNAL_RESULTS``
+naming a directory that holds an external triple of Gaussian calibrations on the
+same grid, it ranks that triple among the draws.
 
     $env:WIDTH_DEBIAS_WORKERS = 0
     .venv/Scripts/python.exe experiments/dfree-calibration/calibration_se_check.py generate
@@ -52,6 +53,7 @@ from width_debias.bias_lookup import frame_stats  # noqa: E402
 from width_debias.weights import calibration_D_se, msd_and_weights  # noqa: E402
 
 OUT = Path(__file__).resolve().parents[2] / "output" / "calibration-se-check"
+EXTERNAL_RESULTS = "WIDTH_DEBIAS_EXTERNAL_RESULTS"
 
 CAL_GRID = np.geomspace(1.5, 150.0, 48)
 CAL_RUNS = 1500
@@ -227,7 +229,7 @@ def analyse() -> None:
           f"{np.sqrt(2 / (len(ks) - 1)):.2f} per cell)")
     for a in arms:
         print(f"  {a:8s}" + "".join(f"{v:8.2f}" for v in (obs[a] / p2).mean(axis=0)))
-    # How often would three draws (the paper's check) read a mean ratio >= 2?
+    # How often would three draws read a mean ratio >= 2?
     from itertools import combinations
     trip = []
     for c in combinations(range(len(ks)), 3):
@@ -254,20 +256,25 @@ def analyse() -> None:
         if r.size:
             print(f"  CNR_0 {c0:5g}: min {r.min():.2f} over {r.size} frames")
 
-    paper_triple(models, means["full"], p2, ecnr, evar)
+    external_triple(models, means["full"], p2, ecnr, evar)
 
 
-def paper_triple(models, full_means, p2, ecnr, evar) -> None:
-    """Rank the fft-cnr paper's three Gaussian calibrations (seeds 1, 101, 201).
+def external_triple(models, full_means, p2, ecnr, evar) -> None:
+    """Rank an external triple of Gaussian calibrations (seeds 1, 101, 201) among the draws.
 
-    The paper's validation code lives in the sibling ``fft_cnr_validation``
-    repository; its case 27 calibrations carry ``framevar_grid``, so they are
-    scored with the same per-frame weights as the draws here.
+    Seed 1 is draw 0 here; the calibrations at seeds 101 and 201 come from an
+    external study on the same grid, read from the directory that
+    ``WIDTH_DEBIAS_EXTERNAL_RESULTS`` names. They carry ``framevar_grid``, so
+    they are scored with the same per-frame weights as the draws here.
     """
-    paper = Path(__file__).resolve().parents[3] / "fft_cnr_validation" / "validation" / "results"
-    paths = [paper / f"case27_calibration_gaussian_seed{s}.npz" for s in (101, 201)]
+    directory = os.environ.get(EXTERNAL_RESULTS)
+    if not directory:
+        print(f"\n({EXTERNAL_RESULTS} not set; external triple skipped)")
+        return
+    paths = [Path(directory) / f"case27_calibration_gaussian_seed{s}.npz" for s in (101, 201)]
     if not all(p.exists() for p in paths):
-        print("\n(fft-cnr paper calibrations not found; paper triple skipped)")
+        print(f"\n(external calibrations not found under {EXTERNAL_RESULTS}; "
+              "external triple skipped)")
         return
     from itertools import combinations
     grid = models[0].cnr_grid
@@ -277,7 +284,7 @@ def paper_triple(models, full_means, p2, ecnr, evar) -> None:
         with np.load(p) as d:
             assert np.allclose(d["cnr_grid"], grid)
             if "framevar_grid" not in d:
-                print(f"\n({p.name} has no framevar_grid; paper triple skipped)")
+                print(f"\n({p.name} has no framevar_grid; external triple skipped)")
                 return
             m = BiasLookup(cnr_grid=grid, p_grid=d["p_grid"],
                                 relvar_grid=d["relvar_grid"],
@@ -288,11 +295,11 @@ def paper_triple(models, full_means, p2, ecnr, evar) -> None:
                       for di, d_true in enumerate(D_VALUES)])
     allm = np.concatenate([full_means, np.asarray(extra)])
     n = allm.shape[0]
-    # Draw 0 is seed 1, so the paper's triple is draws (0, n-2, n-1).
+    # Draw 0 is seed 1, so the external triple is draws (0, n-2, n-1).
     ratio = allm[[0, n - 2, n - 1]].var(axis=0, ddof=1) / p2
     trip = np.array([(allm[list(c)].var(axis=0, ddof=1) / p2).mean()
                      for c in combinations(range(n), 3)])
-    print(f"\nPaper triple (seeds 1, 101, 201) on this evaluation set: mean ratio "
+    print(f"\nExternal triple (seeds 1, 101, 201) on this evaluation set: mean ratio "
           f"{ratio.mean():.2f}; per CNR_0 (mean over D)")
     print("  " + "".join(f"{v:8.2f}" for v in ratio.mean(axis=0)))
     print(f"  fraction of the {trip.size} triples from all {n} draws at or above it: "
