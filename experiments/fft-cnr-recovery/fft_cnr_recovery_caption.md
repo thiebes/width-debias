@@ -7,5 +7,5 @@ true CNR across the whole measured range. Points are the median fft-cnr estimate
 over 1000 noisy Gaussian realisations at each true CNR; the shaded envelope is the
 interquartile spread. The four series are matched-filter window sizes N = 128 to
 1024 (faint to full); all sit on the 1:1 line, so window size is not a tuning
-knob. Source: an external simulation study of fft-cnr, Gaussian 1-D profiles
+knob. Source: an external simulation study of fft-cnr 0.4.0, Gaussian 1-D profiles
 (sigma = 20 px, unit-RMS white noise).
