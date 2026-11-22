@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `Experiment.spread_dims` lets the simulated peak fall as the profile
+  spreads, at a population that changes only by the decay: 1 for a profile
+  summed over the other axis, 2 for a cut through the centre of a spot that
+  also spreads along y (`D_y`, default `D`). For the Voigt profile the peak
+  depends on `psf_hwhm`, which must equal the `VoigtModel`'s `gamma`;
+  `run_ensemble` refuses a mismatch. The default (`None`) keeps the peak at
+  the decay alone, so every output is unchanged. The option leaves the peak
+  unchanged at t = 0 and at every t when D = 0, and draws the same white noise
+  from the same seed. `Experiment.decay_amplitude` and
+  `Experiment.spread_factor` give the two factors of the peak (a subclass with
+  its own decay law overrides `decay_amplitude`, as `MultiExpExperiment`
+  does), and with the option on `cnr_per_frame` returns the CNR of the
+  simulated frames.
+
 ### Changed
 
 - Experiment scripts read collaborator data from a data root instead of fixed

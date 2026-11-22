@@ -142,7 +142,11 @@ def run_ensemble(exp: Experiment, cnr0: float, n_runs: int = 600,
     ``model`` is a profile model from :mod:`width_debias.models`
     (default :class:`~width_debias.models.GaussianModel`).  The per-frame CNR
     is taken from the actual noise-free profile peak, so it is correct for any
-    profile shape.
+    profile shape and for either peak model of ``exp`` (see
+    :class:`~width_debias.simulate.Experiment`). A spreading peak must be
+    computed for the profile drawn: ``exp.psf_hwhm`` must equal a
+    :class:`~width_debias.models.VoigtModel`'s ``gamma``, and 0 for every
+    other model, or this raises ``ValueError``.
 
     ``noise_model`` (see :mod:`width_debias.noise`) swaps the measurement-
     noise law (white vs shot). ``None`` draws constant-sigma white noise; a
@@ -155,6 +159,11 @@ def run_ensemble(exp: Experiment, cnr0: float, n_runs: int = 600,
     """
     if model is None:
         model = GaussianModel()
+    lorentzian_hwhm = getattr(model, "gamma", 0.0)      # VoigtModel only
+    if exp.spread_dims is not None and exp.psf_hwhm != lorentzian_hwhm:
+        raise ValueError(
+            f"the spreading peak uses psf_hwhm={exp.psf_hwhm}, but the {model.name} profile "
+            f"has a Lorentzian half-width of {lorentzian_hwhm}; set Experiment.psf_hwhm to match")
     noise_sigma = noise_sigma_for_cnr0(exp, cnr0)
     x = exp.x
     n_frames = exp.n_frames
