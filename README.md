@@ -113,10 +113,11 @@ calibration's geometry but does not check it against the data.
   nearest grid edge, and `msd_and_weights` then issues a
   `CalibrationRangeWarning`.
 - **The estimated CNR holds over a narrower range.** With the CNR estimated
-  from each frame by `fft-cnr` instead of known, the estimate is imprecise near
-  the floor and its error is correlated with the width error, so the corrected
-  mean D holds in simulation only where every fitted frame stays well above the
-  floor. How far above depends on the profile shape and the diffusion length.
+  from each frame by `fft-cnr` instead of known, the estimate is biased near
+  the floor (it does not scatter evenly about the exact value) and its error is
+  correlated with the width error, so the corrected mean D holds in simulation
+  only where every fitted frame stays well above the floor. How far above
+  depends on the profile shape and the diffusion length.
   See
   [`experiments/wse2-strobescat`](https://github.com/thiebes/width-debias/tree/master/experiments/wse2-strobescat).
 - **Estimate the CNR on the spot.** Cut each profile to about ±4 sigma_0 around

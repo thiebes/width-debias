@@ -14,12 +14,12 @@ dependency on it. Estimate the CNR on a window of about +/-4 sigma_0 around the
 spot: background and fringe structure in a full line cut corrupts the spectral
 estimate at low signal.
 
-The calibration is keyed on the exact CNR, and the estimate is not a reliable
-stand-in for it near the floor: it is imprecise there, and its error is
-correlated with the frame's width error. Keying the correction on the per-frame
-estimate is therefore reliable only where every fitted frame stays well above
-the floor; how far above depends on the profile shape and the diffusion length.
-See ``experiments/wse2-strobescat/README.md``.
+The calibration is keyed on the exact CNR, and the estimate is not an unbiased
+stand-in for it near the floor: it does not scatter evenly about the exact value
+there, and its error is correlated with the frame's width error. Keying the
+correction on the per-frame estimate is therefore reliable only where every
+fitted frame stays well above the floor; how far above depends on the profile
+shape and the diffusion length. See ``experiments/wse2-strobescat/README.md``.
 Use fft-cnr 0.3.3 or later (the first PyPI release with commit 69cd361), which
 refuses degenerate generalized-Gaussian fits below CNR 1 instead of reporting
 runaway CNRs.
@@ -58,11 +58,11 @@ def per_frame_cnr(profiles: np.ndarray,
         heavy-tailed / flat-topped shapes that bracket Voigt and
         generalized-Gaussian, while the generalized-Gaussian fit stays accurate
         across that kurtosis range, with the Gaussian falling out as the p=2
-        special case. Because the noise bias scales as
-        ~A/CNR^2, a biased CNR feeds straight into a biased correction, so the
-        shape-robust estimator matters here. The generalized-Gaussian fit
-        returns a finite confidence interval (it falls back to the peak method
-        if the fit fails), so there is no missing-CI pathology.
+        special case. Because the noise bias scales as ~A/CNR^2, a biased CNR
+        feeds straight into a biased correction, so the shape-robust estimator
+        matters here. The generalized-Gaussian fit returns a finite confidence
+        interval (it falls back to the peak method if the fit fails), so there
+        is no missing-CI pathology.
     **fft_cnr_kwargs
         Passed to ``fft_cnr.fft_cnr`` for every row (for example ``roi``,
         ``window`` or ``rng``).

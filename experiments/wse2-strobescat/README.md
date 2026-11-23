@@ -48,35 +48,34 @@ tested the combination on the four validation shapes.
 
 - **Where the per-frame key holds.** With the exact key, which the validations
   in this repository use, the correction holds down to the floor
-  (`experiments/dfree-calibration`). With the estimated key, it holds only where
-  every fitted frame stays well above the floor; how far above depends on the
-  profile shape and the diffusion length.
-- **Why.** Random error in the key is tolerated; a key that is not random about
-  the exact value is not. Near the floor the estimate is imprecise in that way,
-  so frames near the floor are corrected by the wrong amount and frames below
-  it can be admitted. The key and the width also come from the same frame, and
-  their errors are correlated: a frame whose CNR reads high has a width that
-  reads low.
+  (`experiments/dfree-calibration`, `experiments/correction-floor`). With the
+  estimated key, it holds only where every fitted frame stays well above the
+  floor; how far above depends on the profile shape and the diffusion length.
+- **Why.** Small random error in the key is tolerated; a biased key is not.
+  Near the floor the estimate is biased (it does not scatter evenly about the
+  exact value), so frames near the floor are corrected by the wrong amount and
+  frames below it can be admitted. The key and the width also come from the
+  same frame, and their errors are correlated: a frame whose CNR reads high has
+  a width that reads low.
 - **What does not fix it.** A stricter floor on the estimate, or dropping frames
   whose CNR interval includes zero, selects frames by the same estimate, so
   neither removes the cause. A calibration keyed on the estimate depends on the
   distribution of true CNR it was built on, so it transfers poorly between
   measurements.
 - **Cross-fitted key.** A key predicted for frame t from the other frames (a
-  robust straight-line fit of log CNR against time) does not share the frame's
-  own noise, so it separates the two causes above. It adds a decay-trend model
-  with its own assumptions, so it serves as a check of the cause, and the
-  pipeline keys on the per-frame estimate.
+  robust straight-line fit of log CNR against time) does not share that frame's
+  noise, so it tests whether keying on the frame's own estimate is the cause.
+  It adds a decay-trend model with its own assumptions, so it serves as a
+  diagnostic, and the pipeline keys on the per-frame estimate.
 - **On the measured scans the effect is small**: only 0.035 of the retained
   frames (18 included stroboSCAT scans) are below CNR 2.
 - **fft-cnr version.** Use fft-cnr 0.3.3 or later, the first PyPI release
   that carries commit 69cd361 (0.3.2 is tagged but not published). Earlier
-  versions return occasional runaway
-  generalized-Gaussian fits on frames below CNR 1 (CNR of tens to thousands;
-  about 0.015 of the frames below CNR 0.5); two of the 187 stroboSCAT scans pass
-  the triage screen only with the fix, because a runaway frame makes their
-  merged D negative. `pyproject.toml` requires `fft-cnr>=0.3.3`, and `uv.lock`
-  pins the PyPI release with its hash.
+  versions return occasional runaway generalized-Gaussian fits on frames below
+  CNR 1 (CNR of tens to thousands); two of the 187 stroboSCAT scans pass the
+  triage screen only with the fix, because a runaway frame makes their merged D
+  negative. `pyproject.toml` requires `fft-cnr>=0.3.3`, and `uv.lock` pins the
+  PyPI release with its hash.
 
 ## Contents
 

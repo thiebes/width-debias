@@ -94,10 +94,12 @@ pshare source:
 
 Three scripts read an external simulation study's result files from the
 directory that `WIDTH_DEBIAS_EXTERNAL_RESULTS` names, which has no default:
-`experiments/fft-cnr-recovery/build_fft_cnr_recovery_figure.py` (only when its
-committed summary is missing), `experiments/dfree-calibration/calibration_se_check.py
+`experiments/fft-cnr-recovery/build_fft_cnr_recovery_figure.py` (to rebuild its
+committed summary, and to check the summary's source hash when the file is
+available), `experiments/dfree-calibration/calibration_se_check.py
 analyse` (an optional section of its table) and `scripts/poster_figures.py` (a
-fallback for one panel). Each names the file it needs when that file is missing.
+fallback for one panel). Each says when the variable is unset and names the file
+when it is missing.
 
 Collaborator data is referenced by pointer only; it is not copied into the
 repository.

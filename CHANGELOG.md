@@ -14,7 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `experiments/dfree-calibration/calibration_se_check.py` and
   `scripts/poster_figures.py`) take the directory from
   `WIDTH_DEBIAS_EXTERNAL_RESULTS`, which has no default, and name the file and
-  the directory when a file they need is missing.
+  the directory when a file they need is missing. `scripts/poster_fftcnr_dense.py`
+  writes its sweeps as `output/gengauss_cnr_sweep_{dense,shot}.npz`, the names
+  `scripts/poster_figures.py` reads.
 - The fft-cnr recovery summary and figure are rebuilt from fft-cnr 0.4.0
   estimates: in every (N, CNR) cell the median over 1000 trials lies between
   0.989 and 1.006 of the true CNR. The summary records the fft-cnr version and

@@ -92,8 +92,8 @@ def figure_fftcnr(npz_path: Path | None) -> Path | None:
     Restyles the fft-cnr shape sweep (generalized-Gaussian fit path -- the one
     width-debias uses) into the poster palette: the recovery ratio (estimated /
     true CNR) vs true CNR, median + interquartile band, one line per shape,
-    centred on 1.0. The three poster-primary shapes carry roles
-    1-3; the flat-top is a neutral secondary reference.
+    centred on 1.0. The three poster-primary shapes carry roles 1-3; the
+    flat-top is a neutral secondary reference.
     """
     if npz_path is None:
         return None
