@@ -19,10 +19,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   noise-free fit's D over the same frames, gives SEs of D and of the residuals
   from 200 seeds and from 200 draws of the lookup's own error, prints an arm
   whose power-law exponent ends at a fit bound as "at bound", and counts
-  failed fits. It adds the corrected fit restricted to per-frame CNR >= 3
-  beside the naive one, and its header gives the lookup at sigma_0, with its
-  propagated SE, next to its leading term, the width's Fisher variance on the
-  calibration grid. It applies the correction through `corrected_variance` and
+  failed fits. The exponent bounds are defined once, as `ALPHA_BOUNDS` beside
+  `fit_msd_powerlaw` in
+  `experiments/halide-mixing-brI-legacy/br_halide_validation.py`, and the
+  at-bound marks read them there. It adds the corrected fit restricted to
+  per-frame CNR >= 3 beside the naive one, and its header gives the lookup at
+  sigma_0, with its propagated SE, next to its leading term, the width's
+  Fisher variance on the calibration grid. It applies the correction through
+  `corrected_variance` and
   caches the lookup with `BiasLookup.save`, under a name that carries the run
   count. Its table is committed as `br_halide_highn_validation.txt`. The set
   README said this lookup under-corrects on the bed because the width grows

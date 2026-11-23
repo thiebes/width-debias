@@ -78,8 +78,8 @@ from width_debias.fit import fit_variance as _fit_gaussian  # noqa: E402
 from width_debias.simulate import Experiment  # noqa: E402
 from width_debias.weights import corrected_variance  # noqa: E402
 
-# Pure helper shared with the legacy bed (no module-global dependencies).
-from br_halide_validation import fit_msd_powerlaw  # noqa: E402
+# The power-law fit and its exponent bounds, shared with the legacy bed.
+from br_halide_validation import ALPHA_BOUNDS, fit_msd_powerlaw  # noqa: E402
 
 from br_highn_data import (  # noqa: E402
     INTRINSIC_PEAK_CNR, SIGMA0_HINT_NM, load_all)
@@ -109,7 +109,6 @@ N_BOOT = 200
 N_CAL_DRAWS = 200
 FLOOR_CNR = 1.3       # project floor: the 2-D lookup over-subtracts below ~1.3
 STRICT_CNR = 3.0      # the stricter cut of the naive competitor
-ALPHA_BOUNDS = (0.2, 2.0)   # fit_msd_powerlaw's exponent bounds
 BOUND_TOL = 0.01
 # Analyse every STRIDE-th frame: 601 frames is far more than the MSD power law
 # needs, and the per-frame Gaussian fits dominate the runtime. Stride 10 leaves
@@ -328,8 +327,14 @@ def _f(v, fmt):
 
 
 def _at_bound(alpha: float) -> bool:
-    """Whether a power-law exponent ended within BOUND_TOL of a fit bound."""
-    return bool(np.isfinite(alpha)) and min(abs(alpha - b) for b in ALPHA_BOUNDS) <= BOUND_TOL
+    """Whether a power-law exponent ended within BOUND_TOL of a fit bound (NaN is not)."""
+    lo, hi = ALPHA_BOUNDS
+    return bool(alpha <= lo + BOUND_TOL or alpha >= hi - BOUND_TOL)
+
+
+def _off_bound(ratio: float, alpha: float) -> float:
+    """The ratio, or NaN when its exponent sits at a fit bound (for the figure)."""
+    return np.nan if _at_bound(alpha) else ratio
 
 
 def _ratio_text(ratio, alpha, se_seed, se_cal=None) -> str:
@@ -444,21 +449,17 @@ def make_figure(results: list[CaseResult], path: Path) -> None:
     fig.patch.set_alpha(1)
     for k, (ax, r) in enumerate(zip(axes[0], results)):
         c0 = np.array([c.cnr0 for c in r.cells])
-
-        def off_bound(ratio, alpha):
-            return np.nan if _at_bound(alpha) else ratio
-
         arms = (("naive", NAIVE_RED, "o",
-                 [off_bound(c.ratio_naive, c.a_naive) for c in r.cells],
+                 [_off_bound(c.ratio_naive, c.a_naive) for c in r.cells],
                  [c.se_naive for c in r.cells]),
                 (rf"naive, CNR $\geq$ {STRICT_CNR:g}", STRICT_GOLD, "^",
-                 [off_bound(c.ratio_strict, c.a_naive_strict) for c in r.cells],
+                 [_off_bound(c.ratio_strict, c.a_naive_strict) for c in r.cells],
                  [c.se_strict for c in r.cells]),
                 ("corrected", CORR_BLUE, "s",
-                 [off_bound(c.ratio_cor, c.a_cor) for c in r.cells],
+                 [_off_bound(c.ratio_cor, c.a_cor) for c in r.cells],
                  [np.hypot(c.se_cor_seed, c.se_cor_cal) for c in r.cells]),
                 (rf"corrected, CNR $\geq$ {STRICT_CNR:g}", CORR_STRICT_GREEN, "D",
-                 [off_bound(c.ratio_cor_strict, c.a_cor_strict) for c in r.cells],
+                 [_off_bound(c.ratio_cor_strict, c.a_cor_strict) for c in r.cells],
                  [np.hypot(c.se_cor_strict_seed, c.se_cor_strict_cal) for c in r.cells]))
         for label, color, marker, y, se in arms:
             ax.errorbar(c0, y, yerr=se, color=color, marker=marker, ms=4, lw=2,

@@ -87,6 +87,7 @@ CAL_GEOMETRY = dict(sigma0=SIGMA0_NM, tau=1.0, half_window=75.0 / SIGMA0_NM,
                     n_pixels=250, n_frames=21, t_max=0.1)
 CAL_CNR0 = np.geomspace(1.5, 250.0, 50)
 N_RUNS_CAL = 1500
+ALPHA_BOUNDS = (0.2, 2.0)    # power-law fit bounds on the exponent
 
 
 def fit_msd_powerlaw(t: np.ndarray, var: np.ndarray,
@@ -106,7 +107,7 @@ def fit_msd_powerlaw(t: np.ndarray, var: np.ndarray,
         popt, _ = curve_fit(
             lambda tt, d, a: 2.0 * d * tt ** a, t[keep], msd[keep],
             p0=[max(msd[keep][-1] / (2.0 * t[keep][-1]), 1e-3), 1.0],
-            bounds=([0.0, 0.2], [np.inf, 2.0]), maxfev=20000)
+            bounds=([0.0, ALPHA_BOUNDS[0]], [np.inf, ALPHA_BOUNDS[1]]), maxfev=20000)
         return float(popt[0]), float(popt[1])
     except (RuntimeError, ValueError):
         return np.nan, np.nan

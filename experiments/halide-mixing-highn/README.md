@@ -258,8 +258,8 @@ implementation:
   `None` keeps the `span^2` bound.
 - `src/width_debias/models.py` -- `GaussianModel(max_var=...)` forwards it.
 
-The scripts reuse `fit_msd_powerlaw` from
-`experiments/halide-mixing-brI-legacy/br_halide_validation.py`. The bounded
+The scripts reuse `fit_msd_powerlaw` and its exponent bounds (`ALPHA_BOUNDS`)
+from `experiments/halide-mixing-brI-legacy/br_halide_validation.py`. The bounded
 width fit (`fit_each_row`), the cap (`G_MAX`, `MAX_VAR`) and the per-frame CNR
 floor (`FLOOR_CNR`) are defined in `br_halide_highn_validation.py`, and the
 per-frame scripts import them from there.

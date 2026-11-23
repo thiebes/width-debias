@@ -407,24 +407,32 @@ HALIDE_VALIDATION_FIELDS = {
     "cor_strict_cal": r"corrected, CNR >= 3 [\d.]+ \([\d.]+; calibration ([\d.]+)\)",
 }
 HALIDE_LOOKUP_CNR = ("1.3", "2", "3")
-HALIDE_ALPHA_BOUNDS = (Decimal("0.2"), Decimal("2.0"))
 
 
-def _halide_validation() -> dict[tuple[str, int], dict[str, Decimal]]:
-    """The fields of each (Br fraction, CNR_0) cell of the 1-D lookup's validation
-    table; a field the table prints as n/a is absent."""
+def _halide_validation_texts() -> dict[tuple[str, int], str]:
+    """The text of each (Br fraction, CNR_0) cell of the 1-D lookup's validation
+    table."""
     path = f"{HALIDE}/br_halide_highn_validation.txt"
-    cells = {}
+    texts = {}
     for block in re.split(r"^Br x=", _read(path), flags=re.M)[1:]:
         x = block.split(":", 1)[0]
         for cell in re.split(r"^  CNR0 ", block, flags=re.M)[1:]:
-            values = {}
-            for field, pattern in HALIDE_VALIDATION_FIELDS.items():
-                match = re.search(pattern, cell, flags=re.M)
-                if match:
-                    values[field] = Decimal(match.group(1).lstrip("+"))
-            cells[(x, int(cell.split(":", 1)[0]))] = values
-    assert cells, f"{path}: no cells"
+            texts[(x, int(cell.split(":", 1)[0]))] = cell
+    assert texts, f"{path}: no cells"
+    return texts
+
+
+def _halide_validation() -> dict[tuple[str, int], dict[str, Decimal]]:
+    """The fields of each cell of the 1-D lookup's validation table; a field the
+    table prints as n/a is absent."""
+    cells = {}
+    for key, cell in _halide_validation_texts().items():
+        values = {}
+        for field, pattern in HALIDE_VALIDATION_FIELDS.items():
+            match = re.search(pattern, cell, flags=re.M)
+            if match:
+                values[field] = Decimal(match.group(1).lstrip("+"))
+        cells[key] = values
     return cells
 
 
@@ -465,12 +473,16 @@ def _halide_corrected_strict_max_z() -> tuple[str, ...]:
 
 
 def _halide_corrected_at_bound() -> tuple[str, ...]:
-    """Cells whose full-floor corrected exponent ends within 0.01 of a fit bound,
-    CNR_0 15 and 20, and the number of cells."""
-    cells = _halide_validation_cells("alpha_cor", (15, 20))
-    at_bound = sum(min(abs(c["alpha_cor"] - b) for b in HALIDE_ALPHA_BOUNDS) <= Decimal("0.01")
-                   for c in cells)
-    return str(at_bound), str(len(cells))
+    """Cells at CNR_0 15 and 20 whose full-floor corrected arm the table prints as
+    "at bound", and the number of cells. The README places them at the 0.2 bound,
+    so each marked cell's printed exponent must lie within 0.01 of 0.2."""
+    texts, cells = _halide_validation_texts(), _halide_validation()
+    keys = [key for key in cells if key[1] in (15, 20)]
+    assert len(keys) == 6, f"expected 6 cells at CNR_0 15 and 20, found {len(keys)}"
+    marked = [key for key in keys if "; corrected at bound;" in texts[key]]
+    assert all(abs(cells[key]["alpha_cor"] - Decimal("0.2")) <= Decimal("0.01")
+               for key in marked), "a cell marked at bound is not at the 0.2 bound"
+    return str(len(marked)), str(len(keys))
 
 
 def _halide_naive_strict_beyond() -> tuple[str, ...]:
