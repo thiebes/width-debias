@@ -10,39 +10,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - `experiments/halide-mixing-highn/br_halide_highn_validation.py`, the test of
-  the 1-D D-free lookup on the high-N halide bed, caps the fitted width at
-  12 sigma_0 = 300 nm in the calibration and in the application, as the rest
-  of the set does. With the fit's default bound, the 3000 nm window, low-CNR
+  the 1-D D-free lookup on the high-N halide bed, caps the fitted width at 12
+  sigma_0 = 300 nm in the calibration and in the application, as the rest of
+  the set does. With the fit's default bound, the 3000 nm window, low-CNR
   calibration fits wandered toward the window, the lookup's bias reached about
   340,000 nm^2 at per-frame CNR 1, and the corrected arm collapsed. The script
   also leaves out frames below per-frame CNR 1.3, divides each arm's D by the
-  noise-free fit's D over the same frames, gives SEs from 200 seeds and from
-  200 draws of the lookup's own error, and counts failed fits. It adds the
-  corrected fit restricted to per-frame CNR >= 3 beside the naive one, and
-  its header gives the lookup at sigma_0 next to its leading term, the width's
-  Fisher variance on the calibration grid. Its table is committed as
-  `br_halide_highn_validation.txt`. The set README said this lookup
-  under-corrects on the bed because the width grows 26- to 61-fold; the table
-  shows that, read down to the floor, it over-subtracts. Between per-frame CNR
-  1.3 and 3 its residual is -4066 to -3548 nm^2 at initial CNR 15 and 20, and
-  the corrected D there is 0.35 to 0.61 of the noise-free fit's, because the
-  lookup at sigma_0 is 14 to 132 times its leading term between per-frame CNR
-  3 and 1.3. Kept to per-frame CNR >= 3, it gives 0.96 to 1.02.
-  `br_halide_highn_perframe.py` imports the cap and the bounded fit from it,
-  with unchanged fits.
+  noise-free fit's D over the same frames, gives SEs of D and of the residuals
+  from 200 seeds and from 200 draws of the lookup's own error, prints an arm
+  whose power-law exponent ends at a fit bound as "at bound", and counts
+  failed fits. It adds the corrected fit restricted to per-frame CNR >= 3
+  beside the naive one, and its header gives the lookup at sigma_0, with its
+  propagated SE, next to its leading term, the width's Fisher variance on the
+  calibration grid. It applies the correction through `corrected_variance` and
+  caches the lookup with `BiasLookup.save`, under a name that carries the run
+  count. Its table is committed as `br_halide_highn_validation.txt`. The set
+  README said this lookup under-corrects on the bed because the width grows
+  26- to 61-fold; the table shows that, read down to the floor, it
+  over-subtracts. Between per-frame CNR 1.3 and 3 its residual is -4066 to
+  -3548 nm^2 at initial CNR 15 and 20, and its exponent sits at the fit's 0.2
+  bound on 4 of those 6 cells, because the lookup at sigma_0 is 14 to 132
+  times its leading term between per-frame CNR 3 and 1.3. Kept to per-frame
+  CNR >= 3, it gives D at 0.96 to 1.02 of the noise-free fit's.
+  `br_halide_highn_perframe.py` imports the cap, the bounded fit and the
+  per-frame CNR floor from it, with unchanged fits.
 
 ### Documentation
 
-- The high-N halide README, per-frame script, caption and figure script,
+- The high-N halide README, `br_halide_highn_perframe.py`,
   `key_sensitivity.py`, `docs/DERIVATION.md` and the `BiasLookup.var_bias`
   docstring give the width growth over the fitted frames, 11- to 24-fold at
-  initial CNR 15 and 20 (13- to 24-fold at 20), where they said about
-  64-fold. The README and the per-frame script say that at a given CNR the
+  initial CNR 15 and 20 (13- to 24-fold at 20), where they said about 64-fold.
+  The README and `br_halide_highn_perframe.py` say that at a given CNR the
   bias grows in proportion to sigma to leading order, where they said with
-  sigma^2, and the set calls the offset between the noise-free fit and the carrier
-  reference the shape gap: these profiles are linear in the carrier density,
-  so there is no emission-to-carrier gap.
-
+  sigma^2. The README, `br_halide_highn_perframe.py`, `key_sensitivity.py`,
+  `render_perframe_figure.py` and the per-frame caption call the offset
+  between the noise-free fit and the carrier reference the shape gap: these
+  profiles are linear in the carrier density, so there is no
+  emission-to-carrier gap. The set README gives the 1-D lookup's result its
+  own section and says that the bounded width fit, its cap and the per-frame
+  CNR floor live in `br_halide_highn_validation.py`.
 - Scripts that read an external simulation study's result files
   (`experiments/fft-cnr-recovery/build_fft_cnr_recovery_figure.py`,
   `experiments/dfree-calibration/calibration_se_check.py` and

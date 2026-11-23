@@ -4,139 +4,140 @@ width-fit bound: max_var = (G*sigma0)^2, G = 12 (sigma capped at 300 nm), in the
 calibration: calibrate_d_free, 40 CNR0 from 1.2 to 60 x 1500 runs, 21 frames, sigma0 = 25 nm, 600 pixels over 3000 nm
 evaluation: 200 seeds per CNR0 (seed 1000*CNR0 + s); frame stride 10 (61 frames, 0 to 3 ns); per-frame CNR floor 1.3; CNR0 capped at the map's intrinsic peak CNR ~50
 D from MSD = 2 D t^alpha fitted to the seed-mean trajectory over the frames at or above the floor (naive and corrected) or at or above per-frame CNR 3 (naive, CNR >= 3; corrected, CNR >= 3), each divided by the noise-free fit's D over the same frames
-D SE: (seeds, from 200 resamples; calibration, from 200 draws of the lookup's own error); residuals in nm^2, signed mean over the fitted frames, against the noise-free fit
+SE of D and of the residuals: (seeds, from 200 resamples; calibration, from 200 draws of the lookup's own error); residuals in nm^2, signed mean over the band's frames, against the noise-free fit
+an arm whose exponent ends within 0.01 of a fit bound (0.2 or 2.0) is printed 'at bound': the bound then sets its D
 carrier reference: particle second moment / 2, fitted over the full record
 failed width fits are dropped from the seed means (the calibration keeps them as the fallback width)
-lookup at sigma_0 against its leading term, the width's Fisher variance (2/sqrt(pi)) dx sigma_0 / CNR^2 on the calibration grid: 600 pixels from -1500 to 1500 nm, pitch 5.008 nm; width cap sigma 300 nm, variance 90000 nm^2
-  per-frame CNR 1.3: lookup 11017 nm^2 (SE 647), leading term 83.6 nm^2, ratio 131.8
-  per-frame CNR 2: lookup 3901 nm^2 (SE 418), leading term 35.3 nm^2, ratio 110.4
-  per-frame CNR 3: lookup 218 nm^2 (SE 92), leading term 15.7 nm^2, ratio 13.9
-  per-frame CNR 4: lookup 16 nm^2 (SE 4), leading term 8.8 nm^2, ratio 1.8
-  per-frame CNR 5: lookup 11 nm^2 (SE 3), leading term 5.7 nm^2, ratio 2.0
+lookup at sigma_0 against its leading term, the width's Fisher variance (2/sqrt(pi)) dx sigma_0 / CNR^2 on the calibration grid: 600 pixels from -1500 to 1500 nm, pitch 5.008 nm; width cap sigma 300 nm, variance 90000 nm^2; SE propagated from the independent calibration nodes
+  per-frame CNR 1.3: lookup 11017 nm^2 (SE 471), leading term 83.6 nm^2, ratio 131.8
+  per-frame CNR 2: lookup 3901 nm^2 (SE 370), leading term 35.3 nm^2, ratio 110.4
+  per-frame CNR 3: lookup 218 nm^2 (SE 78), leading term 15.7 nm^2, ratio 13.9
+  per-frame CNR 4: lookup 16 nm^2 (SE 3), leading term 8.8 nm^2, ratio 1.8
+  per-frame CNR 5: lookup 11 nm^2 (SE 2), leading term 5.7 nm^2, ratio 2.0
 ============================================================================
 
-Br x=0.25: carrier reference alpha = 0.997, D_ref = 6265 nm^2/ns; carrier variance grows 61.0-fold over the 3 ns record
+Br x=0.25: carrier reference alpha = 0.997, D_ref = 6265 nm^2/ns^alpha; carrier variance grows 61.0-fold over the 3 ns record
   CNR0 2: 2 frames at or above the floor, t <= 0.05 ns, CNR down to 1.35; carrier variance grows 2.0-fold over them; failed fits 0 of 400
-    residual, CNR >= 3: naive n/a, corrected n/a; floor to 3: naive +4150, corrected -2702
+    residual, CNR >= 3: naive n/a (n/a), corrected n/a (n/a; calibration n/a); floor to 3: naive +4150 (867), corrected -2702 (867; calibration 321)
     D / D_nf: naive n/a (n/a); naive, CNR >= 3 (0 frames) n/a (n/a); corrected n/a (n/a; calibration n/a); corrected, CNR >= 3 n/a (n/a; calibration n/a)
     alpha: noise-free fit n/a, naive n/a, corrected n/a; D_nf = n/a nm^2/ns^alpha
     alpha, CNR >= 3: noise-free fit n/a, naive n/a, corrected n/a
   CNR0 3: 4 frames at or above the floor, t <= 0.15 ns, CNR down to 1.32; carrier variance grows 4.0-fold over them; failed fits 0 of 800
-    residual, CNR >= 3: naive +474, corrected +256; floor to 3: naive +2039, corrected -5046
-    D / D_nf: naive 8.946 (6.627); naive, CNR >= 3 (1 frames) n/a (n/a); corrected 0.000 (0.000; calibration 0.000); corrected, CNR >= 3 n/a (n/a; calibration n/a)
+    residual, CNR >= 3: naive +474 (477), corrected +256 (477; calibration 80); floor to 3: naive +2039 (418), corrected -5046 (418; calibration 251)
+    D / D_nf: naive 8.946 (6.627); naive, CNR >= 3 (1 frames) n/a (n/a); corrected at bound; corrected, CNR >= 3 n/a (n/a; calibration n/a)
     alpha: noise-free fit 0.998, naive 1.616, corrected 2.000; D_nf = 5976 nm^2/ns^alpha
     alpha, CNR >= 3: noise-free fit n/a, naive n/a, corrected n/a
   CNR0 5: 7 frames at or above the floor, t <= 0.30 ns, CNR down to 1.44; carrier variance grows 7.1-fold over them; failed fits 0 of 1400
-    residual, CNR >= 3: naive +19, corrected -18; floor to 3: naive +310, corrected -4258
-    D / D_nf: naive 1.500 (0.346); naive, CNR >= 3 (2 frames) n/a (n/a); corrected 0.000 (0.000; calibration 0.000); corrected, CNR >= 3 n/a (n/a; calibration n/a)
+    residual, CNR >= 3: naive +19 (13), corrected -18 (13; calibration 17); floor to 3: naive +310 (89), corrected -4258 (89; calibration 149)
+    D / D_nf: naive 1.500 (0.346); naive, CNR >= 3 (2 frames) n/a (n/a); corrected at bound; corrected, CNR >= 3 n/a (n/a; calibration n/a)
     alpha: noise-free fit 1.011, naive 1.195, corrected 2.000; D_nf = 6159 nm^2/ns^alpha
     alpha, CNR >= 3: noise-free fit n/a, naive n/a, corrected n/a
   CNR0 8: 12 frames at or above the floor, t <= 0.55 ns, CNR down to 1.39; carrier variance grows 12.1-fold over them; failed fits 0 of 2400
-    residual, CNR >= 3: naive +5, corrected -10; floor to 3: naive +430, corrected -3887
-    D / D_nf: naive 1.188 (0.068); naive, CNR >= 3 (4 frames) 1.037 (0.069); corrected 0.077 (0.009; calibration 0.011); corrected, CNR >= 3 0.966 (0.064; calibration 0.058)
+    residual, CNR >= 3: naive +5 (10), corrected -10 (10; calibration 8); floor to 3: naive +430 (104), corrected -3887 (104; calibration 132)
+    D / D_nf: naive 1.188 (0.068); naive, CNR >= 3 (4 frames) 1.037 (0.069); corrected at bound; corrected, CNR >= 3 0.966 (0.064; calibration 0.058)
     alpha: noise-free fit 1.014, naive 1.100, corrected 0.200; D_nf = 6181 nm^2/ns^alpha
     alpha, CNR >= 3: noise-free fit 0.998, naive 1.010, corrected 0.985
   CNR0 15: 20 frames at or above the floor, t <= 0.95 ns, CNR down to 1.36; carrier variance grows 20.1-fold over them; failed fits 0 of 4000
-    residual, CNR >= 3: naive +7, corrected -18; floor to 3: naive +336, corrected -4043
+    residual, CNR >= 3: naive +7 (13), corrected -18 (13; calibration 7); floor to 3: naive +336 (69), corrected -4043 (69; calibration 117)
     D / D_nf: naive 1.057 (0.015); naive, CNR >= 3 (10 frames) 0.993 (0.019); corrected 0.439 (0.008; calibration 0.012); corrected, CNR >= 3 0.959 (0.018; calibration 0.012)
     alpha: noise-free fit 1.017, naive 1.072, corrected 0.359; D_nf = 6212 nm^2/ns^alpha
     alpha, CNR >= 3: noise-free fit 1.012, naive 1.004, corrected 0.982
   CNR0 20: 24 frames at or above the floor, t <= 1.15 ns, CNR down to 1.38; carrier variance grows 24.1-fold over them; failed fits 0 of 4800
-    residual, CNR >= 3: naive +7, corrected -14; floor to 3: naive +229, corrected -3864
+    residual, CNR >= 3: naive +7 (13), corrected -14 (13; calibration 5); floor to 3: naive +229 (84), corrected -3864 (84; calibration 109)
     D / D_nf: naive 1.025 (0.010); naive, CNR >= 3 (13 frames) 1.003 (0.011); corrected 0.609 (0.008; calibration 0.010); corrected, CNR >= 3 0.984 (0.011; calibration 0.006)
     alpha: noise-free fit 1.013, naive 1.045, corrected 0.483; D_nf = 6195 nm^2/ns^alpha
     alpha, CNR >= 3: noise-free fit 1.017, naive 1.019, corrected 1.004
   CNR0 30: 30 frames at or above the floor, t <= 1.45 ns, CNR down to 1.36; carrier variance grows 30.1-fold over them; failed fits 0 of 6000
-    residual, CNR >= 3: naive +25, corrected +7; floor to 3: naive +271, corrected -3984
+    residual, CNR >= 3: naive +25 (14), corrected +7 (14; calibration 5); floor to 3: naive +271 (86), corrected -3984 (86; calibration 97)
     D / D_nf: naive 1.015 (0.004); naive, CNR >= 3 (18 frames) 1.003 (0.006); corrected 0.777 (0.005; calibration 0.006); corrected, CNR >= 3 0.994 (0.006; calibration 0.003)
     alpha: noise-free fit 1.013, naive 1.037, corrected 0.598; D_nf = 6194 nm^2/ns^alpha
     alpha, CNR >= 3: noise-free fit 1.019, naive 1.017, corrected 1.008
   CNR0 50: 38 frames at or above the floor, t <= 1.85 ns, CNR down to 1.34; carrier variance grows 38.1-fold over them; failed fits 0 of 7600
-    residual, CNR >= 3: naive +53, corrected +42; floor to 3: naive +391, corrected -3644
+    residual, CNR >= 3: naive +53 (17), corrected +42 (17; calibration 3); floor to 3: naive +391 (94), corrected -3644 (94; calibration 81)
     D / D_nf: naive 1.010 (0.002); naive, CNR >= 3 (25 frames) 1.012 (0.004); corrected 0.928 (0.003; calibration 0.002); corrected, CNR >= 3 1.009 (0.004; calibration 0.001)
     alpha: noise-free fit 1.018, naive 1.047, corrected 0.729; D_nf = 6199 nm^2/ns^alpha
     alpha, CNR >= 3: noise-free fit 1.012, naive 1.031, corrected 1.027
 
-Br x=0.5: carrier reference alpha = 0.993, D_ref = 2650 nm^2/ns; carrier variance grows 26.3-fold over the 3 ns record
+Br x=0.5: carrier reference alpha = 0.993, D_ref = 2650 nm^2/ns^alpha; carrier variance grows 26.3-fold over the 3 ns record
   CNR0 2: 3 frames at or above the floor, t <= 0.10 ns, CNR down to 1.44; carrier variance grows 1.9-fold over them; failed fits 0 of 600
-    residual, CNR >= 3: naive n/a, corrected n/a; floor to 3: naive +4762, corrected -1688
+    residual, CNR >= 3: naive n/a (n/a), corrected n/a (n/a; calibration n/a); floor to 3: naive +4762 (720), corrected -1688 (720; calibration 243)
     D / D_nf: naive n/a (n/a); naive, CNR >= 3 (0 frames) n/a (n/a); corrected n/a (n/a; calibration n/a); corrected, CNR >= 3 n/a (n/a; calibration n/a)
     alpha: noise-free fit n/a, naive n/a, corrected n/a; D_nf = n/a nm^2/ns^alpha
     alpha, CNR >= 3: noise-free fit n/a, naive n/a, corrected n/a
   CNR0 3: 6 frames at or above the floor, t <= 0.25 ns, CNR down to 1.45; carrier variance grows 3.2-fold over them; failed fits 0 of 1200
-    residual, CNR >= 3: naive +475, corrected +257; floor to 3: naive +1898, corrected -2716
-    D / D_nf: naive 6.250 (4.773); naive, CNR >= 3 (1 frames) n/a (n/a); corrected 0.000 (0.000; calibration 0.000); corrected, CNR >= 3 n/a (n/a; calibration n/a)
+    residual, CNR >= 3: naive +475 (477), corrected +257 (477; calibration 80); floor to 3: naive +1898 (288), corrected -2716 (288; calibration 157)
+    D / D_nf: naive 6.250 (4.773); naive, CNR >= 3 (1 frames) n/a (n/a); corrected at bound; corrected, CNR >= 3 n/a (n/a; calibration n/a)
     alpha: noise-free fit 0.941, naive 1.395, corrected 2.000; D_nf = 2386 nm^2/ns^alpha
     alpha, CNR >= 3: noise-free fit n/a, naive n/a, corrected n/a
   CNR0 5: 12 frames at or above the floor, t <= 0.55 ns, CNR down to 1.32; carrier variance grows 5.7-fold over them; failed fits 0 of 2400
-    residual, CNR >= 3: naive +28, corrected -33; floor to 3: naive +673, corrected -4505
-    D / D_nf: naive 2.089 (0.457); naive, CNR >= 3 (4 frames) 0.903 (0.129); corrected 0.000 (0.000; calibration 0.000); corrected, CNR >= 3 0.486 (0.074; calibration 0.143)
+    residual, CNR >= 3: naive +28 (10), corrected -33 (10; calibration 19); floor to 3: naive +673 (158), corrected -4505 (158; calibration 136)
+    D / D_nf: naive 2.089 (0.457); naive, CNR >= 3 (4 frames) 0.903 (0.129); corrected at bound; corrected, CNR >= 3 0.486 (0.074; calibration 0.143)
     alpha: noise-free fit 0.968, naive 1.436, corrected 2.000; D_nf = 2493 nm^2/ns^alpha
     alpha, CNR >= 3: noise-free fit 0.925, naive 0.847, corrected 0.626
   CNR0 8: 18 frames at or above the floor, t <= 0.85 ns, CNR down to 1.32; carrier variance grows 8.2-fold over them; failed fits 0 of 3600
-    residual, CNR >= 3: naive +28, corrected +5; floor to 3: naive +451, corrected -4484
-    D / D_nf: naive 1.254 (0.062); naive, CNR >= 3 (8 frames) 1.060 (0.044); corrected 0.000 (0.000; calibration 0.000); corrected, CNR >= 3 1.017 (0.043; calibration 0.022)
+    residual, CNR >= 3: naive +28 (9), corrected +5 (9; calibration 8); floor to 3: naive +451 (100), corrected -4484 (100; calibration 129)
+    D / D_nf: naive 1.254 (0.062); naive, CNR >= 3 (8 frames) 1.060 (0.044); corrected at bound; corrected, CNR >= 3 1.017 (0.043; calibration 0.022)
     alpha: noise-free fit 0.981, naive 1.173, corrected 0.200; D_nf = 2526 nm^2/ns^alpha
     alpha, CNR >= 3: noise-free fit 0.953, naive 0.970, corrected 0.957
   CNR0 15: 26 frames at or above the floor, t <= 1.25 ns, CNR down to 1.37; carrier variance grows 11.6-fold over them; failed fits 0 of 5200
-    residual, CNR >= 3: naive +18, corrected +0; floor to 3: naive +301, corrected -3774
-    D / D_nf: naive 1.065 (0.014); naive, CNR >= 3 (15 frames) 1.034 (0.014); corrected 0.360 (0.007; calibration 0.011); corrected, CNR >= 3 1.004 (0.014; calibration 0.010)
+    residual, CNR >= 3: naive +18 (9), corrected +0 (9; calibration 4); floor to 3: naive +301 (64), corrected -3774 (64; calibration 102)
+    D / D_nf: naive 1.065 (0.014); naive, CNR >= 3 (15 frames) 1.034 (0.014); corrected at bound; corrected, CNR >= 3 1.004 (0.014; calibration 0.010)
     alpha: noise-free fit 0.989, naive 1.089, corrected 0.200; D_nf = 2539 nm^2/ns^alpha
     alpha, CNR >= 3: noise-free fit 0.976, naive 1.006, corrected 0.981
   CNR0 20: 30 frames at or above the floor, t <= 1.45 ns, CNR down to 1.39; carrier variance grows 13.3-fold over them; failed fits 0 of 6000
-    residual, CNR >= 3: naive +21, corrected +12; floor to 3: naive +206, corrected -3548
-    D / D_nf: naive 1.029 (0.007); naive, CNR >= 3 (18 frames) 1.025 (0.009); corrected 0.513 (0.007; calibration 0.012); corrected, CNR >= 3 1.017 (0.009; calibration 0.004)
+    residual, CNR >= 3: naive +21 (8), corrected +12 (8; calibration 3); floor to 3: naive +206 (57), corrected -3548 (57; calibration 102)
+    D / D_nf: naive 1.029 (0.007); naive, CNR >= 3 (18 frames) 1.025 (0.009); corrected at bound; corrected, CNR >= 3 1.017 (0.009; calibration 0.004)
     alpha: noise-free fit 0.996, naive 1.048, corrected 0.203; D_nf = 2545 nm^2/ns^alpha
     alpha, CNR >= 3: noise-free fit 0.981, naive 1.010, corrected 1.002
   CNR0 30: 37 frames at or above the floor, t <= 1.80 ns, CNR down to 1.33; carrier variance grows 16.2-fold over them; failed fits 0 of 7400
-    residual, CNR >= 3: naive +13, corrected -2; floor to 3: naive +300, corrected -3981
+    residual, CNR >= 3: naive +13 (8), corrected -2 (8; calibration 4); floor to 3: naive +300 (76), corrected -3981 (76; calibration 92)
     D / D_nf: naive 1.015 (0.003); naive, CNR >= 3 (24 frames) 1.004 (0.004); corrected 0.702 (0.007; calibration 0.008); corrected, CNR >= 3 0.995 (0.004; calibration 0.003)
     alpha: noise-free fit 1.008, naive 1.067, corrected 0.331; D_nf = 2550 nm^2/ns^alpha
     alpha, CNR >= 3: noise-free fit 0.987, naive 0.987, corrected 0.973
   CNR0 50: 45 frames at or above the floor, t <= 2.20 ns, CNR down to 1.37; carrier variance grows 19.6-fold over them; failed fits 0 of 9000
-    residual, CNR >= 3: naive +18, corrected +3; floor to 3: naive +312, corrected -4077
+    residual, CNR >= 3: naive +18 (8), corrected +3 (8; calibration 3); floor to 3: naive +312 (70), corrected -4077 (70; calibration 94)
     D / D_nf: naive 1.004 (0.002); naive, CNR >= 3 (32 frames) 1.005 (0.002); corrected 0.903 (0.004; calibration 0.004); corrected, CNR >= 3 1.001 (0.002; calibration 0.001)
     alpha: noise-free fit 1.014, naive 1.055, corrected 0.492; D_nf = 2550 nm^2/ns^alpha
     alpha, CNR >= 3: noise-free fit 1.000, naive 1.002, corrected 0.991
 
-Br x=0.75: carrier reference alpha = 0.990, D_ref = 2352 nm^2/ns; carrier variance grows 23.4-fold over the 3 ns record
+Br x=0.75: carrier reference alpha = 0.990, D_ref = 2352 nm^2/ns^alpha; carrier variance grows 23.4-fold over the 3 ns record
   CNR0 2: 3 frames at or above the floor, t <= 0.10 ns, CNR down to 1.38; carrier variance grows 1.8-fold over them; failed fits 0 of 600
-    residual, CNR >= 3: naive n/a, corrected n/a; floor to 3: naive +4829, corrected -2105
+    residual, CNR >= 3: naive n/a (n/a), corrected n/a (n/a; calibration n/a); floor to 3: naive +4829 (729), corrected -2105 (729; calibration 258)
     D / D_nf: naive n/a (n/a); naive, CNR >= 3 (0 frames) n/a (n/a); corrected n/a (n/a; calibration n/a); corrected, CNR >= 3 n/a (n/a; calibration n/a)
     alpha: noise-free fit n/a, naive n/a, corrected n/a; D_nf = n/a nm^2/ns^alpha
     alpha, CNR >= 3: noise-free fit n/a, naive n/a, corrected n/a
   CNR0 3: 6 frames at or above the floor, t <= 0.25 ns, CNR down to 1.45; carrier variance grows 2.9-fold over them; failed fits 0 of 1200
-    residual, CNR >= 3: naive +475, corrected +257; floor to 3: naive +2054, corrected -2963
-    D / D_nf: naive 5.048 (4.335); naive, CNR >= 3 (1 frames) n/a (n/a); corrected 0.000 (0.000; calibration 0.000); corrected, CNR >= 3 n/a (n/a; calibration n/a)
+    residual, CNR >= 3: naive +475 (477), corrected +257 (477; calibration 80); floor to 3: naive +2054 (323), corrected -2963 (323; calibration 186)
+    D / D_nf: naive 5.048 (4.335); naive, CNR >= 3 (1 frames) n/a (n/a); corrected at bound; corrected, CNR >= 3 n/a (n/a; calibration n/a)
     alpha: noise-free fit 0.941, naive 1.182, corrected 2.000; D_nf = 2145 nm^2/ns^alpha
     alpha, CNR >= 3: noise-free fit n/a, naive n/a, corrected n/a
   CNR0 5: 12 frames at or above the floor, t <= 0.55 ns, CNR down to 1.41; carrier variance grows 5.2-fold over them; failed fits 0 of 2400
-    residual, CNR >= 3: naive +27, corrected -53; floor to 3: naive +718, corrected -4121
-    D / D_nf: naive 2.479 (0.585); naive, CNR >= 3 (4 frames) 0.908 (0.137); corrected 0.000 (0.000; calibration 0.000); corrected, CNR >= 3 0.402 (0.068; calibration 0.157)
+    residual, CNR >= 3: naive +27 (9), corrected -53 (9; calibration 22); floor to 3: naive +718 (163), corrected -4121 (163; calibration 123)
+    D / D_nf: naive 2.479 (0.585); naive, CNR >= 3 (4 frames) 0.908 (0.137); corrected at bound; corrected, CNR >= 3 0.402 (0.068; calibration 0.157)
     alpha: noise-free fit 0.959, naive 1.563, corrected 2.000; D_nf = 2213 nm^2/ns^alpha
     alpha, CNR >= 3: noise-free fit 0.917, naive 0.840, corrected 0.563
   CNR0 8: 19 frames at or above the floor, t <= 0.90 ns, CNR down to 1.36; carrier variance grows 7.8-fold over them; failed fits 0 of 3800
-    residual, CNR >= 3: naive +26, corrected -5; floor to 3: naive +400, corrected -4040
-    D / D_nf: naive 1.230 (0.063); naive, CNR >= 3 (8 frames) 1.066 (0.045); corrected 0.000 (0.000; calibration 0.000); corrected, CNR >= 3 0.930 (0.038; calibration 0.050)
+    residual, CNR >= 3: naive +26 (8), corrected -5 (8; calibration 8); floor to 3: naive +400 (88), corrected -4040 (88; calibration 98)
+    D / D_nf: naive 1.230 (0.063); naive, CNR >= 3 (8 frames) 1.066 (0.045); corrected at bound; corrected, CNR >= 3 0.930 (0.038; calibration 0.050)
     alpha: noise-free fit 0.968, naive 1.145, corrected 0.200; D_nf = 2233 nm^2/ns^alpha
     alpha, CNR >= 3: noise-free fit 0.954, naive 0.975, corrected 0.904
   CNR0 15: 28 frames at or above the floor, t <= 1.35 ns, CNR down to 1.35; carrier variance grows 11.2-fold over them; failed fits 0 of 5600
-    residual, CNR >= 3: naive +23, corrected +5; floor to 3: naive +418, corrected -3880
-    D / D_nf: naive 1.083 (0.014); naive, CNR >= 3 (16 frames) 1.039 (0.012); corrected 0.346 (0.009; calibration 0.014); corrected, CNR >= 3 1.009 (0.012; calibration 0.010)
+    residual, CNR >= 3: naive +23 (8), corrected +5 (8; calibration 5); floor to 3: naive +418 (74), corrected -3880 (74; calibration 114)
+    D / D_nf: naive 1.083 (0.014); naive, CNR >= 3 (16 frames) 1.039 (0.012); corrected at bound; corrected, CNR >= 3 1.009 (0.012; calibration 0.010)
     alpha: noise-free fit 0.988, naive 1.146, corrected 0.200; D_nf = 2257 nm^2/ns^alpha
     alpha, CNR >= 3: noise-free fit 0.963, naive 0.998, corrected 0.971
   CNR0 20: 33 frames at or above the floor, t <= 1.60 ns, CNR down to 1.34; carrier variance grows 13.0-fold over them; failed fits 0 of 6600
-    residual, CNR >= 3: naive +25, corrected +7; floor to 3: naive +339, corrected -4066
-    D / D_nf: naive 1.036 (0.008); naive, CNR >= 3 (20 frames) 1.023 (0.008); corrected 0.495 (0.009; calibration 0.011); corrected, CNR >= 3 1.005 (0.007; calibration 0.006)
+    residual, CNR >= 3: naive +25 (8), corrected +7 (8; calibration 4); floor to 3: naive +339 (83), corrected -4066 (83; calibration 102)
+    D / D_nf: naive 1.036 (0.008); naive, CNR >= 3 (20 frames) 1.023 (0.008); corrected at bound; corrected, CNR >= 3 1.005 (0.007; calibration 0.006)
     alpha: noise-free fit 0.994, naive 1.093, corrected 0.200; D_nf = 2261 nm^2/ns^alpha
     alpha, CNR >= 3: noise-free fit 0.970, naive 0.995, corrected 0.974
   CNR0 30: 39 frames at or above the floor, t <= 1.90 ns, CNR down to 1.37; carrier variance grows 15.2-fold over them; failed fits 0 of 7800
-    residual, CNR >= 3: naive +14, corrected +6; floor to 3: naive +519, corrected -3638
+    residual, CNR >= 3: naive +14 (7), corrected +6 (7; calibration 1); floor to 3: naive +519 (95), corrected -3638 (95; calibration 87)
     D / D_nf: naive 1.013 (0.003); naive, CNR >= 3 (26 frames) 1.005 (0.004); corrected 0.754 (0.008; calibration 0.008); corrected, CNR >= 3 1.001 (0.004; calibration 0.001)
     alpha: noise-free fit 0.999, naive 1.128, corrected 0.363; D_nf = 2262 nm^2/ns^alpha
     alpha, CNR >= 3: noise-free fit 0.984, naive 0.988, corrected 0.981
   CNR0 50: 48 frames at or above the floor, t <= 2.35 ns, CNR down to 1.34; carrier variance grows 18.6-fold over them; failed fits 0 of 9600
-    residual, CNR >= 3: naive +14, corrected +3; floor to 3: naive +408, corrected -3912
+    residual, CNR >= 3: naive +14 (8), corrected +3 (8; calibration 3); floor to 3: naive +408 (77), corrected -3912 (77; calibration 86)
     D / D_nf: naive 0.999 (0.004); naive, CNR >= 3 (34 frames) 1.004 (0.002); corrected 0.928 (0.004; calibration 0.004); corrected, CNR >= 3 1.001 (0.002; calibration 0.001)
     alpha: noise-free fit 1.006, naive 1.065, corrected 0.474; D_nf = 2261 nm^2/ns^alpha
     alpha, CNR >= 3: noise-free fit 0.996, naive 0.996, corrected 0.987
