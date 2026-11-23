@@ -37,6 +37,23 @@ keeps 0.61 to 1 of CNR_0, so no cut can select good frames and the late frames
 do not dominate the bias; the question is whether the correction is then the
 only way to an unbiased D. Its seeds have their own root (+500,000).
 
+``--spread-dims 1`` (or 2) evaluates with a peak that also falls as the profile
+spreads (``Experiment.spread_dims``: 1 a summed profile, 2 a centre cut),
+instead of with decay alone. The calibration stays at D = 0, where the profile
+does not spread, so its frames are those of the decay-only bed. A falling peak
+puts the late frames at a lower per-frame CNR than the calibration reached
+(by sigma_0 / sigma for a summed profile), so the lookup would read its edge
+value there; each geometry therefore names the CNR_0 points
+(``spread_cal_extra``) that extend its calibration grid down, and the script
+stops before calibrating if a frame kept at CNR >= 1 would still lie below the
+calibrated range. The added points go after the existing ones, so every
+existing point keeps its seed.
+
+``--cal-runs N`` sets the calibration runs per CNR_0 apart from the evaluation
+runs per cell. Each realization draws from its own child of the cell's seed,
+so a calibration of N runs contains the runs of every smaller one on the same
+seeds: a 5000-run lookup holds the 300 (or 2000) runs of the default.
+
 Statistics, and why they take this form:
 
 * Seeds are offset by 10^6 per shape (and calibration and evaluation seeds are
@@ -64,13 +81,21 @@ Statistics, and why they take this form:
   with an independent calibration of the same budget would see.
 
     $env:WIDTH_DEBIAS_WORKERS = 0
-    .venv/Scripts/python.exe experiments/dfree-calibration/validate_d_zero.py [--short-window] [spec ...]
+    .venv/Scripts/python.exe experiments/dfree-calibration/validate_d_zero.py
+        [--short-window] [--spread-dims {1,2}] [--cal-runs N] [spec ...]
+    .venv/Scripts/python.exe experiments/dfree-calibration/validate_d_zero.py --report <npz> [...]
 
-With no spec, runs the four validation shapes. Reports go to repo-root
-``output/dfree-calibration/validate_d_zero[_short]_<shape>.txt``.
+With no spec, runs the four validation shapes. Each shape's cell statistics go
+to repo-root ``output/dfree-calibration/validate_d_zero<tag>_<shape>.npz``, its
+report to the ``.txt`` beside it, and its calibration to ``..._lookup.npz``
+(``BiasLookup.load`` reads it), where ``<tag>`` is ``_short`` for the short
+window, then ``_spread<d>`` and ``_cal<N>`` when those options are set.
+``--report`` rebuilds the reports from saved ``.npz`` files without rerunning,
+so a table can be regenerated from statistics computed on another machine.
 """
 from __future__ import annotations
 
+import argparse
 import os
 import sys
 import time
@@ -96,9 +121,12 @@ class Geometry:
     d_values: tuple
     seed_offset: int
     n_runs: int                  # calibration runs per CNR_0, and evaluation runs per cell
+    spread_cal_extra: tuple = ()  # CNR_0 points added to the calibration under a falling peak
 
 
 # The standard bed: a 3 tau window, so the per-frame CNR falls about 20-fold.
+# Its calibration reaches per-frame CNR 0.25, far below the floor, so a falling
+# peak needs no extra calibration point.
 STANDARD = Geometry("", 3.0, np.array([5.0, 8.0, 13.0, 21.0, 34.0, 55.0, 90.0]),
                     (0.005, 0.01, 0.02, 0.05, 0.1), 0, 300)
 # A dim or fragile sample measured only at early times: a 0.5 tau window, so
@@ -106,13 +134,17 @@ STANDARD = Geometry("", 3.0, np.array([5.0, 8.0, 13.0, 21.0, 34.0, 55.0, 90.0]),
 # D up to 0.2 keeps the diffusion length over the window at 0.06 to 0.19 FWHM.
 # One measurement's spread reaches several D at CNR_0 2, so resolving a bias of
 # a fraction of D takes 2000 runs per cell (evaluation SE about 0.1 D there).
+# Its calibration reaches only per-frame CNR 1.21, where the decay-only bed's
+# last frame at CNR_0 2 sits; a summed-profile peak takes that frame to 1.11
+# at D = 0.2, so CNR_0 1.8 (reaching 1.09) is added under a falling peak.
 SHORT_WINDOW = Geometry("_short", 0.5, np.array([2.0, 3.0, 4.0, 6.0, 8.0, 12.0]),
-                        (0.02, 0.05, 0.1, 0.2), 500_000, 2000)
+                        (0.02, 0.05, 0.1, 0.2), 500_000, 2000, (1.8,))
 
 N_REPLICATES = (10, 100)     # for the RMS error of an averaged measurement
+FLOOR = 1.0                  # the per-frame CNR below which frames are dropped
 ARMS = (  # (scheme, per-frame CNR cut or None, label)
     ("subtract", None, "corrected, all frames"),
-    ("subtract", 1.0, "corrected, CNR >= 1"),
+    ("subtract", FLOOR, "corrected, CNR >= 1"),
     ("inverse_variance", 3.0, "naive, CNR >= 3"),
     ("inverse_variance", 2.0, "naive, CNR >= 2"),
     ("inverse_variance", None, "naive, all frames"),
@@ -126,6 +158,32 @@ def _seeds(shape_index: int, geometry: Geometry) -> tuple[int, int]:
     """(calibration, evaluation) seed roots; sweeps add 0..6 and 1000 per D."""
     base = 10 ** 6 * shape_index + geometry.seed_offset
     return base + 1, base + 20000
+
+
+def _evaluation_experiment(d_true: float, geometry: Geometry, spread_dims: int | None,
+                           model) -> Experiment:
+    """The evaluation bed; a falling peak needs the profile's Lorentzian half-width."""
+    if spread_dims is None:
+        return Experiment(D=d_true, t_max=geometry.t_max)
+    return Experiment(D=d_true, t_max=geometry.t_max, spread_dims=spread_dims,
+                      psf_hwhm=getattr(model, "gamma", 0.0))      # VoigtModel only
+
+
+def _cnr_coverage(geometry: Geometry, cal_grid: np.ndarray, spread_dims: int | None,
+                  model) -> tuple[float, float, float]:
+    """(lowest calibrated CNR, lowest frame CNR kept at the floor, lowest frame CNR).
+
+    Per-frame CNRs of the noise-free beds: run_ensemble reads the CNR from the
+    noise-free peak, so these are the CNRs the lookup is evaluated at.
+    """
+    cal_exp = Experiment(D=0.0, t_max=geometry.t_max)
+    lowest_calibrated = float(cal_grid.min() * np.min(cal_exp.amplitude) / cal_exp.amplitude0)
+    frames = np.concatenate([
+        cnr0 * exp.amplitude / exp.amplitude0
+        for exp in (_evaluation_experiment(d, geometry, spread_dims, model)
+                    for d in geometry.d_values)
+        for cnr0 in geometry.cnr0_grid])
+    return lowest_calibrated, float(frames[frames >= FLOOR].min()), float(frames.min())
 
 
 def _cell(exp: Experiment, ens, model, scheme: str,
@@ -165,31 +223,57 @@ def _pooled(bias: np.ndarray, eval_se: np.ndarray, cal_se: np.ndarray) -> tuple[
 
 
 def _table(lines: list[str], title: str, values: np.ndarray, fmt: str,
-           geometry: Geometry) -> None:
+           cnr0_grid: np.ndarray, d_values: np.ndarray) -> None:
     lines.append(title)
     lines.append("  D_true  " + "".join(f"{'CNR0=' + format(c, 'g'):>10}"
-                                        for c in geometry.cnr0_grid))
-    for k, d in enumerate(geometry.d_values):
+                                        for c in cnr0_grid))
+    for k, d in enumerate(d_values):
         lines.append(f"  {d:6.4f}  " + "".join(format(v, fmt) for v in values[k]))
     lines.append("")
 
 
-def run_shape(spec: str, geometry: Geometry) -> None:
+def _output_stem(spec: str, geometry: Geometry, spread_dims: int | None, cal_runs: int) -> str:
+    """Output path without extension; a string, since a tag such as ``_p1.5`` is no suffix."""
+    tag = geometry.suffix
+    if spread_dims is not None:
+        tag += f"_spread{spread_dims}"
+    if cal_runs != geometry.n_runs:
+        tag += f"_cal{cal_runs}"
+    return str(OUT / f"validate_d_zero{tag}_{spec_tag(spec)}")
+
+
+def run_shape(spec: str, geometry: Geometry, spread_dims: int | None = None,
+              cal_runs: int | None = None) -> Path:
+    """Calibrate, evaluate every cell under every arm, save the statistics, and report."""
     shape_index = SHAPES.index(spec) if spec in SHAPES else None
     if shape_index is None:
         sys.exit(f"unknown shape {spec!r}; expected one of {SHAPES}")
     model = model_from_spec(spec)
+    cal_runs = geometry.n_runs if cal_runs is None else cal_runs
     cal_seed, eval_seed = _seeds(shape_index, geometry)
     grid, d_values = geometry.cnr0_grid, geometry.d_values
+    extra = np.array(geometry.spread_cal_extra if spread_dims is not None else (), float)
+    cal_grid = np.concatenate([grid, extra])
+    lowest_calibrated, lowest_kept, lowest_frame = _cnr_coverage(geometry, cal_grid,
+                                                                 spread_dims, model)
+    if lowest_kept < lowest_calibrated:
+        sys.exit(f"{spec}: a frame kept at CNR >= {FLOOR:g} reaches per-frame CNR "
+                 f"{lowest_kept:.3f}, below the calibrated range (from {lowest_calibrated:.3f}); "
+                 "extend the geometry's spread_cal_extra")
+    stem = _output_stem(spec, geometry, spread_dims, cal_runs)
+    OUT.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
-    trunc = calibrate_d_free(grid, t_max=geometry.t_max, n_runs=geometry.n_runs, seed=cal_seed,
+    trunc = calibrate_d_free(cal_grid, t_max=geometry.t_max, n_runs=cal_runs, seed=cal_seed,
                              model=model)
+    # Saved whole (SE and frame-variance grids included), so a costly
+    # calibration can be read again without rerunning it.
+    trunc.save(Path(stem + "_lookup.npz"))
     print(f"{spec}: D=0 calibration {time.time() - t0:.0f} s", flush=True)
 
     # (arm, D, CNR_0, statistic): mean, evaluation SE, calibration SE, spread
     res = np.full((len(ARMS), len(d_values), grid.size, 4), np.nan)
     for k, d_true in enumerate(d_values):
-        exp = Experiment(D=d_true, t_max=geometry.t_max)
+        exp = _evaluation_experiment(d_true, geometry, spread_dims, model)
         for i, cnr0 in enumerate(grid):
             ens = run_ensemble(exp, float(cnr0), n_runs=geometry.n_runs,
                                seed=eval_seed + 1000 * k + i, model=model)
@@ -197,32 +281,65 @@ def run_shape(spec: str, geometry: Geometry) -> None:
                 res[a, k, i] = _cell(exp, ens, trunc, scheme, cut)
         print(f"{spec}: D = {d_true:g} {time.time() - t0:.0f} s", flush=True)
 
+    np.savez(stem + ".npz", res=res, spec=spec, suffix=geometry.suffix,
+             t_max=geometry.t_max, cnr0_grid=grid, d_values=np.array(d_values),
+             cal_grid=cal_grid, n_extra=extra.size, cal_runs=cal_runs, n_runs=geometry.n_runs,
+             cal_seed=cal_seed, eval_seed=eval_seed,
+             spread_dims=0 if spread_dims is None else spread_dims,
+             lowest_calibrated=lowest_calibrated, lowest_kept=lowest_kept,
+             lowest_frame=lowest_frame, elapsed=time.time() - t0)
+    return write_report(Path(stem + ".npz"))
+
+
+def write_report(npz_path: Path) -> Path:
+    """Build a shape's report from its saved cell statistics; write it beside the ``.npz``."""
+    z = np.load(npz_path)
+    res, spec = z["res"], str(z["spec"])
+    grid, d_values, cal_grid = z["cnr0_grid"], z["d_values"], z["cal_grid"]
+    n_extra, spread_dims = int(z["n_extra"]), int(z["spread_dims"])
     lines = [
         f"D=0 calibration applied to all D_true values ({spec}; window t_max = "
-        f"{geometry.t_max:g} tau)",
-        f"calibrate_d_free, CNR0 {', '.join(f'{c:g}' for c in grid)}, {geometry.n_runs} runs, "
-        f"seed {cal_seed}; evaluation {geometry.n_runs} runs per cell, seeds {eval_seed} + 1000 k + i; "
-        "library slope weights; every arm uses the same realizations",
-        "",
+        f"{float(z['t_max']):g} tau)",
+        f"calibrate_d_free, CNR0 {', '.join(f'{c:g}' for c in cal_grid)}, {int(z['cal_runs'])} "
+        f"runs, seed {int(z['cal_seed'])}; evaluation {int(z['n_runs'])} runs per cell, seeds "
+        f"{int(z['eval_seed'])} + 1000 k + i; library slope weights; every arm uses the same "
+        "realizations",
     ]
+    if spread_dims:
+        kind = "a summed profile" if spread_dims == 1 else "a centre cut"
+        lines.append(f"peak falls with spreading (spread_dims = {spread_dims}, {kind}); the D = 0 "
+                     "calibration does not spread")
+    lowest_calibrated = float(z["lowest_calibrated"])
+    if n_extra:
+        added = ", ".join(f"{c:g}" for c in cal_grid[-n_extra:])
+        lines.append(f"calibration grid extended by CNR0 {added} (the last seeds), so that "
+                     f"every frame kept at CNR >= {FLOOR:g} lies inside the calibrated range "
+                     f"(lowest kept {float(z['lowest_kept']):.3f}, lowest calibrated "
+                     f"{lowest_calibrated:.3f})")
+    if float(z["lowest_frame"]) < lowest_calibrated * (1.0 - 1e-12):
+        lines.append(f"the arms without a cut read the lookup's edge value for frames below "
+                     f"CNR {lowest_calibrated:.3f} (lowest frame {float(z['lowest_frame']):.3f})")
+    lines.append("")
     for a, (_, _, label) in enumerate(ARMS):
         mean, eval_se, cal_se, spread = (res[a, ..., j] for j in range(4))
         bias = mean - 1.0
         comb = np.sqrt(eval_se ** 2 + cal_se ** 2)
-        z = bias / comb
+        z_score = bias / comb
         lines.append("=" * 78)
         lines.append(f"--- {label}")
-        lines.append(f"cells beyond 2 combined SE: {int(np.nansum(np.abs(z) > 2))} of "
-                     f"{int(np.isfinite(z).sum())} (one calibration per shape, so the cells "
+        lines.append(f"cells beyond 2 combined SE: {int(np.nansum(np.abs(z_score) > 2))} of "
+                     f"{int(np.isfinite(z_score).sum())} (one calibration per shape, so the cells "
                      "share its error)")
         lines.append("")
-        _table(lines, "mean D/D_ref", mean, "10.3f", geometry)
-        _table(lines, "evaluation SE (spread / sqrt(runs per cell))", eval_se, "10.3f", geometry)
+        _table(lines, "mean D/D_ref", mean, "10.3f", grid, d_values)
+        _table(lines, "evaluation SE (spread / sqrt(runs per cell))", eval_se, "10.3f",
+               grid, d_values)
         if np.nanmax(cal_se, initial=0.0) > 0:
-            _table(lines, "calibration SE (propagated lookup error)", cal_se, "10.3f", geometry)
-        _table(lines, "(D/D_ref - 1) / combined SE", z, "10.2f", geometry)
+            _table(lines, "calibration SE (propagated lookup error)", cal_se, "10.3f",
+                   grid, d_values)
+        _table(lines, "(D/D_ref - 1) / combined SE", z_score, "10.2f", grid, d_values)
         _table(lines, "spread of D/D_ref over realizations (one measurement)", spread, "10.3f",
-               geometry)
+               grid, d_values)
         if not np.isfinite(bias).any():
             lines.append("no cell leaves enough frames for a fit under this arm")
             lines.append("")
@@ -258,11 +375,11 @@ def run_shape(spec: str, geometry: Geometry) -> None:
                      "bias^2 = max((D/D_ref - 1)^2 - evaluation SE^2, 0)")
         lines.append("")
         for a, (_, _, label) in enumerate(ARMS):
-            _table(lines, f"[{label}]", rmse[a], "10.3f", geometry)
+            _table(lines, f"[{label}]", rmse[a], "10.3f", grid, d_values)
         for competitor in COMPETITORS:
             _table(lines, f"ratio of RMS errors ({title}), {competitor} / corrected, CNR >= 1 "
                           "(> 1: the correction is better; nan: the cut leaves no fit)",
-                   rmse[labels.index(competitor)] / rmse[ref], "10.2f", geometry)
+                   rmse[labels.index(competitor)] / rmse[ref], "10.2f", grid, d_values)
 
     # Measurements to average before the bias outweighs the statistical error of
     # their mean, spread^2 / bias^2; only where the bias is resolved, since an
@@ -276,21 +393,35 @@ def run_shape(spec: str, geometry: Geometry) -> None:
     lines.append("(nan: bias within 2 combined SE, or no fit)")
     lines.append("")
     for a, (_, _, label) in enumerate(ARMS):
-        _table(lines, f"[{label}]", n_cross[a], "10.0f", geometry)
-    lines.append(f"[total: {time.time() - t0:.0f} s]")
+        _table(lines, f"[{label}]", n_cross[a], "10.0f", grid, d_values)
+    lines.append(f"[total: {float(z['elapsed']):.0f} s]")
     report = "\n".join(lines)
     print(report)
-    OUT.mkdir(parents=True, exist_ok=True)
-    (OUT / f"validate_d_zero{geometry.suffix}_{spec_tag(spec)}.txt").write_text(
-        report + "\n", encoding="utf-8")
+    path = Path(str(npz_path).removesuffix(".npz") + ".txt")
+    path.write_text(report + "\n", encoding="utf-8")
+    return path
 
 
 def main() -> None:
-    args = sys.argv[1:]
-    geometry = SHORT_WINDOW if "--short-window" in args else STANDARD
-    specs = [a for a in args if a != "--short-window"] or SHAPES
-    for spec in specs:
-        run_shape(spec, geometry)
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("specs", nargs="*", default=list(SHAPES),
+                        help="model specs (default: the four validation shapes)")
+    parser.add_argument("--short-window", action="store_true",
+                        help="the 0.5 tau window at CNR0 2 to 12")
+    parser.add_argument("--spread-dims", type=int, choices=(1, 2),
+                        help="evaluate with a peak that falls as the profile spreads")
+    parser.add_argument("--cal-runs", type=int,
+                        help="calibration runs per CNR0 (default: the evaluation runs per cell)")
+    parser.add_argument("--report", nargs="+", type=Path, metavar="NPZ",
+                        help="rebuild reports from saved statistics instead of running")
+    args = parser.parse_args()
+    if args.report:
+        for path in args.report:
+            write_report(path)
+        return
+    geometry = SHORT_WINDOW if args.short_window else STANDARD
+    for spec in args.specs:
+        run_shape(spec, geometry, args.spread_dims, args.cal_runs)
 
 
 if __name__ == "__main__":
