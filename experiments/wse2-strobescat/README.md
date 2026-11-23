@@ -43,34 +43,28 @@ establish what the correction does on real measurements.
 The calibration (`calibrate_d_free`) is keyed on the exact per-frame CNR, which
 simulation knows. This pipeline keys the correction on the CNR that `fft-cnr`
 estimates from each frame, and that key sets three things at once: the
-subtracted bias, the weight, and the floor cut. The combination was tested in
-a separate simulation study (Gaussian, Voigt, and generalized-Gaussian p = 1.5
-and p = 4 profiles, D 0.005 to 0.1, CNR_0 5 to 90, 300 runs per cell).
+subtracted bias, the weight, and the floor cut. An external simulation study
+tested the combination on the four validation shapes.
 
-- **Where the per-frame key holds.** With the exact key, the corrected mean D
-  is within 0.85 to 1.15 of the reference in every cell from CNR_0 5 to 8 at
-  D = 0.02. With the estimated key, it holds only where every fitted frame stays
-  well above the floor: from CNR_0 about 34 at D = 0.02 (about 55 for the
-  heavy-tailed p = 1.5 profile, 13 for p = 4) and from CNR_0 about 21 at
-  D >= 0.05. Below that, the pooled Gaussian mean at D = 0.02 over CNR_0 8 to 90
-  is 1.9 (standard error 0.4).
-- **Why.** Random key error of up to 0.2 of the CNR per frame is tolerated. The
-  estimate is not random about the exact value near the floor: it reads 0.89 to
-  0.97 of the exact CNR at CNR 1 to 2, scatters by 0.6 to 0.9 of the value below
-  CNR 1, and reads about twice the exact value below CNR 0.5. Frames near the
-  floor are therefore over-corrected, and frames below it are admitted and
-  under-corrected. The key and the width also come from the same frame, and
-  their errors are correlated (a frame whose CNR reads high has a width that
-  reads low; correlation -0.1 to -0.3).
-- **What does not fix it.** A stricter floor on the estimate (2 or 3)
-  over-subtracts on every shape except p = 4, because the frames it keeps are
-  the ones whose estimate reads high. Dropping frames whose CNR interval
-  includes zero removes 0.31 to 0.45 of the frames at CNR 1 to 2, selectively,
-  and still over-subtracts on the non-Gaussian profiles. A calibration keyed on
-  the estimate transfers poorly between distributions of true CNR.
-- **Cross-fitted key.** A cross-fitted key (frame t's CNR predicted from the
-  other frames by a robust straight-line fit of log CNR against time) matches
-  the exact key from CNR_0 13 on all four shapes. It adds a decay-trend model
+- **Where the per-frame key holds.** With the exact key, which the validations
+  in this repository use, the correction holds down to the floor
+  (`experiments/dfree-calibration`). With the estimated key, it holds only where
+  every fitted frame stays well above the floor; how far above depends on the
+  profile shape and the diffusion length.
+- **Why.** Random error in the key is tolerated; a key that is not random about
+  the exact value is not. Near the floor the estimate is imprecise in that way,
+  so frames near the floor are corrected by the wrong amount and frames below
+  it can be admitted. The key and the width also come from the same frame, and
+  their errors are correlated: a frame whose CNR reads high has a width that
+  reads low.
+- **What does not fix it.** A stricter floor on the estimate, or dropping frames
+  whose CNR interval includes zero, selects frames by the same estimate, so
+  neither removes the cause. A calibration keyed on the estimate depends on the
+  distribution of true CNR it was built on, so it transfers poorly between
+  measurements.
+- **Cross-fitted key.** A key predicted for frame t from the other frames (a
+  robust straight-line fit of log CNR against time) does not share the frame's
+  own noise, so it separates the two causes above. It adds a decay-trend model
   with its own assumptions, so it serves as a check of the cause, and the
   pipeline keys on the per-frame estimate.
 - **On the measured scans the effect is small**: only 0.035 of the retained
