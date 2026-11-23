@@ -113,13 +113,12 @@ calibration's geometry but does not check it against the data.
   nearest grid edge, and `msd_and_weights` then issues a
   `CalibrationRangeWarning`.
 - **The estimated CNR holds over a narrower range.** With the CNR estimated
-  from each frame by `fft-cnr` instead of known, the corrected mean D holds in
-  simulation only where every fitted frame stays well above the floor: from an
-  initial CNR of about 34 at D = 0.02 sigma_0^2/tau for the Gaussian profile
-  (about 55 for p = 1.5 and 13 for p = 4), and from about 21 at D >= 0.05.
-  Below that, the pooled Gaussian mean at D = 0.02 over initial CNR 8 to 90 is
-  1.9 of the reference (standard error 0.4). See
-  [`experiments/wse2-strobescat`](https://github.com/thiebes/width-debias/tree/v0.4.1/experiments/wse2-strobescat).
+  from each frame by `fft-cnr` instead of known, the estimate is imprecise near
+  the floor and its error is correlated with the width error, so the corrected
+  mean D holds in simulation only where every fitted frame stays well above the
+  floor. How far above depends on the profile shape and the diffusion length.
+  See
+  [`experiments/wse2-strobescat`](https://github.com/thiebes/width-debias/tree/master/experiments/wse2-strobescat).
 - **Estimate the CNR on the spot.** Cut each profile to about ±4 sigma_0 around
   the spot before calling `per_frame_cnr`. Background and fringe structure in a
   full line cut corrupts the spectral CNR estimate at low signal.
