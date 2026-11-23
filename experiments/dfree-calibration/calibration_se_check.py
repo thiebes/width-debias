@@ -265,7 +265,7 @@ def external_triple(models, full_means, p2, ecnr, evar) -> None:
     """Rank draw 0 with two external calibrations (seeds 101, 201) among the draws.
 
     Seed 1 is draw 0 here; the calibrations at seeds 101 and 201 come from an
-    external study on the same grid, read from the directory that
+    external simulation study on the same grid, read from the directory that
     ``WIDTH_DEBIAS_EXTERNAL_RESULTS`` names. They carry ``framevar_grid``, so
     they are scored with the same per-frame weights as the draws here.
     """

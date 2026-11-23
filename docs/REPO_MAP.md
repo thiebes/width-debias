@@ -90,6 +90,14 @@ pshare source:
 | wse2-strobescat | `P:\Lab\Enrique\lab\MultiChannelData\` (+ `P:\jthiebes\WIP\realdata_bias_diagnostics`) |
 | cspbbr-strobescat | `P:/Upasana/CsPbBr_SingleCrystal/Sample_1` |
 | zhang-qd-control | published-paper data (committed CSVs) |
+| fft-cnr-recovery | external simulation study (not distributed; location not recorded; committed summary) |
+
+Three scripts read an external simulation study's result files from the
+directory that `WIDTH_DEBIAS_EXTERNAL_RESULTS` names, which has no default:
+`experiments/fft-cnr-recovery/build_fft_cnr_recovery_figure.py` (only when its
+committed summary is missing), `experiments/dfree-calibration/calibration_se_check.py
+analyse` (an optional section of its table) and `scripts/poster_figures.py` (a
+fallback for one panel). Each names the file it needs when that file is missing.
 
 Collaborator data is referenced by pointer only; it is not copied into the
 repository.

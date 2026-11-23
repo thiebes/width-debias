@@ -30,6 +30,7 @@ Windows. Outputs go to `output/` with matching base names.
   per-experiment render scripts import. No figures here.
 - **`poster_figures.py`** -- renders the summary figures by importing each
   figure's builder from its home (schematics in `illustrations/`, data figures in
-  their experiments). It defines only the two fft-cnr recovery figures, which
-  read an external simulation study's results (`WIDTH_DEBIAS_EXTERNAL_RESULTS`).
+  their experiments). It defines only the two fft-cnr recovery figures, whose
+  sweeps come from `poster_fftcnr_dense.py`; Panel 4 falls back to an external
+  simulation study's sweep (`WIDTH_DEBIAS_EXTERNAL_RESULTS`).
 - **`poster_fftcnr_dense.py`** -- the dense fft-cnr recovery-ratio figure.

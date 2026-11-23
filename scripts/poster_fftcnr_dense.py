@@ -1,7 +1,7 @@
 """Dense CNR-recovery sweep for the poster's fft-cnr panel (Panel 4).
 
-An external simulation study of fft-cnr ran this sweep on a
-coarse six-point CNR grid ([2, 5, 10, 20, 50, 100]); the poster's ratio plot
+An external simulation study of fft-cnr ran this sweep on a coarse six-point
+CNR grid ([2, 5, 10, 20, 50, 100]); the poster's ratio plot
 (recovered / true CNR) reads as six connected dots. This reproduces the same
 experiment on a dense log-spaced CNR grid so the median curve and its
 interquartile band are smooth, and writes a poster-specific npz so the
@@ -63,7 +63,7 @@ N_TRIALS = 500
 
 
 def make_clean(shape: str) -> np.ndarray:
-    """Noise-free, peak-normalized profile of a shape, as the external sweep defines it."""
+    """Noise-free, peak-normalized profile, shaped as in the external sweep."""
     x = np.arange(N, dtype=float)
     center = (N - 1) / 2.0
     if shape == "Gaussian (p=2)":

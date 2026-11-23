@@ -36,7 +36,8 @@ divided by sqrt(CRLB), for three arms:
   coincide with the current package.
 
 Each arm is computed with every frame and with frames below per-frame CNR 1
-dropped (the floor the validations use). A ratio of 1 is efficient. The bound holds
+dropped (the floor that ``validate_d_zero.py`` uses). A ratio of 1 is efficient.
+The bound holds
 for unbiased estimators, and the corrected D is unbiased within its SE across
 this grid (``docs/DERIVATION.md`` section 8), so the comparison is fair.
 
