@@ -47,8 +47,10 @@ The power-law fit bounds the exponent to [0.2, 2.0]. An arm whose exponent
 ends within 0.01 of a bound is printed "at bound" in place of its D: its D
 is then set by the bound, and its resampled SE collapses
 (``experiments/subdiffusive-alpha`` leaves such cells out for the same
-reason). Residuals carry SEs from the same seed resamples and lookup draws
-as D.
+reason). A frame's residual is its fitted variance, averaged over the
+seeds, minus the variance fitted to the same frame's noise-free profile; a
+band's residual is its mean over the band's frames, with SEs from the same
+seed resamples and lookup draws as D.
 
 Run from the repository root (needs the pshare for the maps)::
 
@@ -401,8 +403,9 @@ def write_report(results: list[CaseResult], n_frames: int, t_max: float,
         f"{STRICT_CNR:g} (naive, CNR >= {STRICT_CNR:g}; corrected, CNR >= "
         f"{STRICT_CNR:g}), each divided by the noise-free fit's D over the same frames",
         f"SE of D and of the residuals: (seeds, from {N_BOOT} resamples; calibration, "
-        f"from {N_CAL_DRAWS} draws of the lookup's own error); residuals in nm^2, "
-        "signed mean over the band's frames, against the noise-free fit",
+        f"from {N_CAL_DRAWS} draws of the lookup's own error); residuals in nm^2: "
+        "the seed-mean fitted variance minus the variance fitted to the same frame's "
+        "noise-free profile, signed mean over the band's frames",
         f"an arm whose exponent ends within {BOUND_TOL:g} of a fit bound "
         f"({ALPHA_BOUNDS[0]:.1f} or {ALPHA_BOUNDS[1]:.1f}) is printed 'at bound': "
         "the bound then sets its D",

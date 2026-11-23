@@ -95,15 +95,17 @@ within 0.01 of the fit's bounds (0.2, 2.0) is printed "at bound", because the
 bound then sets its D.
 
 Read down to the floor of 1.3, the lookup over-subtracts, for the same reason as
-the Fisher table calibrated at σ₀. Between per-frame CNR 1.3 and 3 the corrected
-residual against the noise-free fit is -4066 to -3548 nm^2 at CNR0 15 and 20,
-against naive +206 to +418 nm^2. The seed SE is 57 to 84 nm^2 on both arms, and
-the corrected arm's calibration SE is 102 to 117 nm^2. The corrected exponent
-falls to 0.20 to 0.48 against 0.99 to 1.02 for the noise-free fit, and on 4 of
-the 6 cells it sits at the 0.2 bound, so the full-floor corrected fit gives no
-usable D. At σ₀ the lookup is 11017, 3901 and 218 nm^2 at per-frame CNR 1.3, 2
-and 3 (SE 471, 370 and 78 nm^2), against a leading term (the width's Fisher
-variance on the calibration grid, 5.008 nm pitch) of 83.6, 35.3 and 15.7 nm^2.
+the Fisher table calibrated at σ₀. A frame's residual is its fitted variance,
+averaged over the seeds, minus the variance fitted to the same frame's
+noise-free profile. Averaged over the frames between per-frame CNR 1.3 and 3,
+the corrected residual is -4066 to -3548 nm^2 at CNR0 15 and 20, against naive
++206 to +418 nm^2. The seed SE is 57 to 84 nm^2 on both arms, and the corrected
+arm's calibration SE is 102 to 117 nm^2. The corrected exponent falls to 0.20
+to 0.48 against 0.99 to 1.02 for the noise-free fit, and on 4 of the 6 cells it
+sits at the 0.2 bound, so the full-floor corrected fit gives no usable D. At σ₀
+the lookup is 11017, 3901 and 218 nm^2 at per-frame CNR 1.3, 2 and 3 (SE 471,
+370 and 78 nm^2), against a leading term (the width's Fisher variance on the
+calibration grid, 5.008 nm pitch) of 83.6, 35.3 and 15.7 nm^2.
 
 Kept to frames with per-frame CNR >= 3, the lookup recovers D: 0.96 to 1.02 of
 the noise-free fit's at CNR0 15 and 20, each within 2 combined SE of 1, where

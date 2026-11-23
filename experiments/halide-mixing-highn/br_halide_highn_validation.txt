@@ -4,7 +4,7 @@ width-fit bound: max_var = (G*sigma0)^2, G = 12 (sigma capped at 300 nm), in the
 calibration: calibrate_d_free, 40 CNR0 from 1.2 to 60 x 1500 runs, 21 frames, sigma0 = 25 nm, 600 pixels over 3000 nm
 evaluation: 200 seeds per CNR0 (seed 1000*CNR0 + s); frame stride 10 (61 frames, 0 to 3 ns); per-frame CNR floor 1.3; CNR0 capped at the map's intrinsic peak CNR ~50
 D from MSD = 2 D t^alpha fitted to the seed-mean trajectory over the frames at or above the floor (naive and corrected) or at or above per-frame CNR 3 (naive, CNR >= 3; corrected, CNR >= 3), each divided by the noise-free fit's D over the same frames
-SE of D and of the residuals: (seeds, from 200 resamples; calibration, from 200 draws of the lookup's own error); residuals in nm^2, signed mean over the band's frames, against the noise-free fit
+SE of D and of the residuals: (seeds, from 200 resamples; calibration, from 200 draws of the lookup's own error); residuals in nm^2: the seed-mean fitted variance minus the variance fitted to the same frame's noise-free profile, signed mean over the band's frames
 an arm whose exponent ends within 0.01 of a fit bound (0.2 or 2.0) is printed 'at bound': the bound then sets its D
 carrier reference: particle second moment / 2, fitted over the full record
 failed width fits are dropped from the seed means (the calibration keeps them as the fallback width)
