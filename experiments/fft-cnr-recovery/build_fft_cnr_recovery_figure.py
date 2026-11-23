@@ -45,7 +45,9 @@ HERE = Path(__file__).resolve().parent
 # The full-trial source array is external; its directory comes from the
 # environment (see DATASETS.md).
 SOURCE_NAME = "case1_gaussian_1d.npz"
-FFT_CNR_VERSION = "0.4.0"    # the fft-cnr release that produced the source estimates
+# The fft-cnr release that produced the source estimates; the source does not
+# record it, so change this together with the source.
+FFT_CNR_VERSION = "0.4.0"
 SUMMARY = HERE / "fft_cnr_recovery_summary.npz"
 FIGURE = HERE / "fft_cnr_recovery.png"
 
@@ -121,14 +123,17 @@ def _load_summary() -> dict:
         source = _source_path(required=True)
         summ = _reduce_source(source)
         np.savez(SUMMARY, **summ)
-        print(f"Reduced {SOURCE_NAME} -> {SUMMARY.name}")
+        print(f"Reduced {SOURCE_NAME} -> {SUMMARY.name} (fft-cnr {FFT_CNR_VERSION})")
         return summ
     d = np.load(SUMMARY)
     summ = {k: d[k] for k in d.files}
     source = _source_path(required=False)
     if source is not None and _sha256(source) != str(summ["source_sha256"]):
         warnings.warn(f"{SOURCE_NAME} differs from the array {SUMMARY.name} was reduced "
-                      "from; delete the summary and rerun to rebuild it", stacklevel=2)
+                      "from; delete the summary and rerun to rebuild it, and if the "
+                      "source comes from another fft-cnr release, first update "
+                      "FFT_CNR_VERSION and the version the caption, README and "
+                      "DATASETS.md quote", stacklevel=2)
     return summ
 
 

@@ -291,6 +291,28 @@ def _calibration_se_ratio() -> tuple[str, ...]:
     return (_numbers(_search(r"^\s+current\s+(.*)$", _read(path), path).group(1))[-1],)
 
 
+def _calibration_se_ratio_18() -> tuple[str, ...]:
+    """The same ratio over all 18 draws, the 16 here and two external calibrations."""
+    path = f"{DFREE}/calibration_se_check.txt"
+    return (str(_first(r"all 18 draws: mean ratio ([\d.]+)", _read(path), path)),)
+
+
+def _calibration_weight_terms() -> list[Decimal]:
+    """The weight term's share of the predicted variance per CNR_0, mean over D."""
+    path = f"{DFREE}/calibration_se_check.txt"
+    text = _section(_read(path), " Mean over D, per CNR_0", " Three-draw", path)
+    return [Decimal(v) for v in _numbers(_search(r"^\s+weights\s+(.*)$", text, path).group(1))]
+
+
+def _weight_term_from_cnr0_5() -> tuple[str, ...]:
+    """Largest weight term from CNR_0 5 up (the columns are CNR_0 2, 3, 5, ...)."""
+    return (str(max(_calibration_weight_terms()[2:])),)
+
+
+def _weight_term_at_cnr0_3() -> tuple[str, ...]:
+    return (str(_calibration_weight_terms()[1]),)
+
+
 def _unbounded_d_row(cnr0: int) -> list[Decimal]:
     """<D_est>/D_true at one CNR_0: bounded OLS, subtract, unbounded OLS, moment."""
     path = f"{ESTIMATOR}/unbounded_fit_comparison.txt"
@@ -488,7 +510,16 @@ CLAIMS = [
     Claim("calibration SE, observed over predicted variance", _calibration_se_ratio, {
         "docs/DERIVATION.md": ("variance of the cell mean 0.89 with the per-frame slope weights",),
         "docs/REPO_MAP.md": ("observed/predicted 0.89 over 16 draws",),
-        "src/width_debias/weights.py": ("and 0.89 over 16 draws with frame 0 weighted",)}),
+        "src/width_debias/weights.py": ("of the cell mean 0.89 over the 16 draws",)}),
+    Claim("calibration SE, observed over predicted variance, 18 draws",
+          _calibration_se_ratio_18, {
+              "src/width_debias/weights.py": ("and 0.93 with two external calibrations",)}),
+    Claim("calibration SE, weight term from CNR_0 5", _weight_term_from_cnr0_5, {
+        f"{DFREE}/README.md": ("term is at most 0.04 of the prediction",),
+        "src/width_debias/weights.py": ("the weight term is at most 0.04 of it",)}),
+    Claim("calibration SE, weight term at CNR_0 3", _weight_term_at_cnr0_3, {
+        f"{DFREE}/README.md": ("and 0.22 at CNR₀ 2 and 3)",),
+        "src/width_debias/weights.py": ("and 0.22 of it",)}),
     Claim("CRLB efficiency from CNR_0 21", _crlb_efficiency, {
         "docs/DERIVATION.md": ("0.95 to 1.10 × √CRLB",),
         "docs/REPO_MAP.md": ("reaches 0.95-1.10 x sqrt(CRLB) from CNR0 21",),
@@ -640,6 +671,7 @@ RETIRED = {
     "1.44 to 14)": HISTORY_DOCUMENTS,
     "0.089 vs": HISTORY_DOCUMENTS,
     "1.00 times the reference": HISTORY_DOCUMENTS,
+    "0.98 over 18 draws": HISTORY_DOCUMENTS,
 }
 
 

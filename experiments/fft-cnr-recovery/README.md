@@ -14,7 +14,7 @@ estimator; this set replots them in the repository's figure palette.
   median and 25/75, 5/95 percentiles over the 1000 trials (~120 floats).
 - `fft_cnr_recovery.png` + `fft_cnr_recovery_caption.md` -- the figure and caption.
 
-**Data** -- reduced from the external study's full-trial array, which is not
+**Data** -- reduced from the external simulation study's full-trial array, which is not
 committed. See [`DATASETS.md`](DATASETS.md).
 
 **Run**
@@ -34,7 +34,8 @@ being at N = 1024, CNR = 2. Figure `fft_cnr_recovery.png`, caption
 `fft_cnr_recovery_caption.md`.
 
 **Depends on** -- no in-repo helpers; reads the external result array only to
-build the committed summary.
+rebuild the summary and, when the array is available, to check its hash against
+the summary's.
 
 **See also** -- `src/width_debias/cnr.py` (`per_frame_cnr`, the fft-cnr wrapper
 the correction uses on real data), `experiments/wse2-strobescat` (the CNR key

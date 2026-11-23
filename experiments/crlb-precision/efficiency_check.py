@@ -37,9 +37,9 @@ divided by sqrt(CRLB), for three arms:
 
 Each arm is computed with every frame and with frames below per-frame CNR 1
 dropped (the floor that ``validate_d_zero.py`` uses). A ratio of 1 is efficient.
-The bound holds
-for unbiased estimators, and the corrected D is unbiased within its SE across
-this grid (``docs/DERIVATION.md`` section 8), so the comparison is fair.
+The bound holds for unbiased estimators, and the corrected D is unbiased within
+its SE across this grid (``docs/DERIVATION.md`` section 8), so the comparison
+is fair.
 
 ``generate`` caches the calibrations and evaluation ensembles under
 ``output/crlb-efficiency/`` (the Gaussian calibration is draw 0 of
