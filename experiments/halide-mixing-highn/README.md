@@ -46,7 +46,7 @@ the joint grid, 0.024 to 0.034 for the σ₀ Fisher calibration, and 0.003 to
 0.004 for the 75 nm one. Every corrected arm uses the iterated
 measurement-level key, and the figure shows the joint grid. The x = 0.75
 remainder of 0.025 is resolved. The difference between the two joint-grid
-columns is the carrier gap.
+columns is the shape gap.
 
 The legacy 20k-walker maps do not show this effect because their narrow 150 nm
 window already bounds the wander. DICE is unaffected: it sizes its field of view
@@ -86,7 +86,7 @@ tested on this bed at CNR₀ 15 only.
 ## The 1-D D-free lookup at σ₀
 
 `br_halide_highn_validation.py` tests the package's 1-D path,
-`calibrate_d_free`: one calibration at D = 0 and σ₀ = 25 nm (40 CNR₀ from 1.2 to
+`calibrate_d_free`: one calibration at D = 0 and σ₀ = 25 nm (40 CNR0 from 1.2 to
 60, 1500 runs each), read by the per-frame CNR alone, with the same width cap as
 the rest of the set. Each arm's D is divided by the noise-free fit's D over the
 same frames, with SEs from 200 seeds and from 200 draws of the lookup's own
@@ -219,9 +219,10 @@ The run procedure is in `experiments/halide-mixing-brI-legacy/rerun/README.md`.
 Geometry: 600 bins over a 3000 nm window (5 nm/bin), 601 frames at 5 ps to 3.0 ns,
 initial 1-D sigma ~25 nm. The carrier (transport) reference is the particle second
 moment `variance.avg.dat / 2`. It is **Fickian** -- alpha 0.997 / 0.993 / 0.990
-for x = 0.25 / 0.5 / 0.75, with D = 6265 / 2650 / 2352 nm^2/ns -- D falling with
-Br fraction confirms that mixing inhibits transport. (The legacy maps' apparent
-subdiffusion is a short-window / narrow-box artifact, not real transport.)
+for x = 0.25 / 0.5 / 0.75, with D = 6265 / 2650 / 2352 nm^2/ns^alpha -- D falling
+with Br fraction confirms that mixing inhibits transport. (The legacy maps'
+apparent subdiffusion is a short-window / narrow-box artifact, not real
+transport.)
 
 Over the 3 ns window the peak drops ~147x, so most late frames fall below CNR 1
 and are excluded by the floor; the correction is tested on the usable band (a
@@ -232,9 +233,13 @@ shorter effective window, which is the fair test).
 - `br_highn_data.py` -- loads the collapsed 1-D profiles, the reference from
   `variance.avg.dat / 2`, imposes the tau ~ 1 ns decay envelope.
 - `br_halide_highn_validation.py` -- the CNR0 sweep for the 1-D D-free lookup at
-  σ₀ (four arms, each D against the noise-free fit with seed and calibration
-  SEs); writes `br_halide_highn_validation.txt` here. Result in "The 1-D D-free
-  lookup at σ₀" above.
+  σ₀ (four arms, each D against the noise-free fit with a seed SE, and a
+  calibration SE on the corrected arms); writes `br_halide_highn_validation.txt`
+  here. Result in "The 1-D D-free lookup at σ₀" above. It also defines the
+  bounded width fit (`fit_each_row`), the cap (`G_MAX`, `MAX_VAR`) and the
+  per-frame CNR floor (`FLOOR_CNR`): `br_halide_highn_perframe.py` imports
+  them, and `key_sensitivity.py` and `render_perframe_figure.py` read the fit
+  and the floor through it.
 - `br_halide_highn_perframe.py [cnr_sigma2|daware|fisher|fisher_late] [CNR0]` --
   the per-frame residual (with a signed per-frame table), short-window D, and
   the figure. Default calibration is the joint (CNR, sigma^2) one; `daware` is
@@ -259,10 +264,7 @@ implementation:
 - `src/width_debias/models.py` -- `GaussianModel(max_var=...)` forwards it.
 
 The scripts reuse `fit_msd_powerlaw` and its exponent bounds (`ALPHA_BOUNDS`)
-from `experiments/halide-mixing-brI-legacy/br_halide_validation.py`. The bounded
-width fit (`fit_each_row`), the cap (`G_MAX`, `MAX_VAR`) and the per-frame CNR
-floor (`FLOOR_CNR`) are defined in `br_halide_highn_validation.py`, and the
-per-frame scripts import them from there.
+from `experiments/halide-mixing-brI-legacy/br_halide_validation.py`.
 
 ## Running
 
@@ -275,6 +277,9 @@ OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 WIDTH_DEBIAS_WORKERS=
 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 WIDTH_DEBIAS_WORKERS=4 \
   .venv/Scripts/python.exe experiments/halide-mixing-highn/br_halide_highn_validation.py
 ```
+
+In `br_halide_highn_validation.py` the workers speed up only the first build of
+the calibration; the evaluation fits run in one process.
 
 `br_halide_highn_perframe.py` writes its report, figure, and cached calibrations
 to the repo's `output/` (not tracked); `render_perframe_figure.py` writes the

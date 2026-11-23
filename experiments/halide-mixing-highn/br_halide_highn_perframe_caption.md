@@ -22,7 +22,7 @@ and 1.060 (naive) to 1.002, 1.013, and 1.025 (corrected), each with a standard
 error of 0.006 to 0.007 from resampling the realizations; the x = 0.75
 remainder of 0.025 is resolved. Relative to the carrier reference D_ref the
 corrected values are 0.993, 0.971, and 0.984, the difference being the
-carrier gap.
+shape gap.
 
 CNR₀ = 15 is the lowest initial contrast at which the corrected D does not
 depend on the choice among keys that follow the true width (exact, smoothed,

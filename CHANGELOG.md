@@ -47,13 +47,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   initial CNR 15 and 20 (13- to 24-fold at 20), where they said about 64-fold.
   The README and `br_halide_highn_perframe.py` say that at a given CNR the
   bias grows in proportion to sigma to leading order, where they said with
-  sigma^2. The README, `br_halide_highn_perframe.py`, `key_sensitivity.py`,
-  `render_perframe_figure.py` and the per-frame caption call the offset
-  between the noise-free fit and the carrier reference the shape gap: these
-  profiles are linear in the carrier density, so there is no
-  emission-to-carrier gap. The set README gives the 1-D lookup's result its
-  own section and says that the bounded width fit, its cap and the per-frame
-  CNR floor live in `br_halide_highn_validation.py`.
+  sigma^2. The README, the per-frame caption, `br_halide_highn_perframe.py`,
+  `key_sensitivity.py` and the opening of the `render_perframe_figure.py`
+  docstring call the offset between the noise-free fit and the carrier
+  reference the shape gap: these profiles are linear in the carrier density,
+  so there is no emission-to-carrier gap. The per-frame figure's legend, its
+  table line and the colour note that describes them keep the label "carrier
+  gap". The set README gives the 1-D lookup's result its own section and says
+  that the bounded width fit, its cap and the per-frame CNR floor live in
+  `br_halide_highn_validation.py`, which `br_halide_highn_perframe.py`
+  imports and the set's other scripts read through it.
 - Scripts that read an external simulation study's result files
   (`experiments/fft-cnr-recovery/build_fft_cnr_recovery_figure.py`,
   `experiments/dfree-calibration/calibration_se_check.py` and

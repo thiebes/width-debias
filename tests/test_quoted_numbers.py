@@ -464,6 +464,13 @@ def _halide_resid_lo_seed_se() -> tuple[str, ...]:
     return _halide_validation_range("resid_cor_lo_se", (15, 20), 0)
 
 
+def _halide_lookup_ratio_range(cnrs: tuple[str, ...]) -> tuple[str, ...]:
+    """The lookup's ratio to its leading term over the given per-frame CNR, rounded
+    to whole numbers, smallest first."""
+    ratios = [Decimal(r) for r in _halide_lookup(4, cnrs)]
+    return _rounded(min(ratios), 0), _rounded(max(ratios), 0)
+
+
 def _halide_corrected_strict_max_z() -> tuple[str, ...]:
     """Largest |D/D_nf - 1| over its combined SE (seeds and calibration), corrected
     arm on the frames at or above per-frame CNR 3, CNR_0 15 and 20, as a bound."""
@@ -769,7 +776,13 @@ CLAIMS = [
         f"{HALIDE}/README.md": ("of 83.6, 35.3 and 15.7 nm^2",)}),
     Claim("high-N halide 1-D lookup at sigma_0, ratio to the leading term at CNR 3",
           lambda: (_rounded(Decimal(_halide_lookup(4, ("3",))[0]), 0),), {
-              f"{HALIDE}/README.md": ("is still 14 times its leading term at CNR 3",)}),
+              f"{HALIDE}/README.md": ("is still 14 times its leading term at CNR 3",),
+              f"{HALIDE}/br_halide_highn_validation.py": (
+                  "the lookup is 14 times its leading term at CNR 3",)}),
+    Claim("high-N halide 1-D lookup at sigma_0, ratio to the leading term at CNR 1.3 and 2",
+          lambda: _halide_lookup_ratio_range(("1.3", "2")), {
+              f"{HALIDE}/br_halide_highn_validation.py": (
+                  "against 110 to 132 times at CNR 1.3 to 2",)}),
     Claim("high-N halide 1-D lookup above CNR 3, corrected D at CNR_0 15 and 20",
           lambda: _halide_validation_range("cor_strict", (15, 20), 2), {
               f"{HALIDE}/README.md": ("the lookup recovers D: 0.96 to 1.02",),

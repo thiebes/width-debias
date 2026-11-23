@@ -18,9 +18,10 @@ Three design points:
     calibration and in the application fit alike. With the default span^2
     bound, the low-CNR fits wander toward the 3000 nm window and the
     calibration's bias explodes (the README's "The upper bound"). The bound,
-    the bounded fit and the per-frame CNR floor are defined here, and the
-    per-frame scripts import them, so every high-N script fits with one bound
-    and one floor.
+    the bounded fit and the per-frame CNR floor are defined here;
+    ``br_halide_highn_perframe.py`` imports them, and the set's other scripts
+    read the fit and the floor through it, so every high-N script fits with
+    one bound and one floor.
   * **Fitted frames.** The peak falls about 150-fold over the 3 ns record, so
     only the frames at or above the per-frame CNR floor of 1.3 enter the
     slope fit. Each arm's D is divided by the D of the noise-free fit over
@@ -33,7 +34,7 @@ Three design points:
     corrected: the raw fits minus the lookup's bias, on the same frames as
     naive. corrected, CNR >= 3: the same corrected fits on the frames of the
     stricter cut, where the lookup is 14 times its leading term at CNR 3
-    and about twice it from CNR 4, against 110 to 130 times at CNR 1.3 to 2.
+    and about twice it from CNR 4, against 110 to 132 times at CNR 1.3 to 2.
 
 The table's header gives the lookup at sigma_0, with its SE, next to its
 leading term, the width's Fisher variance on the calibration's pixel grid
@@ -51,7 +52,10 @@ as D.
 
 Run from the repository root (needs the pshare for the maps)::
 
-    WIDTH_DEBIAS_WORKERS=0 .venv/Scripts/python.exe experiments/halide-mixing-highn/br_halide_highn_validation.py
+    WIDTH_DEBIAS_WORKERS=4 .venv/Scripts/python.exe experiments/halide-mixing-highn/br_halide_highn_validation.py
+
+The workers speed up only the first build of the calibration; the
+evaluation fits run in one process.
 
 Writes the table ``br_halide_highn_validation.txt`` into this folder, the
 figure to ``output/br_halide_highn_validation.png``, and caches the
@@ -107,7 +111,9 @@ CNR0_SWEEP = (2.0, 3.0, 5.0, 8.0, 15.0, 20.0, 30.0, 50.0)
 N_SEEDS = 200
 N_BOOT = 200
 N_CAL_DRAWS = 200
-FLOOR_CNR = 1.3       # project floor: the 2-D lookup over-subtracts below ~1.3
+# The project's per-frame CNR floor, from the per-frame study: its joint
+# (CNR, sigma^2) lookup over-subtracts below about 1.3.
+FLOOR_CNR = 1.3
 STRICT_CNR = 3.0      # the stricter cut of the naive competitor
 BOUND_TOL = 0.01
 # Analyse every STRIDE-th frame: 601 frames is far more than the MSD power law
@@ -159,7 +165,8 @@ def build_or_load_calibration() -> BiasLookup:
     pixel_x = Experiment(D=0.0, **CAL_GEOMETRY).x
     if CAL_PATH.exists():
         trunc = BiasLookup.load(CAL_PATH)
-        if trunc.pixel_x is None or not np.allclose(trunc.pixel_x, pixel_x):
+        if (trunc.pixel_x is None or trunc.pixel_x.shape != pixel_x.shape
+                or not np.allclose(trunc.pixel_x, pixel_x)):
             raise RuntimeError(f"{CAL_PATH.name} was built on a different pixel grid")
     else:
         trunc = calibrate_d_free(CAL_CNR0, n_runs=N_RUNS_CAL,
@@ -410,6 +417,8 @@ def write_report(results: list[CaseResult], n_frames: int, t_max: float,
                       f"D_ref = {r.d_ref:.4g} nm^2/ns^alpha; carrier variance grows "
                       f"{r.growth_record:.1f}-fold over the {t_max:g} ns record"]
         for c in r.cells:
+            cor_strict = _ratio_text(c.ratio_cor_strict, c.a_cor_strict,
+                                     c.se_cor_strict_seed, c.se_cor_strict_cal)
             lines += [
                 f"  CNR0 {c.cnr0:g}: {c.n_use} frames at or above the floor, t <= "
                 f"{c.t_last:.2f} ns, CNR down to {c.cnr_min:.2f}; carrier variance grows "
@@ -424,9 +433,7 @@ def write_report(results: list[CaseResult], n_frames: int, t_max: float,
                 f"naive, CNR >= {STRICT_CNR:g} ({c.n_strict} frames) "
                 f"{_ratio_text(c.ratio_strict, c.a_naive_strict, c.se_strict)}; corrected "
                 f"{_ratio_text(c.ratio_cor, c.a_cor, c.se_cor_seed, c.se_cor_cal)}; "
-                f"corrected, CNR >= {STRICT_CNR:g} "
-                + _ratio_text(c.ratio_cor_strict, c.a_cor_strict, c.se_cor_strict_seed,
-                              c.se_cor_strict_cal),
+                f"corrected, CNR >= {STRICT_CNR:g} {cor_strict}",
                 f"    alpha: noise-free fit {_f(c.a_nf, '.3f')}, naive {_f(c.a_naive, '.3f')}, "
                 f"corrected {_f(c.a_cor, '.3f')}; D_nf = {_f(c.d_nf, '.4g')} nm^2/ns^alpha",
                 f"    alpha, CNR >= {STRICT_CNR:g}: noise-free fit {_f(c.a_nf_strict, '.3f')}, "

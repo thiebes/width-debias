@@ -292,8 +292,8 @@ def short_window_D(case, trunc, cnr0, n_seeds):
 
 
 def main():
-    # "cnr_sigma2" (default) keys the correction on (CNR, sigma^2); "daware"
-    # reproduces the earlier 1-D D-aware lookup, which mis-subtracts here (see
+    # "cnr_sigma2" (default) keys the correction on (CNR, sigma^2); "daware" is
+    # the 1-D D-aware lookup, which mis-subtracts here (see
     # cnr_sigma2_calibration).
     mode = sys.argv[1] if len(sys.argv) > 1 else "cnr_sigma2"
     if mode not in ("cnr_sigma2", "daware", "fisher", "fisher_late"):
