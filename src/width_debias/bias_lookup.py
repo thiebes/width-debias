@@ -506,7 +506,7 @@ class BiasLookup:
         scatters high reads the lookup near the grid edge, and the mean is
         over-subtracted. On the high-N Br-I bed (sigma^2 growing ~64x) this
         left D at 0.89 to 0.96 of the reference at CNR_0 15 to 20 on two of
-        the three maps (0.99 on the fastest-spreading one), where a
+        the three maps (0.99 to 1.00 on the fastest-spreading one), where a
         measurement-level key (a robust line through the measurement's own
         sigma_hat^2, the smoothed key) matched the exact key to within 0.004 from
         CNR_0 15. That key assumes a form

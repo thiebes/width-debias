@@ -20,6 +20,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   docstring give the measurement-level (smoothed) key's agreement with the
   exact key as within 0.004 from initial CNR 15, and the iterated key's as
   within 0.002, as `key_sensitivity.txt` gives them; they said 0.003.
+- The `bias_lookup` module docstring, `BiasLookup.var_bias`, the
+  `calibrate_cnr_sigma2` docstring, `docs/calibration_runs.md` and
+  `docs/DERIVATION.md` say that keying the joint (CNR, sigma^2) lookup on each
+  frame's own fitted variance over-corrects when the width grows several-fold,
+  as `key_sensitivity.txt` shows: at initial CNR 15 and 20 on the two
+  slower-spreading high-N halide maps, that key leaves D at 0.892 to 0.957 of
+  the reference, against 0.972 to 0.985 with the exact key, and its residuals
+  below CNR 2 are negative. They said it under-corrects. `BiasLookup.var_bias`
+  and `docs/DERIVATION.md` give that key's D on the fastest-spreading map as
+  0.99 to 1.00, where they said 0.99, and the high-N halide per-frame caption
+  names the own-width key as the exception to D not depending on the key from
+  initial CNR 15.
 - The validation numbers in the README, `docs/DERIVATION.md`, and the
   docstrings of `calibrate_d_free` and `msd_and_weights` come from the
   regenerated experiment sets, whose seeds are independent per profile shape:

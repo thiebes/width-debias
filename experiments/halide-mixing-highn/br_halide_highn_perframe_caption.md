@@ -25,7 +25,11 @@ corrected values are 0.993, 0.971, and 0.984, the difference being the
 carrier gap.
 
 CNR₀ = 15 is the lowest initial contrast at which the corrected D does not
-depend on the choice of key: a key error of 0.2 of σ² moves D by at most 0.005
-there, while at CNR₀ 8 to 10 it can move D by up to 0.3
-(`key_sensitivity.py`). The straight-line key assumes the variance grows
+depend on the choice among keys that follow the true width (exact, smoothed,
+or iterated): a key error of 0.2 of σ² moves D by at most 0.005 there, while
+at CNR₀ 8 to 10 it can move D by up to 0.3 (`key_sensitivity.py`). Keying
+each frame on its own fitted σ̂² is the exception, because a frame whose fit
+scatters high reads the lookup near the grid edge: at CNR₀ 15 and 20 this key
+leaves D at 0.89 to 0.96 of D_ref on maps (b) and (c), against 0.97 to 0.99
+with the exact key. The straight-line key assumes the variance grows
 linearly in time, which holds for these maps (exponent 0.990 to 0.997).

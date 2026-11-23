@@ -359,10 +359,11 @@ def _halide_key_gap(key: str) -> tuple[str, ...]:
     return (_bound(max(gaps), 3),)
 
 
-def _halide_perframe_range() -> tuple[str, ...]:
-    """Per-frame key D/D_ref at CNR_0 15 and 20 on the two slower-spreading maps."""
-    values = [d["perframe"] for (x, cnr0), d in _halide_keys().items()
-              if x in ("0.5", "0.75") and cnr0 in (15, 20)]
+def _halide_key_range(key: str, maps: tuple[str, ...]) -> tuple[str, ...]:
+    """One key's D/D_ref at CNR_0 15 and 20 on the given maps (Br fractions)."""
+    values = [d[key] for (x, cnr0), d in _halide_keys().items()
+              if x in maps and cnr0 in (15, 20)]
+    assert len(values) == 2 * len(maps), f"{HALIDE}/key_sensitivity.txt: missing {key} rows"
     return _rounded(min(values), 2), _rounded(max(values), 2)
 
 
@@ -556,9 +557,21 @@ CLAIMS = [
     Claim("high-N halide, iterated key against the exact key from CNR_0 15",
           lambda: _halide_key_gap("iterated"), {
               f"{HALIDE}/README.md": ("and the iterated key to within 0.002",)}),
-    Claim("high-N halide, per-frame key at CNR_0 15 and 20", _halide_perframe_range, {
-        "docs/DERIVATION.md": ("leaves D at 0.89 to 0.96 of the reference",),
-        "src/width_debias/bias_lookup.py": ("left D at 0.89 to 0.96 of the reference",)}),
+    Claim("high-N halide, per-frame key at CNR_0 15 and 20",
+          lambda: _halide_key_range("perframe", ("0.5", "0.75")), {
+              "docs/DERIVATION.md": ("leaves D at 0.89 to 0.96 of the reference",),
+              "src/width_debias/bias_lookup.py": ("left D at 0.89 to 0.96 of the reference",),
+              f"{HALIDE}/br_halide_highn_perframe_caption.md": (
+                  "this key leaves D at 0.89 to 0.96 of D_ref",)}),
+    Claim("high-N halide, exact key at CNR_0 15 and 20",
+          lambda: _halide_key_range("exact", ("0.5", "0.75")), {
+              f"{HALIDE}/br_halide_highn_perframe_caption.md": (
+                  "against 0.97 to 0.99 with the exact key",)}),
+    Claim("high-N halide, per-frame key on the fastest-spreading map",
+          lambda: _halide_key_range("perframe", ("0.25",)), {
+              "docs/DERIVATION.md": ("(0.99 to 1.00 on the third)",),
+              "src/width_debias/bias_lookup.py": (
+                  "(0.99 to 1.00 on the fastest-spreading one)",)}),
     Claim("unbounded comparison, OLS at CNR_0 34",
           lambda: (_rounded(_unbounded_d_row(34)[0], 2),), {
               "README.md": ("an unweighted fit returns 1.20 times the reference D",)}),
