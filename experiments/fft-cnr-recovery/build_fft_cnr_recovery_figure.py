@@ -10,10 +10,13 @@ size recovers the true CNR -- so the four N series share one hue and separate by
 alpha (plot_style "related series"), reading as a single diagonal-hugging story.
 
 Data provenance: the estimates come from an external simulation study of fft-cnr
-(Gaussian 1-D profiles). The full 1000-trial array is 2.3 MB and
-is not committed here; this script reduces it to a tiny per-(N, CNR) summary
-(`fft_cnr_recovery_summary.npz`, committed) and plots from that. Delete the summary
-to force a re-reduction from the source, which is read from the directory that
+(Gaussian 1-D profiles, fft-cnr 0.4.0). The full 1000-trial array is 2.3 MB and is
+not committed here; this script reduces it to a tiny per-(N, CNR) summary
+(`fft_cnr_recovery_summary.npz`, committed) and plots from that. The summary
+records the fft-cnr version and the SHA-256 of the array it was reduced from, and
+whenever the array is available the script checks it against that hash, so a
+changed source cannot leave the summary stale unnoticed. Delete the summary to
+force a re-reduction from the source, which is read from the directory that
 WIDTH_DEBIAS_EXTERNAL_RESULTS names. See DATASETS.md.
 
 Run:
@@ -21,8 +24,10 @@ Run:
 """
 from __future__ import annotations
 
+import hashlib
 import os
 import sys
+import warnings
 from pathlib import Path
 
 import numpy as np
@@ -39,8 +44,8 @@ from matplotlib.ticker import NullFormatter, ScalarFormatter  # noqa: E402
 HERE = Path(__file__).resolve().parent
 # The full-trial source array is external; its directory comes from the
 # environment (see DATASETS.md).
-_EXTERNAL = os.environ.get("WIDTH_DEBIAS_EXTERNAL_RESULTS")
-SOURCE = Path(_EXTERNAL) / "case1_gaussian_1d.npz" if _EXTERNAL else None
+SOURCE_NAME = "case1_gaussian_1d.npz"
+FFT_CNR_VERSION = "0.4.0"    # the fft-cnr release that produced the source estimates
 SUMMARY = HERE / "fft_cnr_recovery_summary.npz"
 FIGURE = HERE / "fft_cnr_recovery.png"
 
@@ -51,15 +56,43 @@ FLAG_BLUE = "#0077c8"
 LIMS = (1.0, 150.0)
 
 
-def _reduce_source() -> dict:
+def _source_path(required: bool) -> Path | None:
+    """The source array in the WIDTH_DEBIAS_EXTERNAL_RESULTS directory.
+
+    Read when needed rather than at import. With ``required`` an unset variable
+    or a missing file raises, naming which; otherwise either gives None.
+    """
+    directory = os.environ.get("WIDTH_DEBIAS_EXTERNAL_RESULTS")
+    if not directory:
+        if required:
+            raise FileNotFoundError(
+                f"WIDTH_DEBIAS_EXTERNAL_RESULTS is not set; set it to the directory that "
+                f"holds {SOURCE_NAME}. See DATASETS.md.")
+        return None
+    path = Path(directory).expanduser().resolve() / SOURCE_NAME
+    if not path.exists():
+        if required:
+            raise FileNotFoundError(
+                f"{SOURCE_NAME} not found in {path.parent} "
+                "(WIDTH_DEBIAS_EXTERNAL_RESULTS). See DATASETS.md.")
+        return None
+    return path
+
+
+def _sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _reduce_source(source: Path) -> dict:
     """Collapse the 1000-trial source array to per-(N, CNR) median and spread.
 
     Only the median and the 25/75 and 5/95 percentiles are needed for the panel,
     so the committed artifact is ~120 floats rather than the 2.3 MB source. Infinite
     estimates (a zero-noise trial divides by zero) are dropped before the
-    percentiles, matching the source notebook.
+    percentiles, matching the source notebook. The fft-cnr version and the source's
+    SHA-256 are stored with the numbers, so the summary names what it came from.
     """
-    d = np.load(SOURCE)
+    d = np.load(source)
     true_cnr = d["true_cnr_values"].astype(float)
     n_values = d["N_values"].astype(int)
     est = d["results_template"]["est_cnr"].astype(float)      # (N, CNR, trials)
@@ -73,23 +106,30 @@ def _reduce_source() -> dict:
         p05=np.nanpercentile(est, 5, axis=2),
         p95=np.nanpercentile(est, 95, axis=2),
         n_trials=int(d["n_trials"]),
+        fft_cnr_version=FFT_CNR_VERSION,
+        source_sha256=_sha256(source),
     )
 
 
 def _load_summary() -> dict:
-    """Return the committed per-(N, CNR) summary, reducing from source if absent."""
+    """Return the committed per-(N, CNR) summary, reducing from source if absent.
+
+    When the summary exists and the source is also available, the source's hash
+    is checked against the one the summary records, and a mismatch warns.
+    """
     if not SUMMARY.exists():
-        if SOURCE is None or not SOURCE.exists():
-            raise FileNotFoundError(
-                f"Neither the committed summary ({SUMMARY.name}) nor the source "
-                f"array is present; set WIDTH_DEBIAS_EXTERNAL_RESULTS to the "
-                f"directory that holds it. See DATASETS.md.")
-        summ = _reduce_source()
+        source = _source_path(required=True)
+        summ = _reduce_source(source)
         np.savez(SUMMARY, **summ)
-        print(f"Reduced {SOURCE.name} -> {SUMMARY.name}")
+        print(f"Reduced {SOURCE_NAME} -> {SUMMARY.name}")
         return summ
     d = np.load(SUMMARY)
-    return {k: d[k] for k in d.files}
+    summ = {k: d[k] for k in d.files}
+    source = _source_path(required=False)
+    if source is not None and _sha256(source) != str(summ["source_sha256"]):
+        warnings.warn(f"{SOURCE_NAME} differs from the array {SUMMARY.name} was reduced "
+                      "from; delete the summary and rerun to rebuild it", stacklevel=2)
+    return summ
 
 
 def build() -> Path:

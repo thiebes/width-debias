@@ -3,9 +3,10 @@
 The panel render code lives with its figure -- schematics in `illustrations/`, data
 panels with their experiment under `experiments/` -- and this module is the
 orchestrator that calls them. The only panels defined here are the two fft-cnr
-recovery figures, which read an external simulation study's results and so
-have no width-debias experiment to live in. Shared poster primitives (palette,
-axis style) come from `scripts/poster_style.py`.
+recovery figures. Their sweeps come from `scripts/poster_fftcnr_dense.py`, and
+Panel 4 falls back to an external simulation study's sweep, so they have no
+width-debias experiment to live in. Shared poster primitives (palette, axis
+style) come from `scripts/poster_style.py`.
 
 Run from the repository root::
 
@@ -51,10 +52,30 @@ OUTPUT.mkdir(exist_ok=True)
 # (scripts/poster_fftcnr_dense.py) when present, so the ratio curve is smooth;
 # otherwise fall back to the external six-point file, read from the directory
 # that WIDTH_DEBIAS_EXTERNAL_RESULTS names.
-_FFTCNR_DENSE = OUTPUT / "case11_gengauss_cnr_sweep_dense.npz"
-_EXTERNAL = os.environ.get("WIDTH_DEBIAS_EXTERNAL_RESULTS")
-_FFTCNR_SWEEP = Path(_EXTERNAL) / "case11_gengauss_cnr_sweep.npz" if _EXTERNAL else None
-FFTCNR_NPZ = _FFTCNR_DENSE if _FFTCNR_DENSE.exists() else _FFTCNR_SWEEP
+_FFTCNR_DENSE = OUTPUT / "gengauss_cnr_sweep_dense.npz"
+_FFTCNR_EXTERNAL_NAME = "case11_gengauss_cnr_sweep.npz"
+
+
+def _fftcnr_sweep() -> Path | None:
+    """The Panel 4 sweep: the dense local file, else the external one; None if neither.
+
+    The variable is read here, when the panel needs it, and the note names the
+    files looked for and where.
+    """
+    if _FFTCNR_DENSE.exists():
+        return _FFTCNR_DENSE
+    directory = os.environ.get("WIDTH_DEBIAS_EXTERNAL_RESULTS")
+    if not directory:
+        print(f"  ({_FFTCNR_DENSE.name} not in output/ and WIDTH_DEBIAS_EXTERNAL_RESULTS "
+              "is not set -- skipping Panel 4 fft-cnr)")
+        return None
+    path = Path(directory).expanduser().resolve() / _FFTCNR_EXTERNAL_NAME
+    if not path.exists():
+        print(f"  ({_FFTCNR_DENSE.name} not in output/ and {_FFTCNR_EXTERNAL_NAME} not "
+              f"found in {path.parent} -- skipping Panel 4 fft-cnr)")
+        return None
+    return path
+
 
 # Sweep shape name -> (poster label, role colour); shared by the fft-cnr figures.
 _FFTCNR_STYLE = {
@@ -74,10 +95,10 @@ def figure_fftcnr(npz_path: Path | None) -> Path | None:
     line per shape, centred on 1.0. The three poster-primary shapes carry roles
     1-3; the flat-top is a neutral secondary reference.
     """
-    if npz_path is None or not npz_path.exists():
-        print("  (fft-cnr sweep not found: no dense sweep in output/, and "
-              "WIDTH_DEBIAS_EXTERNAL_RESULTS is not set or lacks it -- skipping "
-              "Panel 4 fft-cnr)")
+    if npz_path is None:
+        return None
+    if not npz_path.exists():
+        print(f"  (fft-cnr sweep {npz_path} not found -- skipping Panel 4 fft-cnr)")
         return None
     d = np.load(npz_path, allow_pickle=True)
     true_cnr = d["true_cnr"]
@@ -169,7 +190,7 @@ def main() -> None:
     if p3:
         print(f"  Panel 3 (bias curves):             {p3.name}")
     print(f"  Panel 4 (precision floor):         {figure_crlb().name}")
-    p4c = figure_fftcnr(FFTCNR_NPZ)
+    p4c = figure_fftcnr(_fftcnr_sweep())
     if p4c:
         print(f"  Panel 4 (fft-cnr CNR recovery):    {p4c.name}")
     p5 = build_corrected_bias()

@@ -13,8 +13,9 @@ scatter), so this script tests the prediction with many draws over one grid.
 * one fixed evaluation set (D 0.005 to 0.1, CNR_0 2 to 90, 300 runs per cell).
 
 ``analyse`` applies every calibration to the same evaluation realizations
-(subtract, exact per-frame CNR key, frames below CNR 1 dropped), so the spread of a cell's mean over the draws is the calibration term
-alone. Per cell it reports observed / predicted variance for three arms:
+(subtract, exact per-frame CNR key, frames below CNR 1 dropped), so the spread
+of a cell's mean over the draws is the calibration term alone. Per cell it
+reports observed / predicted variance for three arms:
 
 * ``full``    -- the draw's own lookup (what a user applies);
 * ``bias``    -- the draw's var_bias with the weights frozen at the pooled lookup
@@ -29,8 +30,10 @@ with a prediction made for the per-frame weights.
 It also checks the per-point SE (variance of each grid point over the draws
 against its recorded SE squared) and the correlation of the fitted variances
 between frames of one calibration ensemble. With ``WIDTH_DEBIAS_EXTERNAL_RESULTS``
-naming a directory that holds an external triple of Gaussian calibrations on the
-same grid, it ranks that triple among the draws.
+naming a directory that holds two external Gaussian calibrations on the same
+grid (seeds 101 and 201), it ranks the triple they form with draw 0 (seed 1)
+among the draws. Without them that section is skipped with a note on stderr,
+so a table written without the variable lacks it.
 
     $env:WIDTH_DEBIAS_WORKERS = 0
     .venv/Scripts/python.exe experiments/dfree-calibration/calibration_se_check.py generate
@@ -53,7 +56,6 @@ from width_debias.bias_lookup import frame_stats  # noqa: E402
 from width_debias.weights import calibration_D_se, msd_and_weights  # noqa: E402
 
 OUT = Path(__file__).resolve().parents[2] / "output" / "calibration-se-check"
-EXTERNAL_RESULTS = "WIDTH_DEBIAS_EXTERNAL_RESULTS"
 
 CAL_GRID = np.geomspace(1.5, 150.0, 48)
 CAL_RUNS = 1500
@@ -260,21 +262,25 @@ def analyse() -> None:
 
 
 def external_triple(models, full_means, p2, ecnr, evar) -> None:
-    """Rank an external triple of Gaussian calibrations (seeds 1, 101, 201) among the draws.
+    """Rank draw 0 with two external calibrations (seeds 101, 201) among the draws.
 
     Seed 1 is draw 0 here; the calibrations at seeds 101 and 201 come from an
     external study on the same grid, read from the directory that
     ``WIDTH_DEBIAS_EXTERNAL_RESULTS`` names. They carry ``framevar_grid``, so
     they are scored with the same per-frame weights as the draws here.
     """
-    directory = os.environ.get(EXTERNAL_RESULTS)
+    # Skip notes go to stderr: stdout is the committed table.
+    directory = os.environ.get("WIDTH_DEBIAS_EXTERNAL_RESULTS")
     if not directory:
-        print(f"\n({EXTERNAL_RESULTS} not set; external triple skipped)")
+        print("(WIDTH_DEBIAS_EXTERNAL_RESULTS not set; external triple skipped)",
+              file=sys.stderr)
         return
-    paths = [Path(directory) / f"case27_calibration_gaussian_seed{s}.npz" for s in (101, 201)]
-    if not all(p.exists() for p in paths):
-        print(f"\n(external calibrations not found under {EXTERNAL_RESULTS}; "
-              "external triple skipped)")
+    folder = Path(directory).expanduser().resolve()
+    paths = [folder / f"case27_calibration_gaussian_seed{s}.npz" for s in (101, 201)]
+    missing = [p.name for p in paths if not p.exists()]
+    if missing:
+        print(f"({', '.join(missing)} not found in {folder}; external triple skipped)",
+              file=sys.stderr)
         return
     from itertools import combinations
     grid = models[0].cnr_grid
@@ -284,7 +290,8 @@ def external_triple(models, full_means, p2, ecnr, evar) -> None:
         with np.load(p) as d:
             assert np.allclose(d["cnr_grid"], grid)
             if "framevar_grid" not in d:
-                print(f"\n({p.name} has no framevar_grid; external triple skipped)")
+                print(f"({p.name} has no framevar_grid; external triple skipped)",
+                      file=sys.stderr)
                 return
             m = BiasLookup(cnr_grid=grid, p_grid=d["p_grid"],
                                 relvar_grid=d["relvar_grid"],
