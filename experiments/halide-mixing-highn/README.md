@@ -90,20 +90,22 @@ With the 1-D D-aware lookup, the per-frame table at CNR0 = 20 shows the mean
 142 -> 260 nm^2 for x = 0.25 / 0.5 / 0.75). Two separate effects produce it.
 
 1. **The 1-D lookup mixes widths.** The D-aware calibration is keyed on CNR
-   alone, but here sigma^2 grows ~64x over the usable band and var_bias scales
-   with sigma^2. The calibration reaches each CNR along its own peak-decay path,
-   while the data's CNR also falls as the spot spreads, so one CNR value pools
-   calibration frames from sigma^2 = 625 to ~38,000 nm^2, and `np.interp`
-   through those unsmoothed points is erratic (2031, 7773, and 529 nm^2 at CNR
-   1.71, 1.56, and 1.48 for x = 0.25). The script defaults to a joint
-   (CNR, sigma^2) D-free calibration on the data's pixel grid
-   (`cnr_sigma2_calibration`); `daware` reproduces the D-aware table.
+   alone, but here sigma^2 grows 13- to 24-fold over the usable band at CNR0 =
+   20, and at a given CNR var_bias grows with the width (in proportion to sigma
+   to leading order; `docs/DERIVATION.md`). The calibration reaches each CNR
+   along its own peak-decay path, while the data's CNR also falls as the spot
+   spreads, so one CNR value pools calibration frames from sigma^2 = 625 to
+   ~38,000 nm^2, and `np.interp` through those unsmoothed points is erratic
+   (2031, 7773, and 529 nm^2 at CNR 1.71, 1.56, and 1.48 for x = 0.25). The
+   script defaults to a joint (CNR, sigma^2) D-free calibration on the data's
+   pixel grid (`cnr_sigma2_calibration`); `daware` reproduces the D-aware table.
 2. **The carrier reference is not the noise-free fit.** At CNR 3 to 10, where
    the noise bias is negligible, the naive residual against `var_true` is
    already -50 to -170 nm^2: the Gaussian fit of the noise-free profile sits
    118 to 148 nm^2 below the carrier second moment on average (up to 256 nm^2).
-   That is the shape and emission-to-carrier gap, which the noise correction
-   does not address, so a residual against `var_true` mixes it in. The clean
+   That is the shape gap (these profiles are linear in the carrier density, so
+   there is no emission-to-carrier gap), which the noise correction does not
+   address, so a residual against `var_true` mixes it in. The clean
    metric for the noise correction is the residual against the noise-free fit.
 
 Against the noise-free fit at CNR0 = 20 (800 seeds), mean |residual| over the
@@ -171,7 +173,7 @@ the lookup; D is short-window D / D_ref with an SE from resampling the seeds.
   15 only.
 - The residual 0.96 to 0.98 of D_ref at CNR0 20 to 30 for x = 0.5 and 0.75
   appears with every key and with the naive fit at CNR0 30, so it is the shape
-  and emission-to-carrier gap against the carrier reference, not noise.
+  gap against the carrier reference, not noise.
 
 ## The bed
 

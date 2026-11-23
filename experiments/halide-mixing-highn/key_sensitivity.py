@@ -2,8 +2,8 @@
 
 The joint (CNR, sigma^2) calibration returns the bias at a frame's true width,
 which a measurement does not know. The key is the stand-in used for it. This
-script compares keys on the high-N Br-I bed, where sigma^2 grows ~64x over the
-usable band so the key matters:
+script compares keys on the high-N Br-I bed, where sigma^2 grows 11- to 24-fold
+over the usable band at CNR0 15 and 20, so the key matters:
 
 * ``perframe``   -- each frame's own sigma_hat^2, fixed-point inversion
                     (the library default);
@@ -18,8 +18,8 @@ usable band so the key matters:
 
 The fits are computed once per (map, CNR0) and shared by every key, so the
 keys differ only in the lookup. Residuals are against the noise-free fit of
-the same profile (the noise correction's own target; the shape and
-emission-to-carrier gap is reported separately in the bed's README). D is the
+the same profile (the noise correction's own target; the shape gap against the
+carrier reference is reported separately in the bed's README). D is the
 short-window power-law fit of the mean trajectory over frames above the floor,
 as in ``br_halide_highn_perframe.py``, with an SE from resampling the seeds.
 

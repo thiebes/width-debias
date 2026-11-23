@@ -11,9 +11,9 @@ squares: the noise-bias correction, with the bias read from a joint (CNR,
 through each realization's own fitted variances, refitted to the corrected
 values. The indigo line is the separate offset between the noise-free fit and
 the carrier reference (the second moment of the walker distribution): the
-shape and emission-to-carrier gap, which no noise correction removes. Frames
-in the shaded band fall below the per-frame CNR floor of 1.3 and are excluded
-from the fit and from the plot.
+shape gap, which no noise correction removes. Frames in the shaded band fall
+below the per-frame CNR floor of 1.3 and are excluded from the fit and from
+the plot.
 
 Over the unshaded frames the mean |Δσ²| falls from 124, 107, and 140 nm²
 (naive) to 39, 38, and 63 nm² (corrected). The short-window diffusion

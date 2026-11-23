@@ -33,6 +33,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Documentation
 
+- The high-N halide README, per-frame script, caption and figure script,
+  `key_sensitivity.py`, `docs/DERIVATION.md` and the `BiasLookup.var_bias`
+  docstring give the width growth over the fitted frames, 11- to 24-fold at
+  initial CNR 15 and 20 (13- to 24-fold at 20), where they said about
+  64-fold. The README and the per-frame script say that at a given CNR the
+  bias grows in proportion to sigma to leading order, where they said with
+  sigma^2, and the set calls the offset between the noise-free fit and the carrier
+  reference the shape gap: these profiles are linear in the carrier density,
+  so there is no emission-to-carrier gap.
+
 - Scripts that read an external simulation study's result files
   (`experiments/fft-cnr-recovery/build_fft_cnr_recovery_figure.py`,
   `experiments/dfree-calibration/calibration_se_check.py` and

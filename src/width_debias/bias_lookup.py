@@ -504,13 +504,14 @@ class BiasLookup:
         frame's own sigma_hat^2 (the usual call) over-corrects when sigma^2
         grows several-fold over the measurement: at low CNR a frame whose fit
         scatters high reads the lookup near the grid edge, and the mean is
-        over-subtracted. On the high-N Br-I bed (sigma^2 growing ~64x) this
-        left D at 0.89 to 0.96 of the reference at CNR_0 15 to 20 on two of
-        the three maps (0.99 to 1.00 on the fastest-spreading one), where a
+        over-subtracted. On the high-N Br-I bed (sigma^2 growing 11- to
+        24-fold over the fitted frames at CNR_0 15 and 20) this left D at
+        0.89 to 0.96 of the reference at CNR_0 15 to 20 on two of the three
+        maps (0.99 to 1.00 on the fastest-spreading one), where a
         measurement-level key (a robust line through the measurement's own
-        sigma_hat^2, the smoothed key) matched the exact key to within 0.004 from
-        CNR_0 15. That key assumes a form
-        for sigma^2(t), so it is not the default here; see
+        sigma_hat^2, the smoothed key) matched the exact key to within 0.004
+        from CNR_0 15. That key assumes a form for sigma^2(t), so it is not
+        the default here; see
         ``experiments/halide-mixing-highn/key_sensitivity.py`` and
         ``smoothed_key`` in ``br_halide_highn_perframe.py`` for a worked
         example and its limits (below CNR_0 ~15 no key determined D).

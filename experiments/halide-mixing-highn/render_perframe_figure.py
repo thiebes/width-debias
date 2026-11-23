@@ -6,9 +6,8 @@ joint-lookup key (``key_sensitivity.py``). Each panel shows, per frame, the mean
 fitted variance over the seeds minus the Gaussian fit of the noise-free profile,
 for the naive fit and for the corrected fit, with standard errors. That residual
 isolates the noise bias, which is what the correction removes. The separate
-offset between the noise-free fit and the carrier reference (the shape and
-emission-to-carrier gap, which no noise correction addresses) is drawn as its
-own line.
+offset between the noise-free fit and the carrier reference (the shape gap,
+which no noise correction addresses) is drawn as its own line.
 
 The correction uses the dense joint (CNR, sigma^2) calibration and the
 iterated measurement-level key (``iterated_key_correction``). The table

@@ -11,9 +11,9 @@ short-window D move toward the reference?
 The correction is keyed on (CNR, sigma^2) through a joint D-free calibration
 on the data's pixel grid (``cnr_sigma2``, the default). An earlier version used
 a 1-D D-aware calibration keyed on CNR alone (``daware``, kept for
-reproducing that table); because the spot's variance grows ~64x over the
-usable band, that lookup mis-subtracted in the late frames above the floor and
-raised the per-frame mean |residual| after correction (see
+reproducing that table); because the spot's variance grows 13- to 24-fold over
+the usable band at CNR0 20, that lookup mis-subtracted in the late frames above
+the floor and raised the per-frame mean |residual| after correction (see
 ``cnr_sigma2_calibration``). ``fisher`` uses the Fisher-anchored 1-D
 calibration with a width table instead (``fisher_calibration``), which rescales
 one sigma_0 calibration to each frame's width; ``fisher_late`` calibrates the
@@ -126,9 +126,10 @@ def daware_calibration(d_true: float, frac: str, n_frames: int) -> BiasLookup:
 def cnr_sigma2_calibration(pixel_x: np.ndarray) -> BiasLookup:
     """Joint (CNR, sigma^2) calibration on the data's pixel grid; cached.
 
-    The 1-D D-aware lookup above is keyed on CNR alone, but this bed's spot
-    grows ~8x in sigma (~64x in sigma^2) over the usable band, and var_bias
-    scales with sigma^2. Its calibration reaches each CNR along its own
+    The 1-D D-aware lookup above is keyed on CNR alone, but this bed's sigma^2
+    grows 11- to 24-fold over the usable band at CNR0 15 and 20, and at a given
+    CNR var_bias grows with the width (in proportion to sigma to leading order,
+    docs/DERIVATION.md). Its calibration reaches each CNR along its own
     peak-decay path (amplitude ~ exp(-t/tau)), while the data's CNR also falls
     as sigma_0/sigma(t) as the spot spreads, so one CNR value pools calibration
     frames from sigma^2 = 625 to ~38,000 nm^2. np.interp through those
@@ -167,11 +168,11 @@ def fisher_calibration(pixel_x: np.ndarray, workers: int | None = None,
     scales (about as sigma, not sigma^2, at fixed peak CNR); single-frame Monte
     Carlo cells at ``sigma_cal_nm`` supply only the smoothed higher-order
     residual (``BiasLookup.from_cells``). The fit uses the same ``max_var``
-    cap as the data. This bed, where sigma^2 grows ~64x, is where that
-    rescaling is tested against the joint grid, which measures every width
-    directly. The pre-specified arm calibrates at sigma_0; the post hoc arm at
-    ``FISHER_LATE_SIGMA_NM``, with its own seed. The width table spans the same
-    absolute widths for both.
+    cap as the data. This bed, where sigma^2 grows 11- to 24-fold over the
+    usable band at CNR0 15 and 20, is where that rescaling is tested against
+    the joint grid, which measures every width directly. The pre-specified arm calibrates at
+    sigma_0; the post hoc arm at ``FISHER_LATE_SIGMA_NM``, with its own seed.
+    The width table spans the same absolute widths for both.
     """
     at_sigma0 = sigma_cal_nm == SIGMA0_HINT_NM
     path = OUTPUT / (f"cal_highn_fisher_g{int(G_MAX)}_n{N_RUNS_FISHER}"
@@ -356,8 +357,9 @@ def main():
                      f"(mean signed: {np.nanmean(resid_naive[use]):+.0f} -> "
                      f"{np.nanmean(resid_corr[use]):+.0f} nm^2)")
         # The noise correction addresses distortion (1) only; var_true also
-        # carries the shape / emission-to-carrier gap (the noise-free fit's
-        # offset from the carrier second moment). Report the residual against
+        # carries the shape gap (the noise-free fit's offset from the carrier
+        # second moment; these profiles are linear in the carrier density, so
+        # there is no emission-to-carrier gap). Report the residual against
         # the noise-free fit of the same profile as the clean metric.
         nf = fit_each_row(case.x, case.profiles)
         lines.append(f"  vs noise-free fit (noise only): mean |residual| naive "

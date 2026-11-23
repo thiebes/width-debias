@@ -684,6 +684,23 @@ CLAIMS = [
               "docs/DERIVATION.md": ("(0.99 to 1.00 on the third)",),
               "src/width_debias/bias_lookup.py": (
                   "(0.99 to 1.00 on the fastest-spreading one)",)}),
+    Claim("high-N halide, width growth over the fitted frames at CNR_0 15 and 20",
+          lambda: _halide_validation_range("growth", (15, 20), 0), {
+              "docs/DERIVATION.md": (
+                  "growing 11- to 24-fold over the fitted frames at CNR₀ 15 and 20",),
+              "src/width_debias/bias_lookup.py": (
+                  "growing 11- to 24-fold over the fitted frames at CNR_0 15 and 20",),
+              f"{HALIDE}/key_sensitivity.py": (
+                  "grows 11- to 24-fold over the usable band at CNR0 15 and 20, so",),
+              f"{HALIDE}/br_halide_highn_perframe.py": (
+                  "grows 11- to 24-fold over the usable band at CNR0 15 and 20, and",
+                  "grows 11- to 24-fold over the usable band at CNR0 15 and 20, is")}),
+    Claim("high-N halide, width growth over the fitted frames at CNR_0 20",
+          lambda: _halide_validation_range("growth", (20,), 0), {
+              f"{HALIDE}/README.md": (
+                  "grows 13- to 24-fold over the usable band at CNR0 = 20",),
+              f"{HALIDE}/br_halide_highn_perframe.py": (
+                  "grows 13- to 24-fold over the usable band at CNR0 20",)}),
     Claim("high-N halide 1-D lookup, corrected residual from the floor to CNR 3",
           lambda: _halide_validation_range("resid_cor_lo", (15, 20), 0), {
               f"{HALIDE}/README.md": ("-4066 to -3548 nm^2 at CNR0 15 and 20",)}),
