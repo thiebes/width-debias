@@ -251,7 +251,7 @@ def calibrate_cnr_sigma2(model=None, *, pixel_x: np.ndarray | None = None,
     time.
 
     The lookup needs a key for the unknown true sigma^2. Keying each frame on
-    its own fitted sigma_hat^2 under-corrects when sigma^2 grows several-fold
+    its own fitted sigma_hat^2 over-corrects when sigma^2 grows several-fold
     over the measurement; see :meth:`BiasLookup.var_bias` ("Choice of
     key") before applying this calibration to fast-spreading data.
 

@@ -28,7 +28,7 @@ The class supports **two calibration modes** with the same API:
   :meth:`BiasLookup.from_calibration`. Looks up ``var_bias`` and
   per-frame ``rel_variance`` from (CNR, sigma^2) jointly. Its low-CNR
   cells need far more Monte Carlo runs than the 1-D path, and keying each frame
-  on its own fitted width under-corrects when the width grows several-fold
+  on its own fitted width over-corrects when the width grows several-fold
   (see :meth:`var_bias`); see :mod:`width_debias.calibration`.
 
 The selection between the two is automatic: pass a ``variance`` argument to
@@ -501,7 +501,7 @@ class BiasLookup:
 
         **Choice of key.** ``variance`` is the key that stands in for the
         unknown true sigma^2, and any array can be passed. Keying on each
-        frame's own sigma_hat^2 (the usual call) under-corrects when sigma^2
+        frame's own sigma_hat^2 (the usual call) over-corrects when sigma^2
         grows several-fold over the measurement: at low CNR a frame whose fit
         scatters high reads the lookup near the grid edge, and the mean is
         over-subtracted. On the high-N Br-I bed (sigma^2 growing ~64x) this

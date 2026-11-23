@@ -269,7 +269,7 @@ The D = 0 lookup assumes the width changes little over the measurement. When
 it grows several-fold, the bias at a given CNR changes with it, and a joint
 `var_bias(CNR, σ²)` calibration (`width_debias.calibration.calibrate_cnr_sigma2`)
 is needed. Its lookup requires a stand-in for the unknown true `σ²`. Keying
-each frame on its own fitted `σ̂²` under-corrects at low CNR, because a frame
+each frame on its own fitted `σ̂²` over-corrects at low CNR, because a frame
 whose fit scatters high reads the lookup near the grid edge; a
 measurement-level key (a robust line through the measurement's own `σ̂²`) avoids
 that but assumes the form of `σ²(t)`. On the high-N Br-I bed (`σ²` growing about
