@@ -89,10 +89,10 @@ _FFTCNR_STYLE = {
 def figure_fftcnr(npz_path: Path | None) -> Path | None:
     """Panel 4 (CNR-centric spine): fft-cnr recovers CNR across profile shapes.
 
-    Restyles the fft-cnr shape sweep (generalized-Gaussian fit
-    path -- the one width-debias uses) into the poster palette: the recovery
-    ratio (estimated / true CNR) vs true CNR, median + interquartile band, one
-    line per shape, centred on 1.0. The three poster-primary shapes carry roles
+    Restyles the fft-cnr shape sweep (generalized-Gaussian fit path -- the one
+    width-debias uses) into the poster palette: the recovery ratio (estimated /
+    true CNR) vs true CNR, median + interquartile band, one line per shape,
+    centred on 1.0. The three poster-primary shapes carry roles
     1-3; the flat-top is a neutral secondary reference.
     """
     if npz_path is None:

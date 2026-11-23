@@ -257,10 +257,10 @@ def calibration_D_se(times: np.ndarray, msd: np.ndarray, weights: np.ndarray,
     and is approximate. The weights' own dependence on the calibration is
     second order and not included. Sixteen independent calibrations on a
     48-point CNR_0 grid confirm the prediction: observed / predicted variance
-    0.98 over 18 draws with the MSD-point weights
-    (``experiments/dfree-calibration/calibration_se_check.py``, where the
-    weight term is below 0.06 of it from CNR_0 5 up and about 0.3 of it at
-    CNR_0 3), and 0.89 over 16 draws with frame 0 weighted
+    of the cell mean 0.93 over 18 draws, two of them external calibrations on
+    the same grid (``experiments/dfree-calibration/calibration_se_check.py``,
+    where the weight term is at most 0.04 of it from CNR_0 5 up and 0.22 of it
+    at CNR_0 3), and 0.89 over 16 draws with frame 0 weighted
     (``slope_fit_check.py``). Returns NaN when the model has no SE.
 
     A smoothed model (:meth:`~width_debias.bias_lookup.BiasLookup.from_cells`)

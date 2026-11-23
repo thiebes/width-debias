@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Documentation
 
+- Scripts that read an external simulation study's result files
+  (`experiments/fft-cnr-recovery/build_fft_cnr_recovery_figure.py`,
+  `experiments/dfree-calibration/calibration_se_check.py` and
+  `scripts/poster_figures.py`) take the directory from
+  `WIDTH_DEBIAS_EXTERNAL_RESULTS`, which has no default, and name the file and
+  the directory when a file they need is missing.
+- The fft-cnr recovery summary and figure are rebuilt from fft-cnr 0.4.0
+  estimates: in every (N, CNR) cell the median over 1000 trials lies between
+  0.989 and 1.006 of the true CNR. The summary records the fft-cnr version and
+  the SHA-256 of its source array, and the build script checks that hash
+  whenever the source is available.
 - `tests/test_quoted_numbers.py` recomputes validation numbers that the
   README, `docs/DERIVATION.md`, `docs/REPO_MAP.md`, set READMEs, captions and
   library docstrings restate, from the committed tables that produced them,
@@ -98,7 +109,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Fixes from the review of 0.4.0. The recommended path (`calibrate_d_free`, then
 `msd_and_weights("subtract")`, then `fit_D`) gives the same results for valid
-input: a probe of the frozen paths gives 105 of 105 outputs
+input: a probe of that path and the calls around it gives 105 of 105 outputs
 byte-identical to 0.4.0, and a test pins the path's outputs to the 0.4.0
 values.
 
@@ -247,7 +258,7 @@ The first release.
 ## [0.3.0] - 2026-10-21
 
 Not tagged or published; 0.4.0 is the first release. The code at commit
-2836e6c, on which an external validation study first ran.
+2836e6c, on which an external simulation study first ran.
 
 ### Added
 

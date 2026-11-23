@@ -29,9 +29,10 @@ back the corrected-bias curves.
 - `calibration_se_check.py generate|analyse` -- tests `calibration_D_se`
   against 16 independent calibrations on a 48-point grid (CNR0 1.5 to 150,
   1500 runs) applied to one fixed evaluation set; separates the bias and
-  weight terms, checks per-point SE and within-ensemble correlation, and ranks
-  an external triple of calibrations (seeds 1, 101, 201) when
-  `WIDTH_DEBIAS_EXTERNAL_RESULTS` names the directory that holds it. `generate` is about 5 h on 8 cores (cached in
+  weight terms, checks per-point SE and within-ensemble correlation, and, when
+  `WIDTH_DEBIAS_EXTERNAL_RESULTS` names a directory that holds two external
+  calibrations on the same grid (seeds 101 and 201), ranks the triple they form
+  with draw 0 (seed 1). `generate` is about 5 h on 8 cores (cached in
   `output/calibration-se-check/`).
 - `weights_check.py` -- compares two 1-D slope weightings (per-frame variance
   against the MSD-point lookup) on the cached draws of
@@ -55,7 +56,11 @@ back the corrected-bias curves.
 
 ## Data
 
-None. Fully synthetic.
+Synthetic. `calibration_se_check.py analyse` can also read two external
+calibrations (seeds 101 and 201) from the directory that
+`WIDTH_DEBIAS_EXTERNAL_RESULTS` names. The committed `calibration_se_check.txt`
+was written with them; without them its external-triple section is skipped,
+with a note on stderr.
 
 ## Run
 
@@ -158,9 +163,11 @@ averaged over D, is 0.57 to 1.27 per CNR₀ (about ±0.37 expected per cell) and
 0.89 overall; per-point `var_bias` variance matches to 0.91 to 1.07; the weight
 term is at most 0.04 of the prediction from CNR₀ 5 up (0.07 and 0.22 at CNR₀ 2
 and 3). Over the 560 three-draw subsets the mean ratio has median 0.90 and a
-5th to 95th percentile range of 0.49 to 1.31. An external triple of
-calibrations on the same grid (seeds 1, 101, 201) gives 1.31 on this evaluation
-set; 0.09 of the 816 triples from all 18 draws lie at or above it.
+5th to 95th percentile range of 0.49 to 1.31, so a calibration error estimated
+from three draws can fall far from its expected value. The triple formed by
+draw 0 (seed 1) and two external calibrations on the same grid (seeds 101 and
+201) gives 1.31 on this evaluation set; 0.09 of the 816 triples from all 18
+draws lie at or above it.
 
 `weights_check` (`weights_check.txt`; the same 16 draws, 300 evaluation runs
 per cell): the library per-frame weights narrow the spread of D/D_in over

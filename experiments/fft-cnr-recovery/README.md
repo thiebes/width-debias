@@ -35,3 +35,7 @@ being at N = 1024, CNR = 2. Figure `fft_cnr_recovery.png`, caption
 
 **Depends on** -- no in-repo helpers; reads the external result array only to
 build the committed summary.
+
+**See also** -- `src/width_debias/cnr.py` (`per_frame_cnr`, the fft-cnr wrapper
+the correction uses on real data), `experiments/wse2-strobescat` (the CNR key
+on real data), and `docs/VALIDATION_DESIGN.md`.

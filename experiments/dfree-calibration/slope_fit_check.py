@@ -17,7 +17,7 @@ script compares the two on cached Monte Carlo, with no new simulation:
 4. coverage: fraction of realizations whose fit_D 95 % interval (covariance
    SE combined with the calibration SE) contains D_in.
 
-Frames below per-frame CNR 1 are dropped, as in the other validations.
+Frames below per-frame CNR 1 are dropped, as in ``validate_d_zero.py``.
 
     .venv/Scripts/python.exe experiments/dfree-calibration/slope_fit_check.py
 """
