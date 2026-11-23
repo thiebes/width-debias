@@ -49,30 +49,12 @@ from width_debias.bias_lookup import BiasLookup  # noqa: E402
 from width_debias.validate import calibrate  # noqa: E402
 from width_debias.weights import corrected_variance  # noqa: E402
 
-from width_debias.fit import fit_variance as _fit_gaussian  # noqa: E402
-
 from br_halide_validation import fit_msd_powerlaw  # noqa: E402
-from br_halide_highn_validation import STRIDE, subsample  # noqa: E402
+# The width-fit bound (max_var = (G * sigma0)^2, G = 12) and the bounded fit
+# live with the 1-D validation, so every high-N script fits with one bound.
+from br_halide_highn_validation import (  # noqa: E402
+    G_MAX, MAX_VAR, STRIDE, fit_each_row, subsample)
 from br_highn_data import SIGMA0_HINT_NM, load_all  # noqa: E402
-
-# Tighten the width fit's upper bound from the window span^2 to a physical cap
-# (G * sigma0)^2: the spot grows ~8x in sigma over the window, so G = 12 clears
-# every real frame (sigma capped at 300 nm) while bounding the low-CNR fit's
-# noise-wandering, which the wide 3000 nm window otherwise leaves unbounded.
-# Applied identically to the data fit and the calibration (the var_bias must
-# come from the same bound).
-G_MAX = 12.0
-MAX_VAR = (G_MAX * SIGMA0_HINT_NM) ** 2
-
-
-def fit_each_row(x, profiles):
-    """Bounded Gaussian width fit per frame, with the tightened max_var bound."""
-    out = np.full(profiles.shape[0], np.nan)
-    for i in range(profiles.shape[0]):
-        r = _fit_gaussian(x, profiles[i], max_var=MAX_VAR)
-        if r.ok and np.isfinite(r.variance):
-            out[i] = r.variance
-    return out
 
 OUTPUT = Path(__file__).resolve().parents[2] / "output"  # repo-root output/ (cached calibrations)
 OUTPUT.mkdir(exist_ok=True)

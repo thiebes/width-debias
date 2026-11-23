@@ -198,10 +198,31 @@ shorter effective window, which is the fair test).
 
 - `br_highn_data.py` -- loads the collapsed 1-D profiles, the reference from
   `variance.avg.dat / 2`, imposes the tau ~ 1 ns decay envelope.
-- `br_halide_highn_validation.py` -- the CNR0 sweep at this geometry; naive vs
-  corrected alpha/D. Uses the 1-D D=0 calibration, which **under**-corrects here
-  because the width grows 26-61x (the 2-D (CNR, sigma^2) D-free calibration is the
-  deployable path).
+- `br_halide_highn_validation.py` -- the CNR0 sweep for the 1-D D-free lookup
+  (calibrated at D = 0 and σ₀, read by the per-frame CNR alone). The width fit
+  is capped at sigma = 12 σ₀ = 300 nm in the calibration and in the application,
+  and frames below per-frame CNR 1.3 are left out. It writes
+  `br_halide_highn_validation.txt`: each arm's D, divided by the noise-free
+  fit's D over the same frames, with SEs from 200 seeds and from 200 draws of
+  the lookup's own error. The naive and the corrected fits restricted to frames
+  with per-frame CNR >= 3 run beside them. Read down to the floor, the lookup
+  over-subtracts on this bed. Between per-frame CNR 1.3 and 3 its residual
+  against the noise-free fit is -4066 to -3548 nm^2 at CNR0 15 and 20 (naive
+  +206 to +418 nm^2), and the corrected D is 0.35 to 0.44 of the noise-free
+  fit's at CNR0 15, 0.50 to 0.61 at CNR0 20 and 0.90 to 0.93 at CNR0 50. The
+  cause is the lookup at σ₀: at per-frame CNR 1.3, 2 and 3 it is 11017, 3901 and
+  218 nm^2 (SE 647, 418 and 92 nm^2), against a leading term (the width's Fisher
+  variance on the calibration grid, 5.008 nm pitch) of 83.6, 35.3 and 15.7 nm^2.
+  At σ₀ the low-CNR fits wander toward the cap in the 3000 nm window (see
+  `FISHER_LATE_SIGMA_NM` in `br_halide_highn_perframe.py`), and the wider spots
+  the lookup is applied to do not carry that term. Kept to frames with per-frame
+  CNR >= 3, the lookup recovers D: 0.96 to 1.02 of the noise-free fit's at CNR0
+  15 and 20, each within 1.9 combined SE of 1, where the naive fit on the same
+  frames gives 0.99 to 1.04, with 4 of the 6 cells beyond 2 SE. At CNR0 5 and 8,
+  with 4 to 8 such frames, the corrected D is 0.40 to 1.02 (calibration SE up to
+  0.16), so D is not determined there. To use the frames down to the 1.3 floor,
+  the joint (CNR, sigma^2) D-free calibration in `br_halide_highn_perframe.py`
+  is the deployable path.
 - `br_halide_highn_perframe.py [cnr_sigma2|daware|fisher|fisher_late] [CNR0]` --
   the per-frame residual (with a signed per-frame table), short-window D, and
   the figure. Default calibration is the joint (CNR, sigma^2) one; `daware` is

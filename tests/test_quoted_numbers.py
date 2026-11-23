@@ -389,6 +389,87 @@ def _halide_key_range(key: str, maps: tuple[str, ...]) -> tuple[str, ...]:
     return _rounded(min(values), 2), _rounded(max(values), 2)
 
 
+HALIDE_VALIDATION_FIELDS = {
+    "growth": r"grows ([\d.]+)-fold over them",
+    "resid_naive_hi": r"CNR >= 3: naive ([-+\d]+),",
+    "resid_cor_hi": r"CNR >= 3: naive [-+\d]+, corrected ([-+\d]+);",
+    "resid_naive_lo": r"floor to 3: naive ([-+\d]+),",
+    "resid_cor_lo": r"floor to 3: naive [-+\d]+, corrected ([-+\d]+)",
+    "corrected": r"; corrected ([\d.]+) \(",
+    "strict": r"naive, CNR >= 3 \(\d+ frames\) ([\d.]+) ",
+    "strict_se": r"naive, CNR >= 3 \(\d+ frames\) [\d.]+ \(([\d.]+)\)",
+    "strict_frames": r"naive, CNR >= 3 \((\d+) frames\)",
+    "cor_strict": r"corrected, CNR >= 3 ([\d.]+) \(",
+    "cor_strict_se": r"corrected, CNR >= 3 [\d.]+ \(([\d.]+);",
+    "cor_strict_cal": r"corrected, CNR >= 3 [\d.]+ \([\d.]+; calibration ([\d.]+)\)",
+}
+HALIDE_LOOKUP_CNR = ("1.3", "2", "3")
+
+
+def _halide_validation() -> dict[tuple[str, int], dict[str, Decimal]]:
+    """The fields of each (Br fraction, CNR_0) cell of the 1-D lookup's validation
+    table; a field the table prints as n/a is absent."""
+    path = f"{HALIDE}/br_halide_highn_validation.txt"
+    cells = {}
+    for block in re.split(r"^Br x=", _read(path), flags=re.M)[1:]:
+        x = block.split(":", 1)[0]
+        for cell in re.split(r"^  CNR0 ", block, flags=re.M)[1:]:
+            values = {}
+            for field, pattern in HALIDE_VALIDATION_FIELDS.items():
+                match = re.search(pattern, cell)
+                if match:
+                    values[field] = Decimal(match.group(1).lstrip("+"))
+            cells[(x, int(cell.split(":", 1)[0]))] = values
+    assert cells, f"{path}: no cells"
+    return cells
+
+
+def _halide_validation_cells(field: str, cnr0s: tuple[int, ...],
+                             expected: int | None = None) -> list[dict[str, Decimal]]:
+    """The cells at the given CNR_0 that carry the field; by default all three maps."""
+    cells = [cell for (_, cnr0), cell in _halide_validation().items()
+             if cnr0 in cnr0s and field in cell]
+    expected = 3 * len(cnr0s) if expected is None else expected
+    assert len(cells) == expected, (
+        f"{HALIDE}/br_halide_highn_validation.txt: {len(cells)} {field} cells at CNR_0 "
+        f"{cnr0s}, expected {expected}")
+    return cells
+
+
+def _halide_validation_range(field: str, cnr0s: tuple[int, ...], places: int,
+                             expected: int | None = None) -> tuple[str, ...]:
+    """One field's range over the maps at the given CNR_0, rounded as quoted."""
+    values = [cell[field] for cell in _halide_validation_cells(field, cnr0s, expected)]
+    return _rounded(min(values), places), _rounded(max(values), places)
+
+
+def _halide_corrected_strict_max_z() -> tuple[str, ...]:
+    """Largest |D/D_nf - 1| over its combined SE (seeds and calibration), corrected
+    arm on the frames at or above per-frame CNR 3, CNR_0 15 and 20, as a bound."""
+    z = [abs(c["cor_strict"] - 1) / (c["cor_strict_se"] ** 2 + c["cor_strict_cal"] ** 2).sqrt()
+         for c in _halide_validation_cells("cor_strict", (15, 20))]
+    return (_bound(max(z), 1),)
+
+
+def _halide_naive_strict_beyond() -> tuple[str, ...]:
+    """Cells of the naive arm at or above per-frame CNR 3 lying beyond 2 SE of the
+    noise-free fit, CNR_0 15 and 20, and the number of cells."""
+    cells = _halide_validation_cells("strict", (15, 20))
+    beyond = sum(abs(c["strict"] - 1) > 2 * c["strict_se"] for c in cells)
+    return str(beyond), str(len(cells))
+
+
+def _halide_lookup(column: int) -> tuple[str, ...]:
+    """The lookup at sigma_0 (column 1), its SE (2) or its leading term (3), at
+    per-frame CNR 1.3, 2 and 3, from the validation table's header."""
+    path = f"{HALIDE}/br_halide_highn_validation.txt"
+    rows = {m.group(1): m.groups() for m in re.finditer(
+        r"per-frame CNR ([\d.]+): lookup (\d+) nm\^2 \(SE (\d+)\), leading term "
+        r"([\d.]+) nm\^2", _read(path))}
+    assert set(HALIDE_LOOKUP_CNR) <= rows.keys(), f"{path}: missing lookup rows"
+    return tuple(rows[cnr][column] for cnr in HALIDE_LOOKUP_CNR)
+
+
 def _coverage_rows() -> list[dict[str, Decimal]]:
     """The per-cell rows of coverage_check.txt."""
     rows = []
@@ -603,6 +684,52 @@ CLAIMS = [
               "docs/DERIVATION.md": ("(0.99 to 1.00 on the third)",),
               "src/width_debias/bias_lookup.py": (
                   "(0.99 to 1.00 on the fastest-spreading one)",)}),
+    Claim("high-N halide 1-D lookup, corrected residual from the floor to CNR 3",
+          lambda: _halide_validation_range("resid_cor_lo", (15, 20), 0), {
+              f"{HALIDE}/README.md": ("-4066 to -3548 nm^2 at CNR0 15 and 20",)}),
+    Claim("high-N halide 1-D lookup, naive residual from the floor to CNR 3",
+          lambda: _halide_validation_range("resid_naive_lo", (15, 20), 0), {
+              f"{HALIDE}/README.md": ("(naive +206 to +418 nm^2)",)}),
+    *[Claim(f"high-N halide 1-D lookup, corrected D at CNR_0 {cnr0}",
+            lambda cnr0=cnr0: _halide_validation_range("corrected", (cnr0,), 2), {
+                f"{HALIDE}/README.md": (snippet,)})
+      for cnr0, snippet in ((15, "corrected D is 0.35 to 0.44 of the noise-free fit's"),
+                            (20, "0.50 to 0.61 at CNR0 20"),
+                            (50, "0.90 to 0.93 at CNR0 50"))],
+    Claim("high-N halide 1-D lookup, corrected D at CNR_0 15 and 20",
+          lambda: _halide_validation_range("corrected", (15, 20), 2), {
+              "docs/REPO_MAP.md": ("(D 0.35-0.61 of the noise-free fit's at CNR0 15 and 20)",)}),
+    Claim("high-N halide 1-D lookup at sigma_0, per-frame CNR 1.3, 2 and 3",
+          lambda: _halide_lookup(1), {
+              f"{HALIDE}/README.md": ("it is 11017, 3901 and 218 nm^2",)}),
+    Claim("high-N halide 1-D lookup at sigma_0, its SE", lambda: _halide_lookup(2), {
+        f"{HALIDE}/README.md": ("(SE 647, 418 and 92 nm^2)",)}),
+    Claim("high-N halide 1-D lookup at sigma_0, the leading term", lambda: _halide_lookup(3), {
+        f"{HALIDE}/README.md": ("of 83.6, 35.3 and 15.7 nm^2",)}),
+    Claim("high-N halide 1-D lookup above CNR 3, corrected D at CNR_0 15 and 20",
+          lambda: _halide_validation_range("cor_strict", (15, 20), 2), {
+              f"{HALIDE}/README.md": ("the lookup recovers D: 0.96 to 1.02",),
+              "docs/REPO_MAP.md": ("recovers D to 0.96-1.02",)}),
+    Claim("high-N halide 1-D lookup above CNR 3, largest z at CNR_0 15 and 20",
+          _halide_corrected_strict_max_z, {
+              f"{HALIDE}/README.md": ("each within 1.9 combined SE of 1",)}),
+    Claim("high-N halide 1-D lookup, naive fit above CNR 3 at CNR_0 15 and 20",
+          lambda: _halide_validation_range("strict", (15, 20), 2), {
+              f"{HALIDE}/README.md": ("the naive fit on the same frames gives 0.99 to 1.04",)}),
+    Claim("high-N halide 1-D lookup, naive fit above CNR 3, cells beyond 2 SE",
+          _halide_naive_strict_beyond, {
+              f"{HALIDE}/README.md": ("with 4 of the 6 cells beyond 2 SE",)}),
+    Claim("high-N halide 1-D lookup above CNR 3, frames at CNR_0 5 and 8",
+          lambda: tuple(str(f(c["strict_frames"] for c in _halide_validation_cells(
+              "cor_strict", (5, 8), expected=5))) for f in (min, max)), {
+              f"{HALIDE}/README.md": ("with 4 to 8 such frames",)}),
+    Claim("high-N halide 1-D lookup above CNR 3, corrected D at CNR_0 5 and 8",
+          lambda: _halide_validation_range("cor_strict", (5, 8), 2, expected=5), {
+              f"{HALIDE}/README.md": ("the corrected D is 0.40 to 1.02",)}),
+    Claim("high-N halide 1-D lookup above CNR 3, calibration SE at CNR_0 5 and 8",
+          lambda: (_bound(max(c["cor_strict_cal"] for c in _halide_validation_cells(
+              "cor_strict_cal", (5, 8), expected=5)), 2),), {
+              f"{HALIDE}/README.md": ("(calibration SE up to 0.16)",)}),
     Claim("unbounded comparison, OLS at CNR_0 34",
           lambda: (_rounded(_unbounded_d_row(34)[0], 2),), {
               "README.md": ("an unweighted fit returns 1.20 times the reference D",)}),
@@ -685,6 +812,7 @@ RETIRED = {
     "0.089 vs": HISTORY_DOCUMENTS,
     "1.00 times the reference": HISTORY_DOCUMENTS,
     "0.98 over 18 draws": HISTORY_DOCUMENTS,
+    "26 to 61": HISTORY_DOCUMENTS,
 }
 
 

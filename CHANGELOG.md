@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `experiments/halide-mixing-highn/br_halide_highn_validation.py`, the test of
+  the 1-D D-free lookup on the high-N halide bed, caps the fitted width at
+  12 sigma_0 = 300 nm in the calibration and in the application, as the rest
+  of the set does. With the fit's default bound, the 3000 nm window, low-CNR
+  calibration fits wandered toward the window, the lookup's bias reached about
+  340,000 nm^2 at per-frame CNR 1, and the corrected arm collapsed. The script
+  also leaves out frames below per-frame CNR 1.3, divides each arm's D by the
+  noise-free fit's D over the same frames, gives SEs from 200 seeds and from
+  200 draws of the lookup's own error, and counts failed fits. It adds the
+  corrected fit restricted to per-frame CNR >= 3 beside the naive one, and
+  its header gives the lookup at sigma_0 next to its leading term, the width's
+  Fisher variance on the calibration grid. Its table is committed as
+  `br_halide_highn_validation.txt`. The set README said this lookup
+  under-corrects on the bed because the width grows 26- to 61-fold; the table
+  shows that, read down to the floor, it over-subtracts. Between per-frame CNR
+  1.3 and 3 its residual is -4066 to -3548 nm^2 at initial CNR 15 and 20, and
+  the corrected D there is 0.35 to 0.61 of the noise-free fit's, because the
+  lookup at sigma_0 is 14 to 132 times its leading term between per-frame CNR
+  3 and 1.3. Kept to per-frame CNR >= 3, it gives 0.96 to 1.02.
+  `br_halide_highn_perframe.py` imports the cap and the bounded fit from it,
+  with unchanged fits.
+
 ### Documentation
 
 - Scripts that read an external simulation study's result files
