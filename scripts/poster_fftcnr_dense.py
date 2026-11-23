@@ -27,7 +27,7 @@ Run from the repository root::
 
     .venv/Scripts/python.exe scripts/poster_fftcnr_dense.py [white|shot]
 
-Output: ``output/case11_gengauss_cnr_sweep_{dense,shot}.npz`` (drop-in for
+Output: ``output/gengauss_cnr_sweep_{dense,shot}.npz`` (drop-in for
 ``poster_figures.figure_fftcnr``).
 """
 from __future__ import annotations
@@ -63,7 +63,7 @@ N_TRIALS = 500
 
 
 def make_clean(shape: str) -> np.ndarray:
-    """Noise-free, peak-normalized profile of the requested shape (external sweep's definitions)."""
+    """Noise-free, peak-normalized profile of a shape, as the external sweep defines it."""
     x = np.arange(N, dtype=float)
     center = (N - 1) / 2.0
     if shape == "Gaussian (p=2)":
@@ -114,7 +114,7 @@ def main() -> None:
           f"{N_TRIALS} trials/cell)")
     res = sweep(mode)
     suffix = "dense" if mode == "white" else "shot"
-    npz = OUTPUT / f"case11_gengauss_cnr_sweep_{suffix}.npz"
+    npz = OUTPUT / f"gengauss_cnr_sweep_{suffix}.npz"
     np.savez(
         npz,
         true_cnr=TRUE_CNR,
