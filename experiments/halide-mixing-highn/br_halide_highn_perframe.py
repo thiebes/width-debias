@@ -8,17 +8,16 @@ The honest test is the project's actual metric -- the per-frame mean residual
 the correction reduce the upward bias the naive fit carries, and does the
 short-window D move toward the reference?
 
-The correction is keyed on (CNR, sigma^2) through a joint D-free calibration
-on the data's pixel grid (``cnr_sigma2``, the default). An earlier version used
-a 1-D D-aware calibration keyed on CNR alone (``daware``, kept for
-reproducing that table); because the spot's variance grows 13- to 24-fold over
-the usable band at CNR0 20, that lookup mis-subtracted in the late frames above
-the floor and raised the per-frame mean |residual| after correction (see
-``cnr_sigma2_calibration``). ``fisher`` uses the Fisher-anchored 1-D
-calibration with a width table instead (``fisher_calibration``), which rescales
-one sigma_0 calibration to each frame's width; ``fisher_late`` calibrates the
-same way at the width of the frames the correction acts on (post hoc; see
-``FISHER_LATE_SIGMA_NM``).
+The correction is keyed on (CNR, sigma^2) through a joint D-free calibration on
+the data's pixel grid (``cnr_sigma2``, the default). ``daware`` is a 1-D
+D-aware calibration keyed on CNR alone, kept to reproduce its table; because
+the spot's variance grows 13- to 24-fold over the usable band at CNR0 20, that
+lookup mis-subtracted in the late frames above the floor and raised the
+per-frame mean |residual| after correction (see ``cnr_sigma2_calibration``).
+``fisher`` uses the Fisher-anchored 1-D calibration with a width table instead
+(``fisher_calibration``), which rescales one sigma_0 calibration to each
+frame's width; ``fisher_late`` calibrates the same way at the width of the
+frames the correction acts on (post hoc; see ``FISHER_LATE_SIGMA_NM``).
 
 Run from the repository root (needs the pshare)::
 
@@ -50,10 +49,11 @@ from width_debias.validate import calibrate  # noqa: E402
 from width_debias.weights import corrected_variance  # noqa: E402
 
 from br_halide_validation import fit_msd_powerlaw  # noqa: E402
-# The width-fit bound (max_var = (G * sigma0)^2, G = 12) and the bounded fit
-# live with the 1-D validation, so every high-N script fits with one bound.
+# The width-fit bound (max_var = (G * sigma0)^2, G = 12), the bounded fit and
+# the per-frame CNR floor live with the 1-D validation, so every high-N script
+# fits with one bound and one floor.
 from br_halide_highn_validation import (  # noqa: E402
-    G_MAX, MAX_VAR, STRIDE, fit_each_row, subsample)
+    FLOOR_CNR, G_MAX, MAX_VAR, STRIDE, fit_each_row, subsample)
 from br_highn_data import SIGMA0_HINT_NM, load_all  # noqa: E402
 
 OUTPUT = Path(__file__).resolve().parents[2] / "output"  # repo-root output/ (cached calibrations)
@@ -73,7 +73,6 @@ N_SEEDS = 800
 # "smoothed" (a robust line through the measurement; see smoothed_key), or
 # "iterated" (that line refitted to the corrected values; the figure's key).
 KEY = os.environ.get("HIGHN_KEY", "perseed")
-FLOOR_CNR = 1.3      # project floor: the 2-D lookup over-subtracts below ~1.3
 CAL_CNR0 = np.geomspace(1.2, 60.0, 30)
 N_RUNS_CAL = 600
 # Joint (CNR, sigma^2) calibration: sigma spans the true widths of the usable
@@ -170,8 +169,9 @@ def fisher_calibration(pixel_x: np.ndarray, workers: int | None = None,
     residual (``BiasLookup.from_cells``). The fit uses the same ``max_var``
     cap as the data. This bed, where sigma^2 grows 11- to 24-fold over the
     usable band at CNR0 15 and 20, is where that rescaling is tested against
-    the joint grid, which measures every width directly. The pre-specified arm calibrates at
-    sigma_0; the post hoc arm at ``FISHER_LATE_SIGMA_NM``, with its own seed.
+    the joint grid, which measures every width directly. The pre-specified
+    arm calibrates at sigma_0; the post hoc arm at ``FISHER_LATE_SIGMA_NM``,
+    with its own seed.
     The width table spans the same absolute widths for both.
     """
     at_sigma0 = sigma_cal_nm == SIGMA0_HINT_NM
