@@ -22,6 +22,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   its own decay law overrides `decay_amplitude`, as `MultiExpExperiment`
   does), and with the option on `cnr_per_frame` returns the CNR of the
   simulated frames.
+- `experiments/dfree-calibration/validate_d_zero.py` takes `--spread-dims`,
+  to evaluate with a peak that also falls as the profile spreads, and
+  `--cal-runs`, to set the calibration runs per CNR_0 point apart from the
+  evaluation runs. A falling peak takes the late frames to a lower per-frame
+  CNR than the D = 0 calibration reaches, so each window names CNR_0 points
+  that extend its calibration grid down (CNR_0 1.8 for the short window), and
+  the script stops before calibrating if a frame kept at CNR >= 1 would still
+  lie below the calibrated range. Each run saves its cell statistics and its
+  lookup as `.npz` files, and `--report` rebuilds a report from saved
+  statistics. Reports print the SEs and the spread to five decimals and the
+  mean to four, so a large calibration's SE at large D is not printed as
+  0.000. The falling-peak tables for both windows (summed profile, 5000-run
+  calibration) are committed with their statistics and lookups. The corrected
+  fit (CNR >= 1) has 6 of 140 cells beyond 2 combined SE in the standard
+  window and 7 of 96 in the short window, and its pooled bias is within 0.8
+  combined SE on every shape; the naive all-frames fit has 45 of 140 and 43 of
+  96. With the decay alone the corrected fit has 4 of 140 and 5 of 96 and the
+  naive fit 46 of 140 and 41 of 96.
 
 ### Changed
 

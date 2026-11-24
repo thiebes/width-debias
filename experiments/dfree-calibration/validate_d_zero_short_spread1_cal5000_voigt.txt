@@ -1,0 +1,431 @@
+D=0 calibration applied to all D_true values (voigt; window t_max = 0.5 tau)
+calibrate_d_free, CNR0 2, 3, 4, 6, 8, 12, 1.8, 5000 runs, seed 1500001; evaluation 2000 runs per cell, seeds 1520000 + 1000 k + i; library slope weights; every arm uses the same realizations
+peak falls with spreading (spread_dims = 1, a summed profile); the D = 0 calibration does not spread
+calibration grid extended by CNR0 1.8 (the last seeds), so that every frame kept at CNR >= 1 lies inside the calibrated range (lowest kept 1.128, lowest calibrated 1.092)
+
+==============================================================================
+--- corrected, all frames
+cells beyond 2 combined SE: 0 of 24 (one calibration per shape, so the cells share its error)
+
+mean D/D_ref
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200      1.8405    1.0097    0.7681    0.8228    0.9134    0.8863
+  0.0500      0.8989    1.1489    1.0885    1.0580    0.9525    0.9842
+  0.1000      1.0814    0.9794    0.9964    0.9924    0.9976    0.9753
+  0.2000      1.0131    1.0030    0.9880    1.0128    1.0219    0.9922
+
+evaluation SE (spread / sqrt(runs per cell))
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200     0.47727   0.27325   0.19885   0.13002   0.09677   0.06330
+  0.0500     0.18622   0.10994   0.08282   0.05270   0.03884   0.02675
+  0.1000     0.09718   0.05820   0.04230   0.02730   0.01980   0.01349
+  0.2000     0.05332   0.03002   0.02252   0.01373   0.01032   0.00732
+
+calibration SE (propagated lookup error)
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200     0.23984   0.15598   0.10040   0.07359   0.04887   0.03677
+  0.0500     0.11243   0.05876   0.04598   0.02717   0.02238   0.01360
+  0.1000     0.05160   0.03057   0.02129   0.01443   0.01037   0.00722
+  0.2000     0.02853   0.01495   0.01149   0.00697   0.00559   0.00349
+
+(D/D_ref - 1) / combined SE
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200        1.57      0.03     -1.04     -1.19     -0.80     -1.55
+  0.0500       -0.46      1.19      0.93      0.98     -1.06     -0.53
+  0.1000        0.74     -0.31     -0.08     -0.25     -0.11     -1.62
+  0.2000        0.22      0.09     -0.48      0.83      1.87     -0.96
+
+spread of D/D_ref over realizations (one measurement)
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200    21.34407  12.21990   8.89306   5.81461   4.32763   2.83088
+  0.0500     8.32809   4.91665   3.70396   2.35681   1.73677   1.19638
+  0.1000     4.34598   2.60284   1.89150   1.22098   0.88558   0.60307
+  0.2000     2.38443   1.34250   1.00703   0.61399   0.46133   0.32755
+
+pooled D/D_ref - 1 (inverse combined variance; calibration SE as one shared systematic, fully correlated, an upper bound)
+  D 0.0200: -0.1089 +/- 0.0467 (evaluation) +/- 0.0535 (calibration); -1.53 combined SE
+  D 0.0500: -0.0035 +/- 0.0193 (evaluation) +/- 0.0217 (calibration); -0.12 combined SE
+  D 0.1000: -0.0146 +/- 0.0098 (evaluation) +/- 0.0108 (calibration); -1.00 combined SE
+  D 0.2000: +0.0028 +/- 0.0052 (evaluation) +/- 0.0055 (calibration); +0.37 combined SE
+  all cells: -0.0020 +/- 0.0045 (evaluation) +/- 0.0079 (calibration); -0.22 combined SE
+
+==============================================================================
+--- corrected, CNR >= 1
+cells beyond 2 combined SE: 0 of 24 (one calibration per shape, so the cells share its error)
+
+mean D/D_ref
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200      1.8405    1.0097    0.7681    0.8228    0.9134    0.8863
+  0.0500      0.8989    1.1489    1.0885    1.0580    0.9525    0.9842
+  0.1000      1.0814    0.9794    0.9964    0.9924    0.9976    0.9753
+  0.2000      1.0131    1.0030    0.9880    1.0128    1.0219    0.9922
+
+evaluation SE (spread / sqrt(runs per cell))
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200     0.47727   0.27325   0.19885   0.13002   0.09677   0.06330
+  0.0500     0.18622   0.10994   0.08282   0.05270   0.03884   0.02675
+  0.1000     0.09718   0.05820   0.04230   0.02730   0.01980   0.01349
+  0.2000     0.05332   0.03002   0.02252   0.01373   0.01032   0.00732
+
+calibration SE (propagated lookup error)
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200     0.23984   0.15598   0.10040   0.07359   0.04887   0.03677
+  0.0500     0.11243   0.05876   0.04598   0.02717   0.02238   0.01360
+  0.1000     0.05160   0.03057   0.02129   0.01443   0.01037   0.00722
+  0.2000     0.02853   0.01495   0.01149   0.00697   0.00559   0.00349
+
+(D/D_ref - 1) / combined SE
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200        1.57      0.03     -1.04     -1.19     -0.80     -1.55
+  0.0500       -0.46      1.19      0.93      0.98     -1.06     -0.53
+  0.1000        0.74     -0.31     -0.08     -0.25     -0.11     -1.62
+  0.2000        0.22      0.09     -0.48      0.83      1.87     -0.96
+
+spread of D/D_ref over realizations (one measurement)
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200    21.34407  12.21990   8.89306   5.81461   4.32763   2.83088
+  0.0500     8.32809   4.91665   3.70396   2.35681   1.73677   1.19638
+  0.1000     4.34598   2.60284   1.89150   1.22098   0.88558   0.60307
+  0.2000     2.38443   1.34250   1.00703   0.61399   0.46133   0.32755
+
+pooled D/D_ref - 1 (inverse combined variance; calibration SE as one shared systematic, fully correlated, an upper bound)
+  D 0.0200: -0.1089 +/- 0.0467 (evaluation) +/- 0.0535 (calibration); -1.53 combined SE
+  D 0.0500: -0.0035 +/- 0.0193 (evaluation) +/- 0.0217 (calibration); -0.12 combined SE
+  D 0.1000: -0.0146 +/- 0.0098 (evaluation) +/- 0.0108 (calibration); -1.00 combined SE
+  D 0.2000: +0.0028 +/- 0.0052 (evaluation) +/- 0.0055 (calibration); +0.37 combined SE
+  all cells: -0.0020 +/- 0.0045 (evaluation) +/- 0.0079 (calibration); -0.22 combined SE
+
+==============================================================================
+--- naive, CNR >= 3
+cells beyond 2 combined SE: 3 of 16 (one calibration per shape, so the cells share its error)
+
+mean D/D_ref
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200         nan       nan    1.5059    1.0180    1.0484    0.9800
+  0.0500         nan       nan    1.2905    1.1354    1.0021    1.0242
+  0.1000         nan       nan    1.1671    1.0307    1.0312    0.9973
+  0.2000         nan       nan    0.9394    1.0331    1.0365    1.0040
+
+evaluation SE (spread / sqrt(runs per cell))
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200         nan       nan   0.38938   0.13002   0.09677   0.06330
+  0.0500         nan       nan   0.16037   0.05270   0.03884   0.02675
+  0.1000         nan       nan   0.09964   0.02730   0.01980   0.01349
+  0.2000         nan       nan   0.04975   0.01373   0.01032   0.00732
+
+(D/D_ref - 1) / combined SE
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200         nan       nan      1.30      0.14      0.50     -0.32
+  0.0500         nan       nan      1.81      2.57      0.05      0.90
+  0.1000         nan       nan      1.68      1.13      1.57     -0.20
+  0.2000         nan       nan     -1.22      2.41      3.54      0.54
+
+spread of D/D_ref over realizations (one measurement)
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200         nan       nan  17.41343   5.81461   4.32763   2.83088
+  0.0500         nan       nan   7.17203   2.35681   1.73677   1.19638
+  0.1000         nan       nan   4.45605   1.22098   0.88558   0.60307
+  0.2000         nan       nan   2.22494   0.61399   0.46133   0.32755
+
+pooled D/D_ref - 1 (inverse combined variance; calibration SE as one shared systematic, fully correlated, an upper bound)
+  D 0.0200: +0.0109 +/- 0.0487 (evaluation) +/- 0.0000 (calibration); +0.22 combined SE
+  D 0.0500: +0.0387 +/- 0.0202 (evaluation) +/- 0.0000 (calibration); +1.92 combined SE
+  D 0.1000: +0.0129 +/- 0.0103 (evaluation) +/- 0.0000 (calibration); +1.26 combined SE
+  D 0.2000: +0.0168 +/- 0.0054 (evaluation) +/- 0.0000 (calibration); +3.09 combined SE
+  all cells: +0.0171 +/- 0.0047 (evaluation) +/- 0.0000 (calibration); +3.68 combined SE
+
+==============================================================================
+--- naive, CNR >= 2
+cells beyond 2 combined SE: 5 of 20 (one calibration per shape, so the cells share its error)
+
+mean D/D_ref
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200         nan    1.6879    1.2987    1.0180    1.0484    0.9800
+  0.0500         nan    1.2854    1.2959    1.1354    1.0021    1.0242
+  0.1000         nan    1.1396    1.1005    1.0307    1.0312    0.9973
+  0.2000         nan    1.0820    1.0417    1.0331    1.0365    1.0040
+
+evaluation SE (spread / sqrt(runs per cell))
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200         nan   0.38621   0.19885   0.13002   0.09677   0.06330
+  0.0500         nan   0.15414   0.08282   0.05270   0.03884   0.02675
+  0.1000         nan   0.07906   0.04230   0.02730   0.01980   0.01349
+  0.2000         nan   0.04676   0.02252   0.01373   0.01032   0.00732
+
+(D/D_ref - 1) / combined SE
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200         nan      1.78      1.50      0.14      0.50     -0.32
+  0.0500         nan      1.85      3.57      2.57      0.05      0.90
+  0.1000         nan      1.77      2.38      1.13      1.57     -0.20
+  0.2000         nan      1.75      1.85      2.41      3.54      0.54
+
+spread of D/D_ref over realizations (one measurement)
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200         nan  17.27165   8.89306   5.81461   4.32763   2.83088
+  0.0500         nan   6.89324   3.70396   2.35681   1.73677   1.19638
+  0.1000         nan   3.53571   1.89150   1.22098   0.88558   0.60307
+  0.2000         nan   2.09121   1.00703   0.61399   0.46133   0.32755
+
+pooled D/D_ref - 1 (inverse combined variance; calibration SE as one shared systematic, fully correlated, an upper bound)
+  D 0.0200: +0.0300 +/- 0.0473 (evaluation) +/- 0.0000 (calibration); +0.63 combined SE
+  D 0.0500: +0.0533 +/- 0.0196 (evaluation) +/- 0.0000 (calibration); +2.72 combined SE
+  D 0.1000: +0.0182 +/- 0.0099 (evaluation) +/- 0.0000 (calibration); +1.83 combined SE
+  D 0.2000: +0.0199 +/- 0.0053 (evaluation) +/- 0.0000 (calibration); +3.77 combined SE
+  all cells: +0.0214 +/- 0.0045 (evaluation) +/- 0.0000 (calibration); +4.74 combined SE
+
+==============================================================================
+--- naive, all frames
+cells beyond 2 combined SE: 12 of 24 (one calibration per shape, so the cells share its error)
+
+mean D/D_ref
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200      2.7594    1.8179    1.2987    1.0180    1.0484    0.9800
+  0.0500      1.4005    1.4560    1.2959    1.1354    1.0021    1.0242
+  0.1000      1.3023    1.1073    1.1005    1.0307    1.0312    0.9973
+  0.2000      1.1484    1.0779    1.0417    1.0331    1.0365    1.0040
+
+evaluation SE (spread / sqrt(runs per cell))
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200     0.47727   0.27325   0.19885   0.13002   0.09677   0.06330
+  0.0500     0.18622   0.10994   0.08282   0.05270   0.03884   0.02675
+  0.1000     0.09718   0.05820   0.04230   0.02730   0.01980   0.01349
+  0.2000     0.05332   0.03002   0.02252   0.01373   0.01032   0.00732
+
+(D/D_ref - 1) / combined SE
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200        3.69      2.99      1.50      0.14      0.50     -0.32
+  0.0500        2.15      4.15      3.57      2.57      0.05      0.90
+  0.1000        3.11      1.84      2.38      1.13      1.57     -0.20
+  0.2000        2.78      2.59      1.85      2.41      3.54      0.54
+
+spread of D/D_ref over realizations (one measurement)
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200    21.34407  12.21990   8.89306   5.81461   4.32763   2.83088
+  0.0500     8.32809   4.91665   3.70396   2.35681   1.73677   1.19638
+  0.1000     4.34598   2.60284   1.89150   1.22098   0.88558   0.60307
+  0.2000     2.38443   1.34250   1.00703   0.61399   0.46133   0.32755
+
+pooled D/D_ref - 1 (inverse combined variance; calibration SE as one shared systematic, fully correlated, an upper bound)
+  D 0.0200: +0.0599 +/- 0.0467 (evaluation) +/- 0.0000 (calibration); +1.28 combined SE
+  D 0.0500: +0.0659 +/- 0.0193 (evaluation) +/- 0.0000 (calibration); +3.41 combined SE
+  D 0.1000: +0.0218 +/- 0.0098 (evaluation) +/- 0.0000 (calibration); +2.22 combined SE
+  D 0.2000: +0.0221 +/- 0.0052 (evaluation) +/- 0.0000 (calibration); +4.24 combined SE
+  all cells: +0.0247 +/- 0.0045 (evaluation) +/- 0.0000 (calibration); +5.54 combined SE
+
+==============================================================================
+--- comparison: RMS error of one measurement, sqrt(bias^2 + spread^2 / 1), bias^2 = max((D/D_ref - 1)^2 - evaluation SE^2, 0)
+
+[corrected, all frames]
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200      21.355    12.220     8.894     5.816     4.328     2.832
+  0.0500       8.328     4.918     3.704     2.357     1.737     1.196
+  0.1000       4.346     2.603     1.892     1.221     0.886     0.603
+  0.2000       2.384     1.342     1.007     0.614     0.462     0.328
+
+[corrected, CNR >= 1]
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200      21.355    12.220     8.894     5.816     4.328     2.832
+  0.0500       8.328     4.918     3.704     2.357     1.737     1.196
+  0.1000       4.346     2.603     1.892     1.221     0.886     0.603
+  0.2000       2.384     1.342     1.007     0.614     0.462     0.328
+
+[naive, CNR >= 3]
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200         nan       nan    17.416     5.815     4.328     2.831
+  0.0500         nan       nan     7.176     2.360     1.737     1.196
+  0.1000         nan       nan     4.458     1.221     0.886     0.603
+  0.2000         nan       nan     2.225     0.615     0.463     0.328
+
+[naive, CNR >= 2]
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200         nan    17.281     8.896     5.815     4.328     2.831
+  0.0500         nan     6.897     3.715     2.360     1.737     1.196
+  0.1000         nan     3.538     1.894     1.221     0.886     0.603
+  0.2000         nan     2.092     1.008     0.615     0.463     0.328
+
+[naive, all frames]
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200      21.411    12.244     8.896     5.815     4.328     2.831
+  0.0500       8.336     4.937     3.715     2.360     1.737     1.196
+  0.1000       4.355     2.604     1.894     1.221     0.886     0.603
+  0.2000       2.388     1.344     1.008     0.615     0.463     0.328
+
+ratio of RMS errors (one measurement), naive, CNR >= 3 / corrected, CNR >= 1 (> 1: the correction is better; nan: the cut leaves no fit)
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200         nan       nan      1.96      1.00      1.00      1.00
+  0.0500         nan       nan      1.94      1.00      1.00      1.00
+  0.1000         nan       nan      2.36      1.00      1.00      1.00
+  0.2000         nan       nan      2.21      1.00      1.00      1.00
+
+ratio of RMS errors (one measurement), naive, CNR >= 2 / corrected, CNR >= 1 (> 1: the correction is better; nan: the cut leaves no fit)
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200         nan      1.41      1.00      1.00      1.00      1.00
+  0.0500         nan      1.40      1.00      1.00      1.00      1.00
+  0.1000         nan      1.36      1.00      1.00      1.00      1.00
+  0.2000         nan      1.56      1.00      1.00      1.00      1.00
+
+ratio of RMS errors (one measurement), naive, all frames / corrected, CNR >= 1 (> 1: the correction is better; nan: the cut leaves no fit)
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200        1.00      1.00      1.00      1.00      1.00      1.00
+  0.0500        1.00      1.00      1.00      1.00      1.00      1.00
+  0.1000        1.00      1.00      1.00      1.00      1.00      1.00
+  0.2000        1.00      1.00      1.00      1.00      1.00      1.00
+
+==============================================================================
+--- comparison: RMS error of the mean of 10 measurements, sqrt(bias^2 + spread^2 / 10), bias^2 = max((D/D_ref - 1)^2 - evaluation SE^2, 0)
+
+[corrected, all frames]
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200       6.785     3.864     2.815     1.843     1.369     0.900
+  0.0500       2.634     1.558     1.172     0.746     0.550     0.378
+  0.1000       1.374     0.823     0.598     0.386     0.280     0.192
+  0.2000       0.754     0.425     0.318     0.194     0.147     0.104
+
+[corrected, CNR >= 1]
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200       6.785     3.864     2.815     1.843     1.369     0.900
+  0.0500       2.634     1.558     1.172     0.746     0.550     0.378
+  0.1000       1.374     0.823     0.598     0.386     0.280     0.192
+  0.2000       0.754     0.425     0.318     0.194     0.147     0.104
+
+[naive, CNR >= 3]
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200         nan       nan     5.516     1.839     1.369     0.895
+  0.0500         nan       nan     2.281     0.756     0.549     0.378
+  0.1000         nan       nan     1.415     0.386     0.281     0.191
+  0.2000         nan       nan     0.704     0.196     0.150     0.104
+
+[naive, CNR >= 2]
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200         nan     5.491     2.821     1.839     1.369     0.895
+  0.0500         nan     2.193     1.205     0.756     0.549     0.378
+  0.1000         nan     1.124     0.605     0.386     0.281     0.191
+  0.2000         nan     0.665     0.320     0.196     0.150     0.104
+
+[naive, all frames]
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200       6.959     3.940     2.821     1.839     1.369     0.895
+  0.0500       2.657     1.617     1.205     0.756     0.549     0.378
+  0.1000       1.404     0.828     0.605     0.386     0.281     0.191
+  0.2000       0.767     0.431     0.320     0.196     0.150     0.104
+
+ratio of RMS errors (the mean of 10 measurements), naive, CNR >= 3 / corrected, CNR >= 1 (> 1: the correction is better; nan: the cut leaves no fit)
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200         nan       nan      1.96      1.00      1.00      0.99
+  0.0500         nan       nan      1.95      1.01      1.00      1.00
+  0.1000         nan       nan      2.37      1.00      1.00      0.99
+  0.2000         nan       nan      2.21      1.01      1.02      1.00
+
+ratio of RMS errors (the mean of 10 measurements), naive, CNR >= 2 / corrected, CNR >= 1 (> 1: the correction is better; nan: the cut leaves no fit)
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200         nan      1.42      1.00      1.00      1.00      0.99
+  0.0500         nan      1.41      1.03      1.01      1.00      1.00
+  0.1000         nan      1.37      1.01      1.00      1.00      0.99
+  0.2000         nan      1.57      1.01      1.01      1.02      1.00
+
+ratio of RMS errors (the mean of 10 measurements), naive, all frames / corrected, CNR >= 1 (> 1: the correction is better; nan: the cut leaves no fit)
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200        1.03      1.02      1.00      1.00      1.00      0.99
+  0.0500        1.01      1.04      1.03      1.01      1.00      1.00
+  0.1000        1.02      1.01      1.01      1.00      1.00      0.99
+  0.2000        1.02      1.01      1.01      1.01      1.02      1.00
+
+==============================================================================
+--- comparison: RMS error of the mean of 100 measurements, sqrt(bias^2 + spread^2 / 100), bias^2 = max((D/D_ref - 1)^2 - evaluation SE^2, 0)
+
+[corrected, all frames]
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200       2.244     1.222     0.897     0.594     0.433     0.298
+  0.0500       0.833     0.502     0.372     0.237     0.176     0.120
+  0.1000       0.435     0.260     0.189     0.122     0.089     0.064
+  0.2000       0.238     0.134     0.101     0.061     0.050     0.033
+
+[corrected, CNR >= 1]
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200       2.244     1.222     0.897     0.594     0.433     0.298
+  0.0500       0.833     0.502     0.372     0.237     0.176     0.120
+  0.1000       0.435     0.260     0.189     0.122     0.089     0.064
+  0.2000       0.238     0.134     0.101     0.061     0.050     0.033
+
+[naive, CNR >= 3]
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200         nan       nan     1.771     0.581     0.433     0.283
+  0.0500         nan       nan     0.757     0.267     0.174     0.120
+  0.1000         nan       nan     0.465     0.123     0.092     0.060
+  0.2000         nan       nan     0.225     0.068     0.058     0.033
+
+[naive, CNR >= 2]
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200         nan     1.819     0.917     0.581     0.433     0.283
+  0.0500         nan     0.730     0.467     0.267     0.174     0.120
+  0.1000         nan     0.372     0.210     0.123     0.092     0.060
+  0.2000         nan     0.220     0.107     0.068     0.058     0.033
+
+[naive, all frames]
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200       2.725     1.445     0.917     0.581     0.433     0.283
+  0.0500       0.905     0.662     0.467     0.267     0.174     0.120
+  0.1000       0.520     0.275     0.210     0.123     0.092     0.060
+  0.2000       0.276     0.152     0.107     0.068     0.058     0.033
+
+ratio of RMS errors (the mean of 100 measurements), naive, CNR >= 3 / corrected, CNR >= 1 (> 1: the correction is better; nan: the cut leaves no fit)
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200         nan       nan      1.97      0.98      1.00      0.95
+  0.0500         nan       nan      2.04      1.13      0.99      1.00
+  0.1000         nan       nan      2.46      1.01      1.04      0.95
+  0.2000         nan       nan      2.24      1.11      1.16      1.00
+
+ratio of RMS errors (the mean of 100 measurements), naive, CNR >= 2 / corrected, CNR >= 1 (> 1: the correction is better; nan: the cut leaves no fit)
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200         nan      1.49      1.02      0.98      1.00      0.95
+  0.0500         nan      1.45      1.26      1.13      0.99      1.00
+  0.1000         nan      1.43      1.11      1.01      1.04      0.95
+  0.2000         nan      1.64      1.06      1.11      1.16      1.00
+
+ratio of RMS errors (the mean of 100 measurements), naive, all frames / corrected, CNR >= 1 (> 1: the correction is better; nan: the cut leaves no fit)
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200        1.21      1.18      1.02      0.98      1.00      0.95
+  0.0500        1.09      1.32      1.26      1.13      0.99      1.00
+  0.1000        1.20      1.06      1.11      1.01      1.04      0.95
+  0.2000        1.16      1.13      1.06      1.11      1.16      1.00
+
+==============================================================================
+--- measurements averaged before the bias exceeds the error of their mean, spread^2 / bias^2
+(nan: bias within 2 combined SE, or no fit)
+
+[corrected, all frames]
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200         nan       nan       nan       nan       nan       nan
+  0.0500         nan       nan       nan       nan       nan       nan
+  0.1000         nan       nan       nan       nan       nan       nan
+  0.2000         nan       nan       nan       nan       nan       nan
+
+[corrected, CNR >= 1]
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200         nan       nan       nan       nan       nan       nan
+  0.0500         nan       nan       nan       nan       nan       nan
+  0.1000         nan       nan       nan       nan       nan       nan
+  0.2000         nan       nan       nan       nan       nan       nan
+
+[naive, CNR >= 3]
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200         nan       nan       nan       nan       nan       nan
+  0.0500         nan       nan       nan       357       nan       nan
+  0.1000         nan       nan       nan       nan       nan       nan
+  0.2000         nan       nan       nan       415       173       nan
+
+[naive, CNR >= 2]
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200         nan       nan       nan       nan       nan       nan
+  0.0500         nan       nan       170       357       nan       nan
+  0.1000         nan       nan       430       nan       nan       nan
+  0.2000         nan       nan       nan       415       173       nan
+
+[naive, all frames]
+  D_true      CNR0=2    CNR0=3    CNR0=4    CNR0=6    CNR0=8   CNR0=12
+  0.0200         159       251       nan       nan       nan       nan
+  0.0500         552       123       170       357       nan       nan
+  0.1000         230       nan       430       nan       nan       nan
+  0.2000         296       349       nan       415       173       nan
+
+[total: 297 s]
