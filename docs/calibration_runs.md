@@ -78,8 +78,12 @@ floor-dominated), so its preset uses gaussian.
   high statistics where the per-cell bias estimate is noisy -- ~8000/cell at the
   low-CNR end. Drop to ~2000 for a quick look. The lookup's own Monte Carlo
   error is shared by every measurement corrected with it and does not average
-  down, so a mean over many measurements needs more runs than one measurement
-  does; see "Use enough calibration runs" in the README.
+  down: for a mean over measurements, combine the calibration SE once, not
+  divided by the square root of their number, and use more runs than one
+  measurement needs. "Use enough calibration runs" in the
+  [top-level README](../README.md#on-real-data) gives this rule; its numbers
+  are for the 1-D D-free calibration, whose runs are counted per initial-CNR
+  point, and were not checked for this lookup.
 - Grid sizes (`--n-cnr`, `--n-sigma`): ~100 each is typical; the total fit count
   is `n_cnr * n_sigma * n_runs`.
 

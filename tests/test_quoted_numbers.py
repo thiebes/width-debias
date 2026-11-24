@@ -133,6 +133,20 @@ def _dfree_arm(shape: str, window: str, arm: str) -> tuple[str, str]:
     return _section(_read(path), f"--- {arm}\n", "--- ", path), path
 
 
+def _dfree_matrix(arm: str, title: str, source: str) -> dict[tuple[str, str], Decimal]:
+    """Every cell of one matrix in a D-free arm, keyed by (D_true, CNR0 column): a
+    title line, a header of CNR0 columns, then one row per D. A next_start of
+    "\\n" ends the section at the blank line after the last row."""
+    lines = _section(arm, title, "\n", source).splitlines()
+    columns = lines[1].split()[1:]
+    cells = {}
+    for line in lines[2:]:
+        d_true, *values = line.split()
+        assert len(values) == len(columns), f"{source}: row {line!r} under {title!r} is short"
+        cells.update({(d_true, column): Decimal(value) for column, value in zip(columns, values)})
+    return cells
+
+
 def _cells_beyond(window: str, arm: str) -> tuple[str, ...]:
     """Cells beyond two combined SE, summed over the four shapes, as N and M of "N of M"."""
     counts = [_search(r"cells beyond 2 combined SE: (\d+) of (\d+)",
@@ -314,32 +328,45 @@ def _weight_term_at_cnr0_3() -> tuple[str, ...]:
     return (str(_calibration_weight_terms()[1]),)
 
 
-def _dfree_matrix(arm: str, title: str, source: str) -> list[Decimal]:
-    """Every cell of one matrix in a D-free arm: a title line, a header of
-    CNR0 columns, then one row per D, ended by a blank line."""
-    lines = _section(arm, title, "\n", source).split("\n\n")[0].splitlines()
-    n_columns = len(lines[1].split()) - 1
-    values = []
-    for line in lines[2:]:
-        cells = line.split()[1:]
-        assert len(cells) == n_columns, f"{source}: row {line!r} under {title!r} is short"
-        values += [Decimal(cell) for cell in cells]
-    return values
+def _calibration_se_over_spread_cells(shape: str, window: str) -> dict[tuple[str, str], Decimal]:
+    """Calibration SE x sqrt(calibration runs per CNR_0 point) / single-measurement
+    spread of D/D_ref, per cell of the corrected arm (CNR >= 1), keyed by (D_true,
+    CNR0 column). Cells the table prints as nan (no fit) are left out, as the
+    table's own counts leave them out."""
+    arm, path = _dfree_arm(shape, window, "corrected, CNR >= 1")
+    runs = _first(r"calibrate_d_free, CNR0 [\d., ]+?, (\d+) runs", _read(path), path)
+    calibration_se = _dfree_matrix(arm, "calibration SE (propagated", path)
+    spread = _dfree_matrix(arm, "spread of D/D_ref over", path)
+    assert calibration_se.keys() == spread.keys(), (
+        f"{path}: the calibration SE and spread matrices have different cells")
+    ratios = {cell: calibration_se[cell] * runs.sqrt() / spread[cell] for cell in calibration_se
+              if calibration_se[cell].is_finite() and spread[cell].is_finite()
+              and spread[cell] > 0}
+    assert ratios, f"{path}: no cell has a finite calibration SE and spread"
+    return ratios
 
 
 def _calibration_se_over_spread() -> tuple[str, ...]:
-    """Calibration SE x sqrt(calibration runs per CNR_0 point) / single-measurement
-    spread of D/D_ref, over the cells of the corrected arm (CNR >= 1): the lowest
-    and highest median per shape and window."""
-    medians = []
-    for window in ("standard", "short"):
-        for shape in DFREE_SHAPES:
-            arm, path = _dfree_arm(shape, window, "corrected, CNR >= 1")
-            runs = _first(r"calibrate_d_free, CNR0 [\d., ]+?, (\d+) runs", _read(path), path)
-            calibration_se = _dfree_matrix(arm, "calibration SE (propagated", path)
-            spread = _dfree_matrix(arm, "spread of D/D_ref over", path)
-            medians.append(median(se * runs.sqrt() / s for se, s in zip(calibration_se, spread)))
+    """The lowest and highest median over cells, per shape and window."""
+    medians = [median(_calibration_se_over_spread_cells(shape, window).values())
+               for window in ("standard", "short") for shape in DFREE_SHAPES]
     return _rounded(min(medians), 2), _rounded(max(medians), 2)
+
+
+def _calibration_se_over_spread_by_d() -> tuple[str, ...]:
+    """The row medians at the smallest and at the largest D: their range over the
+    shapes in the standard window, then in the short window, first at the smallest
+    D and then at the largest."""
+    ranges = []
+    for pick in (min, max):
+        for window in ("standard", "short"):
+            row_medians = []
+            for shape in DFREE_SHAPES:
+                ratios = _calibration_se_over_spread_cells(shape, window)
+                d_true = pick({cell[0] for cell in ratios}, key=Decimal)
+                row_medians.append(median(r for cell, r in ratios.items() if cell[0] == d_true))
+            ranges += [_rounded(min(row_medians), 2), _rounded(max(row_medians), 2)]
+    return tuple(ranges)
 
 
 def _unbounded_d_row(cnr0: int) -> list[Decimal]:
@@ -672,9 +699,15 @@ CLAIMS = [
     Claim("calibration SE, weight term at CNR_0 3", _weight_term_at_cnr0_3, {
         f"{DFREE}/README.md": ("and 0.22 at CNR₀ 2 and 3)",),
         "src/width_debias/weights.py": ("and 0.22 of it",)}),
-    Claim("calibration SE over spread / sqrt(calibration runs)", _calibration_se_over_spread, {
-        "README.md": ("(median ratio 0.94 to 0.98 per shape and window",),
-        f"{DFREE}/README.md": ("has a median of 0.94 to 0.98 per shape and",)}),
+    Claim("calibration SE, times sqrt(calibration runs) over single-measurement spread: "
+          "median per shape and window", _calibration_se_over_spread, {
+              "README.md": ("ratio has a median of 0.94 to 0.98 per shape and window",),
+              f"{DFREE}/README.md": ("has a median of 0.94 to 0.98 per shape and window",)}),
+    Claim("calibration SE, times sqrt(calibration runs) over single-measurement spread: "
+          "row medians at the smallest and largest D", _calibration_se_over_spread_by_d, {
+              f"{DFREE}/README.md": (
+                  "(row medians 0.96 to 1.00 in the standard window and 0.99 to 1.00 in the "
+                  "short) and lower at the largest (0.81 to 0.90 and 0.91 to 0.95)",)}),
     Claim("CRLB efficiency from CNR_0 21", _crlb_efficiency, {
         "docs/DERIVATION.md": ("0.95 to 1.10 × √CRLB",),
         "docs/REPO_MAP.md": ("reaches 0.95-1.10 x sqrt(CRLB) from CNR0 21",),

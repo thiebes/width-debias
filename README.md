@@ -108,17 +108,22 @@ calibration's geometry but does not check it against the data.
 - **Use enough calibration runs.** The lookup's own Monte Carlo error is
   shared by every measurement made with it, so it does not show in their
   scatter and does not average down. For one measurement, combine
-  `calibration_D_se` with the fit's SE as in the example above. For the mean
-  of N measurements made with one lookup, add the calibration SE once, not
-  divided by the square root of N; the mean of the per-measurement
-  `calibration_D_se` values is an upper bound on it. The calibration SE of D
-  falls as one over the square root of `n_runs`, the runs per initial-CNR
-  point: in the validation it is about s / sqrt(n_runs), with s the spread of
-  D over single measurements (median ratio 0.94 to 0.98 per shape and window,
-  `experiments/dfree-calibration`). With `n_runs` equal to N it is about as
-  large as the statistical error of the mean, so choose `n_runs` well above
-  the number of measurements to be averaged: at 4N the combined SE of the mean
-  is about 1.12 times its statistical error.
+  `calibration_D_se` with the fit's SE in quadrature, as in the example above.
+  For the mean of N measurements made with one lookup, combine the calibration
+  SE once, in quadrature, with the statistical error of the mean, not divided
+  by the square root of N; the mean of the per-measurement `calibration_D_se`
+  values is an upper bound on it. The quick start does this for the mean of
+  300 runs (`r.cal_se` is the mean of the per-run values). The calibration SE
+  of D falls as one over the square root of `n_runs`, the runs per initial-CNR
+  point (400 by default). In the validation it is at most about
+  `s / sqrt(n_runs)`, with `s` the spread of D over single measurements: their
+  ratio has a median of 0.94 to 0.98 per shape and window, near 1 at the
+  smallest D and lower where the width grows more
+  (`experiments/dfree-calibration`). With `n_runs` equal to N the calibration
+  SE can be as large as the statistical error of the mean, so choose `n_runs`
+  well above the number of measurements to be averaged: at 4N the combined SE
+  of the mean is at most about 1.12 times its statistical error, so the
+  default suits means of up to about 100 measurements.
 - **Drop frames below the floor.** The correction holds above a per-frame CNR
   of about 1 (0.89 to 1.51 depending on shape). The validations set the weight of
   frames below a per-frame CNR of 1.0 or 1.3 to zero before `fit_D`;

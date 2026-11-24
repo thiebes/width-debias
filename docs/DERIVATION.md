@@ -246,8 +246,8 @@ cell mean 0.89 with the per-frame slope weights
 calibration and evaluation terms are about equal, and the calibration term does
 not shrink with more evaluation runs. It is shared by every measurement made
 with the calibration, so the mean of N measurements carries all of it; the
-calibration runs per CNR₀ point should exceed the number of measurements
-averaged.
+calibration runs per CNR₀ point should be well above the number of
+measurements averaged.
 
 With both terms in the cell SE and the per-frame slope weights
 (`validate_d_zero.py`; seeds offset by 10⁶ per shape), keeping frames with
