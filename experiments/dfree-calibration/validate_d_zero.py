@@ -331,14 +331,17 @@ def write_report(npz_path: Path) -> Path:
                      f"{int(np.isfinite(z_score).sum())} (one calibration per shape, so the cells "
                      "share its error)")
         lines.append("")
-        _table(lines, "mean D/D_ref", mean, "10.3f", grid, d_values)
-        _table(lines, "evaluation SE (spread / sqrt(runs per cell))", eval_se, "10.3f",
+        # Five decimals for the SEs and the spread: a large calibration's SE at
+        # large D is a few 1e-4 of D, which three decimals print as 0.000, and
+        # ratios read from the tables would then be set by the rounding.
+        _table(lines, "mean D/D_ref", mean, "10.4f", grid, d_values)
+        _table(lines, "evaluation SE (spread / sqrt(runs per cell))", eval_se, "10.5f",
                grid, d_values)
         if np.nanmax(cal_se, initial=0.0) > 0:
-            _table(lines, "calibration SE (propagated lookup error)", cal_se, "10.3f",
+            _table(lines, "calibration SE (propagated lookup error)", cal_se, "10.5f",
                    grid, d_values)
         _table(lines, "(D/D_ref - 1) / combined SE", z_score, "10.2f", grid, d_values)
-        _table(lines, "spread of D/D_ref over realizations (one measurement)", spread, "10.3f",
+        _table(lines, "spread of D/D_ref over realizations (one measurement)", spread, "10.5f",
                grid, d_values)
         if not np.isfinite(bias).any():
             lines.append("no cell leaves enough frames for a fit under this arm")
