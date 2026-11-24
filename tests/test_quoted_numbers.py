@@ -26,6 +26,7 @@ from dataclasses import dataclass
 from decimal import ROUND_CEILING, ROUND_HALF_UP, Decimal
 from functools import cache
 from pathlib import Path
+from statistics import median
 from typing import Callable
 
 import pytest
@@ -311,6 +312,34 @@ def _weight_term_from_cnr0_5() -> tuple[str, ...]:
 
 def _weight_term_at_cnr0_3() -> tuple[str, ...]:
     return (str(_calibration_weight_terms()[1]),)
+
+
+def _dfree_matrix(arm: str, title: str, source: str) -> list[Decimal]:
+    """Every cell of one matrix in a D-free arm: a title line, a header of
+    CNR0 columns, then one row per D, ended by a blank line."""
+    lines = _section(arm, title, "\n", source).split("\n\n")[0].splitlines()
+    n_columns = len(lines[1].split()) - 1
+    values = []
+    for line in lines[2:]:
+        cells = line.split()[1:]
+        assert len(cells) == n_columns, f"{source}: row {line!r} under {title!r} is short"
+        values += [Decimal(cell) for cell in cells]
+    return values
+
+
+def _calibration_se_over_spread() -> tuple[str, ...]:
+    """Calibration SE x sqrt(calibration runs per CNR_0 point) / single-measurement
+    spread of D/D_ref, over the cells of the corrected arm (CNR >= 1): the lowest
+    and highest median per shape and window."""
+    medians = []
+    for window in ("standard", "short"):
+        for shape in DFREE_SHAPES:
+            arm, path = _dfree_arm(shape, window, "corrected, CNR >= 1")
+            runs = _first(r"calibrate_d_free, CNR0 [\d., ]+?, (\d+) runs", _read(path), path)
+            calibration_se = _dfree_matrix(arm, "calibration SE (propagated", path)
+            spread = _dfree_matrix(arm, "spread of D/D_ref over", path)
+            medians.append(median(se * runs.sqrt() / s for se, s in zip(calibration_se, spread)))
+    return _rounded(min(medians), 2), _rounded(max(medians), 2)
 
 
 def _unbounded_d_row(cnr0: int) -> list[Decimal]:
@@ -643,6 +672,9 @@ CLAIMS = [
     Claim("calibration SE, weight term at CNR_0 3", _weight_term_at_cnr0_3, {
         f"{DFREE}/README.md": ("and 0.22 at CNR₀ 2 and 3)",),
         "src/width_debias/weights.py": ("and 0.22 of it",)}),
+    Claim("calibration SE over spread / sqrt(calibration runs)", _calibration_se_over_spread, {
+        "README.md": ("(median ratio 0.94 to 0.98 per shape and window",),
+        f"{DFREE}/README.md": ("has a median of 0.94 to 0.98 per shape and",)}),
     Claim("CRLB efficiency from CNR_0 21", _crlb_efficiency, {
         "docs/DERIVATION.md": ("0.95 to 1.10 × √CRLB",),
         "docs/REPO_MAP.md": ("reaches 0.95-1.10 x sqrt(CRLB) from CNR0 21",),

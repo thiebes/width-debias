@@ -129,14 +129,18 @@ expected by chance.
 
 At equal runs the calibration SE of a cell is about its evaluation SE (at 300
 runs each, for example 0.193 against 0.195 for p = 1.5 at D = 0.02, CNR₀ 8).
-The calibration error is shared by every measurement made with that
+Over the cells of the corrected arm (CNR ≥ 1), the calibration SE times the
+square root of the calibration runs per CNR₀ point, divided by the spread of
+D/D_ref over single measurements, has a median of 0.94 to 0.98 per shape and
+window. The calibration error is shared by every measurement made with that
 calibration, so it does not average down. The mean of N measurements carries
 the full calibration SE, and the calibration runs per CNR₀ point should be well
 above the number of measurements averaged to keep it below the statistical
-error of the mean. With 300 runs the mean-of-100 comparison already shows the
-calibration error. The naive-to-corrected RMS ratio there spans 0.63 to 5.3,
-and the ratios below 1 are consistent with this calibration draw's error in the
-corrected arm.
+error of the mean: with N runs per point the mean's combined SE is about √2
+times its statistical error, and with 4N about 1.12 times. With 300 runs the
+mean-of-100 comparison already shows the calibration error. The
+naive-to-corrected RMS ratio there spans 0.63 to 5.3, and the ratios below 1
+are consistent with this calibration draw's error in the corrected arm.
 
 `validate_d_zero --short-window` (window 0.5τ, CNR₀ 2 to 12, D 0.02 to
 0.2 σ₀²/τ; per shape one calibration of 6 CNR₀ points × 2000 runs and 2000

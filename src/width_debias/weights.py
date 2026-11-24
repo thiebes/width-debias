@@ -261,7 +261,11 @@ def calibration_D_se(times: np.ndarray, msd: np.ndarray, weights: np.ndarray,
     calibrations on the same grid added
     (``experiments/dfree-calibration/calibration_se_check.py`` and
     ``slope_fit_check.py``); the weight term is at most 0.04 of it from CNR_0 5
-    up and 0.22 of it at CNR_0 3. Returns NaN when the model has no SE.
+    up and 0.22 of it at CNR_0 3. The calibration error is shared by every
+    measurement made with the lookup, so for a mean of N measurements add the
+    calibration SE once, not divided by sqrt(N); the mean of the
+    per-measurement values is an upper bound on it. Returns NaN when the model
+    has no SE.
 
     A smoothed model (:meth:`~width_debias.bias_lookup.BiasLookup.from_cells`)
     correlates the biases of neighbouring frames, so the sum uses the full

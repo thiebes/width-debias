@@ -105,6 +105,20 @@ calibration's geometry but does not check it against the data.
   and multiply the fitted D and its SE by sigma_0^2 at the end. A calibration in
   units of sigma_0 applied to widths in micrometres subtracts a bias that is
   off by the square of the unit ratio (16 for sigma_0 = 0.25 μm).
+- **Use enough calibration runs.** The lookup's own Monte Carlo error is
+  shared by every measurement made with it, so it does not show in their
+  scatter and does not average down. For one measurement, combine
+  `calibration_D_se` with the fit's SE as in the example above. For the mean
+  of N measurements made with one lookup, add the calibration SE once, not
+  divided by the square root of N; the mean of the per-measurement
+  `calibration_D_se` values is an upper bound on it. The calibration SE of D
+  falls as one over the square root of `n_runs`, the runs per initial-CNR
+  point: in the validation it is about s / sqrt(n_runs), with s the spread of
+  D over single measurements (median ratio 0.94 to 0.98 per shape and window,
+  `experiments/dfree-calibration`). With `n_runs` equal to N it is about as
+  large as the statistical error of the mean, so choose `n_runs` well above
+  the number of measurements to be averaged: at 4N the combined SE of the mean
+  is about 1.12 times its statistical error.
 - **Drop frames below the floor.** The correction holds above a per-frame CNR
   of about 1 (0.89 to 1.51 depending on shape). The validations set the weight of
   frames below a per-frame CNR of 1.0 or 1.3 to zero before `fit_D`;
