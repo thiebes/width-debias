@@ -127,8 +127,9 @@ after 15 to 91 averaged measurements (spread²/bias², 46 cells). The corrected
 arm resolves a bias in 4 cells (27 to 46 measurements), fewer than the 6
 expected by chance.
 
-At equal runs the calibration SE of a cell is about its evaluation SE (at 300
-runs each, for example 0.193 against 0.195 for p = 1.5 at D = 0.02, CNR₀ 8).
+At equal runs the calibration SE of a cell is at most about its evaluation SE
+(at 300 runs each, for example 0.193 against 0.195 for p = 1.5 at D = 0.02,
+CNR₀ 8).
 The calibration error is shared by every measurement made with that
 calibration, so it does not average down. The mean of N measurements carries
 the full calibration SE, and the calibration runs per CNR₀ point should be well
@@ -158,17 +159,21 @@ D ≤ 0.05 σ₀²/τ (0.65 to 0.87, up to 2.4 combined SE).
 
 In both windows, over the cells of the corrected arm (CNR ≥ 1), the calibration
 SE times the square root of the calibration runs per CNR₀ point, divided by the
-spread of D/D_ref over single measurements, has a median of 0.94 to 0.98 per
-shape and window. It is near 1 at the smallest D (row medians 0.96 to 1.00 in
-the standard window and 0.99 to 1.00 in the short) and lower at the largest
-(0.81 to 0.90 and 0.91 to 0.95). In absolute units the calibration SE of D is
-the same at every D: the lookup, built at D = 0, is read by the per-frame CNR
-alone. The spread of single measurements grows with the width, which grows more
-at larger D. The calibration SE is therefore at most about the
-single-measurement spread divided by the square root of the calibration runs. At a ratio of 1, the mean of N
-measurements has a combined SE of √2 times its statistical error with N
-calibration runs per point and 1.12 times with 4N; where the ratio is below 1
-the factors are smaller.
+spread of D/D_ref over single measurements, each summed over the cells, is 0.92
+to 0.98 per shape and window. Summed, the larger cells, which the tables print
+with the most digits, set the ratio. Over the row at the smallest D it is 0.96
+to 0.99 in the standard window and 0.93 to 0.99 in the short, and at the
+largest D 0.82 to 0.89 and 0.88 to 0.95. In absolute units the calibration SE
+of D is the same at every D: every D has the same per-frame CNRs, because the
+simulated profiles keep their peak height as they spread, and the lookup, built
+at D = 0, is read by the per-frame CNR alone. The spread of single measurements
+grows with the width, which grows more at larger D. In general, at a given CNR
+the scatter of a fitted width grows with the width, while the lookup's error is
+that of the width at σ₀, so the calibration SE is at most about the
+single-measurement spread divided by the square root of the calibration runs.
+At a ratio of 1, the mean of N measurements has a combined SE of √2 times its
+statistical error with N calibration runs per point and 1.12 times with 4N;
+where the ratio is below 1 the factors are smaller.
 
 `calibration_se_check` (`calibration_se_check.txt`; 16 calibration draws of
 1500 runs on a 48-point CNR₀ grid, library slope weights): the propagated

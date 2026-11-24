@@ -243,8 +243,8 @@ t = 0 shift cancels into the intercept, and frame 0's own error enters through
 draws applied to one fixed evaluation set: observed / predicted variance of the
 cell mean 0.89 with the per-frame slope weights
 (`experiments/dfree-calibration/calibration_se_check.txt`). At equal runs the
-calibration and evaluation terms are about equal, and the calibration term does
-not shrink with more evaluation runs. It is shared by every measurement made
+calibration term is at most about the evaluation term, and it does not shrink
+with more evaluation runs. It is shared by every measurement made
 with the calibration, so the mean of N measurements carries all of it; the
 calibration runs per CNR₀ point should be well above the number of
 measurements averaged.

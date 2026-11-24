@@ -100,9 +100,9 @@ def calibrate_d_free(cnr0_grid: np.ndarray, *, sigma0: float = 1.0,
     All parameters except ``cnr0_grid``, ``n_runs`` and ``seed`` describe the
     experiment: its geometry (pixel grid, frame count, lifetime), profile
     model and noise; the calibration must match the data it will be applied
-    to. Lengths are in the unit of
-    ``sigma0``: with the default ``sigma0 = 1``, the fitted variances passed to
-    the lookup must be in units of sigma_0^2. The lookup records the pixel grid
+    to. Lengths are in the unit of ``sigma0``: with the default
+    ``sigma0 = 1``, the fitted variances passed to the lookup must be in units
+    of sigma_0^2. The lookup records the pixel grid
     (``pixel_x``), the profile model (``model_spec``) and the lowest calibrated
     CNR (``lowest_calibrated_cnr``), so an application can check its data
     against them.

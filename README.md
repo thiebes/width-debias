@@ -113,12 +113,12 @@ calibration's geometry but does not check it against the data.
   SE once, in quadrature, with the statistical error of the mean, not divided
   by the square root of N; the mean of the per-measurement `calibration_D_se`
   values is an upper bound on it. The quick start does this for the mean of
-  300 runs (`r.cal_se` is the mean of the per-run values). The calibration SE
-  of D falls as one over the square root of `n_runs`, the runs per initial-CNR
-  point (400 by default). In the validation it is at most about
-  `s / sqrt(n_runs)`, with `s` the spread of D over single measurements: their
-  ratio has a median of 0.94 to 0.98 per shape and window, near 1 at the
-  smallest D and lower where the width grows more
+  300 runs (`r.cal_se` is the mean of the per-run values), with `n_runs` equal
+  to N, so there the two terms are about equal. The calibration SE of D falls
+  as one over the square root of `n_runs`, the runs per initial-CNR point (400
+  by default). In the validation it is at most about `s / sqrt(n_runs)`, with
+  `s` the spread of D over single measurements: summed over the cells, their
+  ratio is 0.92 to 0.98 per shape and window
   (`experiments/dfree-calibration`). With `n_runs` equal to N the calibration
   SE can be as large as the statistical error of the mean, so choose `n_runs`
   well above the number of measurements to be averaged: at 4N the combined SE
