@@ -1,7 +1,6 @@
 # Datasets -- mn-trapping
 
-Collaborator data (Marc Meléndez). Referenced by pointer only -- never copied
-into git, never moved or renamed on the pshare.
+Collaborator data (Marc Meléndez), never committed.
 
 ## Local working copy
 
@@ -19,5 +18,5 @@ et al. 2025). The loader `marc_data.py` reads from this `data/` dir
 
 ## Authoritative source
 
-Marc Meléndez's pshare share (the P: drive).
-Do not commit these `.dat` files; do not edit or rename the pshare originals.
+Marc Meléndez's simulation output. Do not commit these `.dat` files, and keep the
+originals unedited and under their own names.

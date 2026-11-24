@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Experiment scripts read collaborator data from a data root instead of fixed
+  shared-drive paths: the folder `WIDTH_DEBIAS_DATA_ROOT` names, or else `data/`
+  at the repository root, which git ignores. `scripts/data_root.py` holds the
+  folder layout (`stroboscat_scans/`, `simulated_map/`, `halide_mixing/`,
+  `halide_mixing_highn/`, `cspbbr_sample_1/`), and the loaders in `nc-solid`,
+  `halide-mixing-brI-legacy`, `halide-mixing-highn`, `wse2-strobescat` and
+  `cspbbr-strobescat` read their folders there; `cspbbr-strobescat/run_all.py`
+  takes its `--sample-root` default from it. With each folder mapped to its old
+  location the scripts resolve the same folders, files and keys in the same
+  order, so no result changes. Each set's `DATASETS.md`, its README, the
+  repository map and `.gitignore` name the data-root folders instead of the
+  drive paths.
+
 ### Fixed
 
 - `experiments/halide-mixing-highn/br_halide_highn_validation.py`, the test of

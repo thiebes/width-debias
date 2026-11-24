@@ -36,22 +36,22 @@ output/              regenerated run outputs and cached calibrations (not tracke
 | [fisher-calibration](../experiments/fisher-calibration/) | `compare_calibrations.py`, `fisher_check.py`, `diagnose_criterion3.py` | pre-registered switch test: `calibrate_fisher` matches the raw path's accuracy with 0.20-0.32 of its calibration SE but fails the criterion on Voigt and p = 4 (predicted SE too small: per-draw GCV smoothing choice) and p = 1.5 (cells beyond 2 SE), so the raw path stays recommended; Fisher A matches Monte Carlo to 0.998-1.003 on four shapes; width scaling not established | `.txt` tables |
 | [fft-cnr-recovery](../experiments/fft-cnr-recovery/) | `build_fft_cnr_recovery_figure.py` (+ committed summary `.npz`) | fft-cnr recovers the true CNR on the 1:1 line from CNR 2 to 100, N = 128-1024 | `fft_cnr_recovery.png` |
 
-### Transport-simulation beds (Marc Meléndez; data on the pshare, see each `DATASETS.md`)
+### Transport-simulation beds (Marc Meléndez; data root, see each `DATASETS.md`)
 
 | Set | Scripts | Main result | Data |
 | ------- | ------- | ------- | ------- |
-| [nc-solid](../experiments/nc-solid/) | `nc_solid_*` (+ loaders `nc_data.py`, `nc_solid_sim.py`) | de-noised maps: the naive exponent climbs toward the ballistic limit at low CNR and the corrected exponent recovers the reference 0.88; raw maps: the correction does not rescue CNR0 3 to 10 (both exponents at the fit bound of 2) | pshare; committed `.npz` calibration |
-| [mn-trapping](../experiments/mn-trapping/) | `marc_diffmap_validation.py`, `marc_mn_trapping_plan_a.py` (+ loaders) | reference is the emission-weighted PL second moment, not the carrier moment; where every frame has CNR >= 1.8 the raw and corrected widths lie within 0.0053 μm² of the noiseless fit, so the bed bounds the correction rather than resolving it; the 0.005 to 0.078 μm² shape gap needs a forward fit, and the moment estimator closes it but is unusable under noise | pshare; local `data/` (not tracked) |
-| [saha-reaction-diffusion](../experiments/saha-reaction-diffusion/) | `nonfickian_validation.py`, `forward_fit_validation.py`, `reaction_diffusion_saha.py` | the correction does not improve the exponent on this bed (both within 0.003 of the reference from CNR0 40 up); the 2-D lookup over-subtracts below per-frame CNR 1.13 to 1.37, which supports the real-data floor of 1.3; a forward fit recovers the carrier transport | pshare |
-| [halide-mixing-brI-legacy](../experiments/halide-mixing-brI-legacy/) | `br_halide_validation.py` (+ loader) | mixing suppresses transport; the correction has little to do over the short window | pshare |
-| [halide-mixing-highn](../experiments/halide-mixing-highn/) | `br_halide_highn_*`, `key_sensitivity.py`, `render_perframe_figure.py` (+ loader) | the width-fit upper bound governs the apparent bias; with a joint (CNR, sigma^2) calibration and a measurement-level key, D is recovered to 0.96-0.99 from CNR0 15 and is not determined below it; a Fisher width table calibrated at the width of the frames the correction acts on (75 nm, post hoc) matches the joint grid to 0.003 in D with 1/25 of its fits, while one calibrated at sigma_0 over-subtracts (D 0.35-0.59 of the noise-free fit's) because the window sets the sigma_0 residual; the 1-D D-free lookup at sigma_0 over-subtracts for the same reason when read down to the 1.3 floor (residual -4066 to -3548 nm^2 between per-frame CNR 1.3 and 3 at CNR0 15 and 20, exponent at the fit's bound on 4 of 6 cells) and, kept to frames with per-frame CNR >= 3, recovers D to 0.96-1.02 at those CNR0 | pshare (collapsed 1-D) |
+| [nc-solid](../experiments/nc-solid/) | `nc_solid_*` (+ loaders `nc_data.py`, `nc_solid_sim.py`) | de-noised maps: the naive exponent climbs toward the ballistic limit at low CNR and the corrected exponent recovers the reference 0.88; raw maps: the correction does not rescue CNR0 3 to 10 (both exponents at the fit bound of 2) | data root; committed `.npz` calibration |
+| [mn-trapping](../experiments/mn-trapping/) | `marc_diffmap_validation.py`, `marc_mn_trapping_plan_a.py` (+ loaders) | reference is the emission-weighted PL second moment, not the carrier moment; where every frame has CNR >= 1.8 the raw and corrected widths lie within 0.0053 μm² of the noiseless fit, so the bed bounds the correction rather than resolving it; the 0.005 to 0.078 μm² shape gap needs a forward fit, and the moment estimator closes it but is unusable under noise | local `data/` (not tracked) |
+| [saha-reaction-diffusion](../experiments/saha-reaction-diffusion/) | `nonfickian_validation.py`, `forward_fit_validation.py`, `reaction_diffusion_saha.py` | the correction does not improve the exponent on this bed (both within 0.003 of the reference from CNR0 40 up); the 2-D lookup over-subtracts below per-frame CNR 1.13 to 1.37, which supports the real-data floor of 1.3; a forward fit recovers the carrier transport | none (in-repo port of the model) |
+| [halide-mixing-brI-legacy](../experiments/halide-mixing-brI-legacy/) | `br_halide_validation.py` (+ loader) | mixing suppresses transport; the correction has little to do over the short window | data root |
+| [halide-mixing-highn](../experiments/halide-mixing-highn/) | `br_halide_highn_*`, `key_sensitivity.py`, `render_perframe_figure.py` (+ loader) | the width-fit upper bound governs the apparent bias; with a joint (CNR, sigma^2) calibration and a measurement-level key, D is recovered to 0.96-0.99 from CNR0 15 and is not determined below it; a Fisher width table calibrated at the width of the frames the correction acts on (75 nm, post hoc) matches the joint grid to 0.003 in D with 1/25 of its fits, while one calibrated at sigma_0 over-subtracts (D 0.35-0.59 of the noise-free fit's) because the window sets the sigma_0 residual; the 1-D D-free lookup at sigma_0 over-subtracts for the same reason when read down to the 1.3 floor (residual -4066 to -3548 nm^2 between per-frame CNR 1.3 and 3 at CNR0 15 and 20, exponent at the fit's bound on 4 of 6 cells) and, kept to frames with per-frame CNR >= 3, recovers D to 0.96-1.02 at those CNR0 | data root (collapsed 1-D) |
 
 ### Measured data
 
 | Set | Scripts | Main result | Data |
 | ------- | ------- | ------- | ------- |
-| [wse2-strobescat](../experiments/wse2-strobescat/) | `render_realdata_panel.py`, `realdata_*` | MoSSe alloy `26_32/250716`: corrected/naive D 0.95 over the full range and 0.97 for t <= 2 ns | pshare (Enrique Arévalo Rodríguez) |
-| [cspbbr-strobescat](../experiments/cspbbr-strobescat/) | `reduce.py`, `apply_correction.py`, `run_all.py` | end-to-end correction of measured CsPbBr3 diffusion scans | pshare (Upasana) |
+| [wse2-strobescat](../experiments/wse2-strobescat/) | `render_realdata_panel.py`, `realdata_*` | MoSSe alloy `26_32/250716`: corrected/naive D 0.95 over the full range and 0.97 for t <= 2 ns | data root (Enrique Arévalo Rodríguez) |
+| [cspbbr-strobescat](../experiments/cspbbr-strobescat/) | `reduce.py`, `apply_correction.py`, `run_all.py` | end-to-end correction of measured CsPbBr3 diffusion scans | data root (Upasana) |
 | [zhang-qd-control](../experiments/zhang-qd-control/) | `zhang_qd_panel.py` (+ committed figure CSVs) | the published quantum-dot Dfast is robust to the correction (high CNR) | committed CSVs |
 
 ## Illustrations
@@ -75,20 +75,22 @@ figure with its build script, figure, and caption. See
   `scripts/poster_style.py`: render the summary figures and hold their shared
   palette and axis style.
 
-## Datasets (pshare, not tracked)
+## Datasets (data root, not tracked)
 
-Each collaborator and measured-data set carries a `DATASETS.md` pointing to its
-pshare source:
+Each collaborator and measured-data set carries a `DATASETS.md` naming the files
+it reads. The scripts read collaborator data from the data root: the folder that
+`WIDTH_DEBIAS_DATA_ROOT` names, or else `data/` at the repository root (ignored
+by git). `scripts/data_root.py` holds the folder layout.
 
-| Set | pshare source |
+| Set | Source |
 | ------- | ------- |
-| nc-solid | `P:/Marc/shared_data/disordered_perovskite_nanocrystals_solids` |
-| mn-trapping | Marc Meléndez's pshare (Mn diffmaps; local `data/` copy) |
-| saha-reaction-diffusion | `P:/Marc/shared_data/data_links/Diffusion_simulation` (+ Marc's Saha code) |
-| halide-mixing-brI-legacy | `P:/Marc/shared_data/Halide_mixing` |
-| halide-mixing-highn | `P:/jthiebes/WIP/BrI_halide_highN/...` (collapsed 1-D) |
-| wse2-strobescat | `P:\Lab\Enrique\lab\MultiChannelData\` (+ `P:\jthiebes\WIP\realdata_bias_diagnostics`) |
-| cspbbr-strobescat | `P:/Upasana/CsPbBr_SingleCrystal/Sample_1` |
+| nc-solid | data root, `simulated_map/` (Marc Meléndez's maps) |
+| mn-trapping | Marc Meléndez's Mn diffmaps, in the set's local `data/` copy |
+| saha-reaction-diffusion | none: an in-repo port of Marc Meléndez's Saha model |
+| halide-mixing-brI-legacy | data root, `halide_mixing/` (Marc Meléndez's maps) |
+| halide-mixing-highn | data root, `halide_mixing_highn/` (collapsed 1-D) |
+| wse2-strobescat | data root, `stroboscat_scans/` (Enrique Arévalo Rodríguez's scans; outputs in the set's untracked `diagnostics/`) |
+| cspbbr-strobescat | data root, `cspbbr_sample_1/` (Upasana's scans) |
 | zhang-qd-control | published-paper data (committed CSVs) |
 | fft-cnr-recovery | external simulation study (not distributed; location not recorded; committed summary) |
 

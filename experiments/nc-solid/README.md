@@ -14,8 +14,9 @@ the synthetic beds.
 
 ## Contents
 
-- `nc_data.py` -- loader for the NC-solid maps (reads the pshare; `denoise=True`
-  reconstructs the smooth Gaussian per frame before measurement noise).
+- `nc_data.py` -- loader for the NC-solid maps (reads the data root;
+  `denoise=True` reconstructs the smooth Gaussian per frame before measurement
+  noise).
 - `nc_solid_sim.py` -- the Solari hopping-KMC simulator.
 - `nc_solid_sim_run.py` -- runs the KMC simulator (`nc_solid_sim`).
 - `nc_solid_alpha_vs_cnr.py` -- naive vs corrected alpha against CNR0 (the core
@@ -32,8 +33,8 @@ the synthetic beds.
 
 ## Data
 
-NC-solid maps on the pshare (`P:/Marc/shared_data/disordered_perovskite_nanocrystals_solids`);
-see `DATASETS.md`. No local copy. The committed calibration `.npz` is the only
+NC-solid maps in the data root's `simulated_map/` folder; see `DATASETS.md`. Not
+committed. The committed calibration `.npz` is the only
 large derived artifact kept in-repo.
 
 ## Run

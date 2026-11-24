@@ -199,7 +199,7 @@ def main():
         return
     cases = load_all(denoise=True)
     if not cases:
-        print("No NC-solid maps on the pshare.")
+        print("No NC-solid maps in the data root.")
         return
 
     # Main sweep: one task per (case, CNR_0) cell, fanned over processes.

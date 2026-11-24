@@ -19,7 +19,7 @@ per-frame mean |residual| after correction (see ``cnr_sigma2_calibration``).
 frame's width; ``fisher_late`` calibrates the same way at the width of the
 frames the correction acts on (post hoc; see ``FISHER_LATE_SIGMA_NM``).
 
-Run from the repository root (needs the pshare)::
+Run from the repository root (needs the collapsed maps in the data root)::
 
     .venv/Scripts/python.exe experiments/halide-mixing-highn/br_halide_highn_perframe.py [cnr_sigma2|daware|fisher|fisher_late] [CNR0]
 

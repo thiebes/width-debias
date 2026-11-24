@@ -40,10 +40,11 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Collaborator data (Marc's pshare datasets) -- never committed; read locally
-# or from the P: pshare. Each experiment
-# set keeps its large/collaborator data in a local data/ dir, never committed;
-# see the set's DATASETS.md for the pshare source.
+# Collaborator data -- never committed. The scripts read it from the data root
+# (WIDTH_DEBIAS_DATA_ROOT, or else data/ at the repository root; see
+# scripts/data_root.py). Some sets keep a local data/ dir; see each set's
+# DATASETS.md.
+/data/
 mc_experiments/**/data/
 experiments/**/data/
 # Per-scan outputs derived from unpublished measurements; regenerated locally.

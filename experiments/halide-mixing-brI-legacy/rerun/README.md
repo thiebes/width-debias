@@ -19,9 +19,9 @@ generates the crystal structure, neighbour list, and the Gaussian initial
 exciton distribution internally, so the only inputs are the binary, the two
 lattice files, and the parameter file.
 
-## Files to copy from the pshare
+## Files to copy from the simulation folders
 
-From `P:\Marc\shared_data\Halide_mixing\BrI_x_<frac>\` (for each Br fraction
+From `halide_mixing/BrI_x_<frac>/` in the data root (for each Br fraction
 `<frac>` in `0.25`, `0.5`, `0.75`), copy into a Linux working directory:
 
 | file | role | SHA-256 (frac 0.25) |

@@ -27,7 +27,8 @@ The key-error term: the sensitivity dD/de from the perturbed exact keys,
 times the spread of the smoothed key's own error (key / sigma^2_true - 1) over
 measurements, is the extra uncertainty the smoothed key carries.
 
-Run from the repository root (needs the pshare and the dense calibration)::
+Run from the repository root (needs the maps in the data root and the dense
+calibration)::
 
     WIDTH_DEBIAS_WORKERS=7 .venv/Scripts/python.exe experiments/halide-mixing-highn/key_sensitivity.py
 """

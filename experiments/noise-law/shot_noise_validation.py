@@ -2,7 +2,7 @@
 
 The poster is not tied to one technique, so the correction must hold across the
 noise regimes that different transport-microscopy methods present. Two bases,
-anchored by real data on the pshare:
+anchored by real data:
 
   WHITE / constant floor -- differential, pump-probe imaging (stroboSCAT,
     transient absorption). Measured on real stroboSCAT frames: the noise is set

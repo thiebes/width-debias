@@ -24,7 +24,7 @@ which is shared by every measurement and so does not shrink with the seeds.
 
     .venv/Scripts/python.exe experiments/halide-mixing-highn/render_perframe_figure.py
 
-Needs the pshare (collapsed maps) and the dense calibration in ``output/``
+Needs the collapsed maps in the data root and the dense calibration in ``output/``
 (``output/build_highn_dense_cal.py`` or ``br_halide_highn_perframe.cnr_sigma2_calibration``).
 """
 import os

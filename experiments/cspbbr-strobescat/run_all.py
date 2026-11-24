@@ -17,11 +17,10 @@ with `--stages` to resume (e.g. `--stages apply,summary` after a calibration run
 Example::
 
     python experiments/cspbbr-strobescat/run_all.py \
-        --sample-root "P:/Upasana/CsPbBr_SingleCrystal/Sample_1" \
         --out-dir output/cspbbr --workers 16 --n-runs 8000
 
-The run machine must be able to read the raw data at ``--sample-root`` (the
-pshare on Windows, or a copy on the compute box).
+``--sample-root`` defaults to the ``cspbbr_sample_1/`` folder of the data root
+(``scripts/data_root.py``); the run machine must be able to read it.
 """
 from __future__ import annotations
 
@@ -35,6 +34,9 @@ import sys
 from pathlib import Path
 
 import numpy as np
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "scripts"))
+from data_root import cspbbr_sample_dir  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[1]
@@ -60,8 +62,9 @@ def run(cmd):
 def main():
     p = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--sample-root", required=True,
-                   help="folder containing the per-fluence subfolders")
+    p.add_argument("--sample-root", default=str(cspbbr_sample_dir()),
+                   help="folder containing the per-fluence subfolders (default: "
+                        "cspbbr_sample_1/ in the data root)")
     p.add_argument("--pattern", default="*uJ*",
                    help="glob for fluence subfolders (default '*uJ*')")
     p.add_argument("--out-dir", default="output/cspbbr")

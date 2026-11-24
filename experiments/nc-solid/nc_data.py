@@ -1,4 +1,4 @@
-"""Load Marc Melendez's disordered-NC-solid diffusion maps (read-only from P:).
+"""Load Marc Melendez's disordered-NC-solid diffusion maps (read only, from the data root).
 
 Model: the exciton-hopping simulation of Solari et al., "Exciton Transport in
 Disordered Perovskite Nanocrystal Solids" (CH3NH3PbBr3 NC films, C8/C12/C16
@@ -7,8 +7,9 @@ the runs behind the paper's Fig. 5, which used only variance curves, and its
 deposit (doi:10.21950/A0AB3H) has no maps. The small map's 2-D variance grows
 with exponent 0.85, like the deposited C16 run (0.84), but about 25% faster, so
 it is a separate run of the same model. Small / medium / large are the C16 / C12
-/ C8 structures (mean NC radius 3.7 / 5.3 / 7.4 nm). The files live on the
-pshare; we read them, never write there.
+/ C8 structures (mean NC radius 3.7 / 5.3 / 7.4 nm). The files are read from
+the ``simulated_map/`` folder of the data root (``scripts/data_root.py``) and
+never written.
 
 Each `diffmap_<tag>.dat` is 20 frames of 250x250 exciton-concentration maps over
 a 1500x1500 nm^2 area (6 nm/pixel), 1 ns/frame. The maps track exciton position
@@ -27,13 +28,17 @@ nanocrystal-solid regime).
 """
 from __future__ import annotations
 
+import os
+import sys
 from dataclasses import dataclass
-from pathlib import Path
 
 import numpy as np
 from scipy.optimize import curve_fit
 
-PSHARE = Path("P:/Marc/shared_data/disordered_perovskite_nanocrystals_solids")
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "scripts"))
+from data_root import simulated_map_dir  # noqa: E402
+
+MAP_DIR = simulated_map_dir()
 L_UM = 1.5            # box length (um); 1500 nm
 NBINS = 250
 NFRAMES = 20
@@ -97,7 +102,7 @@ def load_case(tag: str, tau_ns: float = DEFAULT_TAU_NS, n0: float = 1.0,
     Carlo is the measurement noise added downstream. ``var_true`` is then the
     de-noised Gaussian width; otherwise it is the raw projection's second moment.
     """
-    cube = np.loadtxt(PSHARE / f"diffmap_{tag}.dat").reshape(NFRAMES, NBINS, NBINS)
+    cube = np.loadtxt(MAP_DIR / f"diffmap_{tag}.dat").reshape(NFRAMES, NBINS, NBINS)
     x = np.linspace(-L_UM / 2.0, L_UM / 2.0, NBINS)
     t = np.arange(NFRAMES) * DT_NS
     prof = cube.sum(axis=1)                              # project y -> (t, x)
@@ -116,6 +121,6 @@ def load_case(tag: str, tau_ns: float = DEFAULT_TAU_NS, n0: float = 1.0,
 
 
 def load_all(tau_ns: float = DEFAULT_TAU_NS, denoise: bool = False) -> list[NCCase]:
-    """Load every map present on the pshare, in small/medium/large order."""
+    """Load every map present in the data root, in small/medium/large order."""
     return [load_case(tag, tau_ns=tau_ns, denoise=denoise) for tag in CASES
-            if (PSHARE / f"diffmap_{tag}.dat").exists()]
+            if (MAP_DIR / f"diffmap_{tag}.dat").exists()]

@@ -1,14 +1,18 @@
 # Datasets -- nc-solid
 
-Collaborator data (Marc Meléndez; Solari et al. maps). Referenced by pointer only
--- never copied into git, never moved or renamed on the pshare.
+Collaborator data (Marc Meléndez; Solari et al. maps), read only and never
+committed.
 
 ## Source
 
-The loader `nc_data.py` reads directly from the pshare:
+The loader `nc_data.py` reads the maps from the `simulated_map/` folder of
+the data root (`scripts/data_root.py`: the folder `WIDTH_DEBIAS_DATA_ROOT`
+names, or else `data/` at the repository root):
 
 ```text
-P:/Marc/shared_data/disordered_perovskite_nanocrystals_solids
+simulated_map/diffmap_small.dat
+simulated_map/diffmap_medium.dat
+simulated_map/diffmap_large.dat
 ```
 
 These are the disordered CH3NH3PbBr3 nanocrystal-solid exciton-hopping maps
@@ -18,7 +22,8 @@ They are not the paper's Fig. 5 runs (the paper used only variance
 curves; its deposit, doi:10.21950/A0AB3H, has no maps). The maps are
 ~50,000-walker histograms tracking position only; the loader imposes decay
 `N0*exp(-t/tau)` and (with `denoise=True`) reconstructs the smooth Gaussian per
-frame before measurement noise. No local copy is kept in the repo.
+frame before measurement noise. The scripts use whichever of the three maps
+are present. None is committed.
 
 ## In-repo derived artifact
 

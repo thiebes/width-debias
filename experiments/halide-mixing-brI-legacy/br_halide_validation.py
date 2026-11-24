@@ -31,7 +31,7 @@ cached. The Gaussian fit on a mildly flat-topped profile (shape exponent ~ 2.35)
 carries a small shape gap, reported separately; gen-Gaussian / Voigt fits recover
 a near-identical alpha.
 
-Run from the repository root (needs the pshare for the maps)::
+Run from the repository root (needs the maps in the data root)::
 
     .venv/Scripts/python.exe scripts/br_halide_validation.py
 
@@ -275,7 +275,7 @@ def make_figure(results: list[CaseResult], path: Path) -> None:
 def main() -> None:
     cases = load_all()
     if not cases:
-        print("No Br-I maps found on the pshare; nothing to validate.")
+        print("No Br-I maps found in the data root; nothing to validate.")
         return
     print(f"Building/loading Br-I Gaussian D-free calibration "
           f"({len(CAL_CNR0)} CNR0 x {N_RUNS_CAL} runs) ...")

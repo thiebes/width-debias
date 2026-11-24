@@ -161,7 +161,7 @@ def main() -> None:
     trunc = BiasLookup.from_calibration(CalibrationGrid.load(CAL_PATH))
     cases = load_all()
     if not cases:
-        print("No NC-solid maps found on the pshare; nothing to validate.")
+        print("No NC-solid maps found in the data root; nothing to validate.")
         return
 
     lines = [

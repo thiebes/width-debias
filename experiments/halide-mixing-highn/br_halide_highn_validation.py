@@ -52,7 +52,7 @@ seeds, minus the variance fitted to the same frame's noise-free profile; a
 band's residual is its mean over the band's frames, with SEs from the same
 seed resamples and lookup draws as D.
 
-Run from the repository root (needs the pshare for the maps)::
+Run from the repository root (needs the maps in the data root)::
 
     WIDTH_DEBIAS_WORKERS=4 .venv/Scripts/python.exe experiments/halide-mixing-highn/br_halide_highn_validation.py
 
@@ -497,7 +497,7 @@ def make_figure(results: list[CaseResult], path: Path) -> None:
 def main() -> None:
     cases = load_all()
     if not cases:
-        print("No high-N collapsed maps found on the pshare; nothing to validate.")
+        print("No high-N collapsed maps found in the data root; nothing to validate.")
         return
     cases = [subsample(c, STRIDE) for c in cases]
     n_frames = cases[0].profiles.shape[0]

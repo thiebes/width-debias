@@ -16,7 +16,7 @@ curves `mean(D_hat)/D_true` vs CNR0 for OLS, inverse-variance, and
 
 ## Data
 
-None. Fully synthetic (`width_debias` Monte Carlo); no pshare datasets.
+None. Fully synthetic (`width_debias` Monte Carlo); no collaborator data.
 
 ## Run
 

@@ -5,7 +5,8 @@ CsPbBr3 single-crystal transient-PL-microscopy diffusion (Upasana's data, from
 the Antonella/Carlos diffusion paper). The late-time MSD inflates as the
 per-frame CNR collapses; the correction removes that bias before the D fit. The
 real-data figure of this repository is in `experiments/wse2-strobescat/`; this
-folder is a second real-data application. Data on the pshare; see `DATASETS.md`.
+folder is a second real-data application. Data in the data root's
+`cspbbr_sample_1/` folder; see `DATASETS.md`.
 
 The calibration uses the gaussian (white, constant-floor) noise model. That
 choice is asserted, not measured: `reduce.py` runs no noise-law fit, and a
@@ -35,13 +36,12 @@ fluence-independent), applies the correction, and writes a D-vs-fluence summary
 
 ```bash
 python experiments/cspbbr-strobescat/run_all.py \
-  --sample-root "P:/Upasana/CsPbBr_SingleCrystal/Sample_1" \
   --out-dir output/cspbbr --workers 0 --n-runs 8000
 ```
 
 `--stages` resumes a partial run (e.g. `--stages apply,summary` after the
-calibrations are built). The run machine must be able to read the raw data at
-`--sample-root`.
+calibrations are built). `--sample-root` defaults to the data root's
+`cspbbr_sample_1/` folder; the run machine must be able to read it.
 
 ## Single fluence (manual)
 
@@ -50,7 +50,7 @@ calibrations are built). The run machine must be able to read the raw data at
 
    ```bash
    python experiments/cspbbr-strobescat/reduce.py \
-     --data "P:/Upasana/CsPbBr_SingleCrystal/Sample_1/13.47 uJ_Fluence_19_May_2026" \
+     --data "data/cspbbr_sample_1/13.47 uJ_Fluence_19_May_2026" \
      --n-files 3 --max-var 6.25 --out output/cspbbr_13p47.npz
    ```
 
