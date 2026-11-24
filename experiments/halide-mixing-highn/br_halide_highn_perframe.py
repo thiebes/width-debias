@@ -54,7 +54,7 @@ from br_halide_validation import fit_msd_powerlaw  # noqa: E402
 # fits with one bound and one floor.
 from br_halide_highn_validation import (  # noqa: E402
     FLOOR_CNR, G_MAX, MAX_VAR, STRIDE, fit_each_row, subsample)
-from br_highn_data import SIGMA0_HINT_NM, load_all  # noqa: E402
+from br_highn_data import MAP_DIR, SIGMA0_HINT_NM, load_all  # noqa: E402
 
 OUTPUT = Path(__file__).resolve().parents[2] / "output"  # repo-root output/ (cached calibrations)
 OUTPUT.mkdir(exist_ok=True)
@@ -309,7 +309,7 @@ def main():
         tag += f"_cnr0{CNR0:g}"
     cases = [subsample(c, STRIDE) for c in load_all()]
     if not cases:
-        print("No high-N maps found.")
+        print(f"No high-N collapsed maps found in {MAP_DIR} (WIDTH_DEBIAS_DATA_ROOT, or else data/). See DATASETS.md.")
         return
     label = {"cnr_sigma2": f"joint (CNR, sigma^2) D-free calibration, {N_RUNS_CAL2} "
                            f"runs/cell, {KEY} key",

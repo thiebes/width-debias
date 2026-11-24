@@ -45,9 +45,9 @@ from dataclasses import dataclass
 import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "scripts"))
-from data_root import halide_mixing_dir  # noqa: E402
+from collaborator_data import halide_mixing_dir  # noqa: E402
 
-MAP_DIR = halide_mixing_dir()   # one BrI_x_<frac>/ folder per Br fraction
+MAP_DIR = halide_mixing_dir()
 L_NM = 150.0          # box length (nm); the parameters file labels it "um" in error
 NBINS = 250
 NFRAMES = 21

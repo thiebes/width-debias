@@ -8,7 +8,7 @@ deposit (doi:10.21950/A0AB3H) has no maps. The small map's 2-D variance grows
 with exponent 0.85, like the deposited C16 run (0.84), but about 25% faster, so
 it is a separate run of the same model. Small / medium / large are the C16 / C12
 / C8 structures (mean NC radius 3.7 / 5.3 / 7.4 nm). The files are read from
-the ``simulated_map/`` folder of the data root (``scripts/data_root.py``) and
+the ``simulated_map/`` folder of the data root (``scripts/collaborator_data.py``) and
 never written.
 
 Each `diffmap_<tag>.dat` is 20 frames of 250x250 exciton-concentration maps over
@@ -31,12 +31,13 @@ from __future__ import annotations
 import os
 import sys
 from dataclasses import dataclass
+from pathlib import Path
 
 import numpy as np
 from scipy.optimize import curve_fit
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "scripts"))
-from data_root import simulated_map_dir  # noqa: E402
+from collaborator_data import simulated_map_dir  # noqa: E402
 
 MAP_DIR = simulated_map_dir()
 L_UM = 1.5            # box length (um); 1500 nm
@@ -93,7 +94,7 @@ def _denoise_row(x: np.ndarray, row: np.ndarray) -> tuple[np.ndarray, float]:
 
 
 def load_case(tag: str, tau_ns: float = DEFAULT_TAU_NS, n0: float = 1.0,
-              denoise: bool = False) -> NCCase:
+              denoise: bool = False, *, map_dir: Path | str | None = None) -> NCCase:
     """Load one map by tag (``small`` / ``medium`` / ``large``), with decay applied.
 
     With ``denoise=True`` each frame's projection is replaced by its smooth
@@ -102,7 +103,8 @@ def load_case(tag: str, tau_ns: float = DEFAULT_TAU_NS, n0: float = 1.0,
     Carlo is the measurement noise added downstream. ``var_true`` is then the
     de-noised Gaussian width; otherwise it is the raw projection's second moment.
     """
-    cube = np.loadtxt(MAP_DIR / f"diffmap_{tag}.dat").reshape(NFRAMES, NBINS, NBINS)
+    folder = MAP_DIR if map_dir is None else Path(map_dir)
+    cube = np.loadtxt(folder / f"diffmap_{tag}.dat").reshape(NFRAMES, NBINS, NBINS)
     x = np.linspace(-L_UM / 2.0, L_UM / 2.0, NBINS)
     t = np.arange(NFRAMES) * DT_NS
     prof = cube.sum(axis=1)                              # project y -> (t, x)
@@ -120,7 +122,10 @@ def load_case(tag: str, tau_ns: float = DEFAULT_TAU_NS, n0: float = 1.0,
     return NCCase(name=tag, x=x, t=t, profiles=prof, var_true=var, tau_ns=tau_ns)
 
 
-def load_all(tau_ns: float = DEFAULT_TAU_NS, denoise: bool = False) -> list[NCCase]:
-    """Load every map present in the data root, in small/medium/large order."""
-    return [load_case(tag, tau_ns=tau_ns, denoise=denoise) for tag in CASES
-            if (MAP_DIR / f"diffmap_{tag}.dat").exists()]
+def load_all(tau_ns: float = DEFAULT_TAU_NS, denoise: bool = False, *,
+             map_dir: Path | str | None = None) -> list[NCCase]:
+    """Load every map present in ``map_dir`` (by default the data root's
+    ``simulated_map/``), in small/medium/large order."""
+    folder = MAP_DIR if map_dir is None else Path(map_dir)
+    return [load_case(tag, tau_ns=tau_ns, denoise=denoise, map_dir=folder) for tag in CASES
+            if (folder / f"diffmap_{tag}.dat").exists()]

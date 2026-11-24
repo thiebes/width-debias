@@ -120,11 +120,14 @@ def main() -> None:
     import br_halide_highn_perframe as hp
     from br_halide_validation import fit_msd_powerlaw
     from br_halide_highn_validation import STRIDE, subsample
-    from br_highn_data import load_all
+    from br_highn_data import MAP_DIR, load_all
 
     if hp.N_RUNS_CAL2 != 4000:
         sys.exit("expects the dense calibration (HIGHN_CAL2_RUNS unset or 4000)")
-    case0 = subsample(load_all()[0], STRIDE)
+    cases = load_all()
+    if not cases:
+        sys.exit(f"No high-N collapsed maps found in {MAP_DIR} (WIDTH_DEBIAS_DATA_ROOT, or else data/). See DATASETS.md.")
+    case0 = subsample(cases[0], STRIDE)
     trunc = hp.cnr_sigma2_calibration(case0.x)
 
     jobs = [(f, c) for f in ("0.25", "0.5", "0.75") for c in CNR0_LIST]

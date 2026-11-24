@@ -88,7 +88,7 @@ from width_debias.weights import corrected_variance  # noqa: E402
 from br_halide_validation import ALPHA_BOUNDS, fit_msd_powerlaw  # noqa: E402
 
 from br_highn_data import (  # noqa: E402
-    INTRINSIC_PEAK_CNR, SIGMA0_HINT_NM, load_all)
+    INTRINSIC_PEAK_CNR, MAP_DIR, SIGMA0_HINT_NM, load_all)
 
 HERE = Path(__file__).resolve().parent
 OUTPUT = HERE.parents[1] / "output"
@@ -497,7 +497,8 @@ def make_figure(results: list[CaseResult], path: Path) -> None:
 def main() -> None:
     cases = load_all()
     if not cases:
-        print("No high-N collapsed maps found in the data root; nothing to validate.")
+        print(f"No high-N collapsed maps found in {MAP_DIR} (WIDTH_DEBIAS_DATA_ROOT, or else data/). See DATASETS.md; "
+              "nothing to validate.")
         return
     cases = [subsample(c, STRIDE) for c in cases]
     n_frames = cases[0].profiles.shape[0]

@@ -67,7 +67,7 @@ import fft_cnr  # noqa: E402
 from width_debias import GaussianModel, calibrate_d_free  # noqa: E402
 from width_debias.fit import fit_D, fit_variance  # noqa: E402
 from width_debias.bias_lookup import BiasLookup  # noqa: E402
-from data_root import stroboscat_scans_dir  # noqa: E402
+from collaborator_data import stroboscat_scans_dir  # noqa: E402
 
 # outputs live with the experiment (this folder's diagnostics/ subtree); not
 # tracked, because they are derived from unpublished scans
@@ -76,47 +76,48 @@ CALIB_DIR = os.path.join(WIP, "_calib")
 
 # --- measurement registry: name -> (label, folder) ---------------------------
 # The canonical (most-merged) analysis_*_.npy in the folder is used; partial
-# scan-index files are Enrique's exploration, not separate measurements. Folders
-# are under the data root's stroboscat_scans/ (the lab folder's layout).
+# scan-index files are Enrique's exploration, not separate measurements. The
+# folders are in the data root's stroboscat_scans/ (see DATASETS.md).
 SCANS = stroboscat_scans_dir()
+MULTICHANNEL = SCANS / "MultiChannelData"
 MEASUREMENTS = {
     "wse2_250224_0p020": (
         "WSe2_Power_var_250224_0p020",
-        str(SCANS.joinpath("MultiChannelData", "WSe2", "Power_var", "250224", "0.020")),
+        str(MULTICHANNEL / "WSe2/Power_var/250224/0.020"),
     ),
     "mixed_tmdc_comparison_all_0": (
         "mixed_tmdc_comparison_all_0",
-        str(SCANS.joinpath("MultiChannelData", "mixed_tmdc", "comparison_all", "0")),
+        str(MULTICHANNEL / "mixed_tmdc/comparison_all/0"),
     ),
     "mixed_tmdc_26_32_250716": (
         "mixed_tmdc_26_32_250716",
-        str(SCANS.joinpath("MultiChannelData", "mixed_tmdc", "26_32", "250716")),
+        str(MULTICHANNEL / "mixed_tmdc/26_32/250716"),
     ),
     "mixed_tmdc_pureS_250701": (
         "mixed_tmdc_pureS_250701",
-        str(SCANS.joinpath("MultiChannelData", "mixed_tmdc", "pureS", "250701")),
+        str(MULTICHANNEL / "mixed_tmdc/pureS/250701"),
     ),
     "mixed_tmdc_50_50_250702": (
         "mixed_tmdc_50_50_250702",
-        str(SCANS.joinpath("MultiChannelData", "mixed_tmdc", "50_50", "250702")),
+        str(MULTICHANNEL / "mixed_tmdc/50_50/250702"),
     ),
     # clean WSe2 diffusers surfaced by the de-parity triage (both sweeps agree,
     # high tstat, many low-CNR frames)
     "wse2_betterpower_5MHz_0p022": (
         "WSe2_Better_power_5MHz_0p022",
-        str(SCANS.joinpath("MultiChannelData", "WSe2", "Better_power", "5MHz", "0.022")),
+        str(MULTICHANNEL / "WSe2/Better_power/5MHz/0.022"),
     ),
     "wse2_250606_0p025": (
         "WSe2_Power_var_250606_0p025",
-        str(SCANS.joinpath("MultiChannelData", "WSe2", "Power_var", "250606", "0.025")),
+        str(MULTICHANNEL / "WSe2/Power_var/250606/0.025"),
     ),
     "wse2_250722_0p043": (
         "WSe2_Power_var_250722_0p043",
-        str(SCANS.joinpath("MultiChannelData", "WSe2", "Power_var", "250722", "0.043")),
+        str(MULTICHANNEL / "WSe2/Power_var/250722/0.043"),
     ),
     "mapbbr_250730": (
         "MAPbBr3_strobe_MA_250730",
-        str(SCANS.joinpath("TPLM _TSM", "MA", "250730")),
+        str(SCANS / "TPLM _TSM/MA/250730"),
     ),
 }
 

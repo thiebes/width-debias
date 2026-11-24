@@ -20,7 +20,7 @@ Example::
         --out-dir output/cspbbr --workers 16 --n-runs 8000
 
 ``--sample-root`` defaults to the ``cspbbr_sample_1/`` folder of the data root
-(``scripts/data_root.py``); the run machine must be able to read it.
+(``scripts/collaborator_data.py``); the run machine must be able to read it.
 """
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "scripts"))
-from data_root import cspbbr_sample_dir  # noqa: E402
+from collaborator_data import cspbbr_sample_1_dir  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[1]
@@ -62,7 +62,7 @@ def run(cmd):
 def main():
     p = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--sample-root", default=str(cspbbr_sample_dir()),
+    p.add_argument("--sample-root", default=str(cspbbr_sample_1_dir()),
                    help="folder containing the per-fluence subfolders (default: "
                         "cspbbr_sample_1/ in the data root)")
     p.add_argument("--pattern", default="*uJ*",
@@ -82,10 +82,12 @@ def main():
 
     stages = set(s.strip() for s in args.stages.split(","))
     out = Path(args.out_dir); out.mkdir(parents=True, exist_ok=True)
+    if not os.path.isdir(args.sample_root):
+        raise SystemExit(f"No sample root at {args.sample_root} (WIDTH_DEBIAS_DATA_ROOT, or else data/). See DATASETS.md.")
     folders = sorted(glob.glob(os.path.join(args.sample_root, args.pattern)))
     folders = [f for f in folders if os.path.isdir(f)]
     if not folders:
-        raise SystemExit(f"no fluence folders matching {args.pattern!r}")
+        raise SystemExit(f"no fluence folders matching {args.pattern!r} in {args.sample_root}")
     fluences = [(f, *label_and_fluence(os.path.basename(f.rstrip("/\\"))))
                 for f in folders]
     print(f"{len(fluences)} fluences: "

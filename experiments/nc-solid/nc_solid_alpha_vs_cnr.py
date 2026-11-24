@@ -54,7 +54,7 @@ from width_debias.noise import ShotNoise, WhiteNoise  # noqa: E402
 from width_debias.bias_lookup import BiasLookup  # noqa: E402
 from width_debias.weights import corrected_variance  # noqa: E402
 
-from nc_data import load_all, load_case  # noqa: E402
+from nc_data import CASES, MAP_DIR, load_all, load_case  # noqa: E402
 
 OUTPUT = Path(__file__).resolve().parents[2] / "output"
 OUTPUT.mkdir(exist_ok=True)
@@ -197,10 +197,12 @@ def main():
     if not CAL_PATH.exists():
         print(f"Calibration not found: {CAL_PATH.name}.")
         return
-    cases = load_all(denoise=True)
-    if not cases:
-        print("No NC-solid maps in the data root.")
+    missing = [t for t in CASES if not (MAP_DIR / f"diffmap_{t}.dat").exists()]
+    if missing:
+        print(f"This script needs all three NC-solid maps; missing in {MAP_DIR}: "
+              f"{', '.join(missing)} (WIDTH_DEBIAS_DATA_ROOT, or else data/). See DATASETS.md.")
         return
+    cases = load_all(denoise=True)
 
     # Main sweep: one task per (case, CNR_0) cell, fanned over processes.
     # Every task carries its noise model and a seed offset; the main / tau
