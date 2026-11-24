@@ -50,7 +50,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   per-measurement values is an upper bound), and the calibration runs per
   initial-CNR point should be well above N. In the D-free validation tables
   the calibration SE is about the single-measurement spread of D divided by
-  the square root of the calibration runs.
+  the square root of the calibration runs. The `--n-runs` entry of
+  `docs/calibration_runs.md` says that the joint lookup's error is shared in
+  the same way, and points to the README.
 - The high-N halide README, `br_halide_highn_perframe.py`,
   `key_sensitivity.py`, `docs/DERIVATION.md` and the `BiasLookup.var_bias`
   docstring give the width growth over the fitted frames, 11- to 24-fold at

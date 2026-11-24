@@ -76,7 +76,10 @@ floor-dominated), so its preset uses gaussian.
   mismatched.
 - `--n-runs`: Monte Carlo runs per cell. The 2-D (CNR, sigma^2) lookup needs
   high statistics where the per-cell bias estimate is noisy -- ~8000/cell at the
-  low-CNR end. Drop to ~2000 for a quick look.
+  low-CNR end. Drop to ~2000 for a quick look. The lookup's own Monte Carlo
+  error is shared by every measurement corrected with it and does not average
+  down, so a mean over many measurements needs more runs than one measurement
+  does; see "Use enough calibration runs" in the README.
 - Grid sizes (`--n-cnr`, `--n-sigma`): ~100 each is typical; the total fit count
   is `n_cnr * n_sigma * n_runs`.
 
