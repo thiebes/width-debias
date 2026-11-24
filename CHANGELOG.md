@@ -10,17 +10,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Experiment scripts read collaborator data from a data root instead of fixed
-  shared-drive paths: the folder `WIDTH_DEBIAS_DATA_ROOT` names, or else `data/`
-  at the repository root, which git ignores. `scripts/data_root.py` holds the
-  folder layout (`stroboscat_scans/`, `simulated_map/`, `halide_mixing/`,
-  `halide_mixing_highn/`, `cspbbr_sample_1/`), and the loaders in `nc-solid`,
-  `halide-mixing-brI-legacy`, `halide-mixing-highn`, `wse2-strobescat` and
-  `cspbbr-strobescat` read their folders there; `cspbbr-strobescat/run_all.py`
-  takes its `--sample-root` default from it. With each folder mapped to its old
-  location the scripts resolve the same folders, files and keys in the same
-  order, so no result changes. Each set's `DATASETS.md`, its README, the
-  repository map and `.gitignore` name the data-root folders instead of the
-  drive paths.
+  shared-drive paths: the folder `WIDTH_DEBIAS_DATA_ROOT` names (`~` and
+  relative paths are resolved), or else `data/` at the repository root, which
+  git ignores. `scripts/collaborator_data.py` holds the folders
+  (`stroboscat_scans/`, `simulated_map/`, `halide_mixing/`,
+  `halide_mixing_highn/`, `cspbbr_sample_1/`). The loaders in `nc-solid`,
+  `halide-mixing-brI-legacy`, `halide-mixing-highn` and `wse2-strobescat` read
+  their folders there, and `cspbbr-strobescat/run_all.py` takes its
+  `--sample-root` default from it. `nc_data.load_case` and `load_all` take a
+  keyword-only `map_dir` that overrides the folder. With each folder mapped to
+  its old location the scripts resolve the same folders, files and keys in the
+  same order, so no result changes. When data is missing, the scripts name the
+  folder they searched and the variable that sets it. Each set's `DATASETS.md`
+  and README and the repository map name the data-root folders, and
+  `.gitignore` ignores `data/`. `tests/test_data_root.py` checks how the root
+  resolves, the folder names, and that no tracked text file names a drive
+  path.
 
 ### Fixed
 

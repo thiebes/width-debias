@@ -54,6 +54,9 @@ calibrations are built). `--sample-root` defaults to the data root's
      --n-files 3 --max-var 6.25 --out output/cspbbr_13p47.npz
    ```
 
+   (`data/` is the default data root; with `WIDTH_DEBIAS_DATA_ROOT` set, the
+   folder is under that root.)
+
 2. **Calibrate** the `(CNR, sigma^2)` bias lookup for this geometry (heavy; run
    on a multi-core Linux or WSL machine; geometry and tunables are documented in
    the script header):
@@ -80,5 +83,5 @@ the calibration must agree on:
 - the **fit variance cap** (`reduce.py --max-var` must equal the calibration's
   `--max-var`).
 
-Raw data is not committed (it is the collaborators'); point `--data` at the
-acquisition folder on the share.
+Raw data is not committed (it is the collaborators'); point `--data` at a
+fluence folder in the data root's `cspbbr_sample_1/` (`DATASETS.md`).

@@ -33,9 +33,9 @@ the synthetic beds.
 
 ## Data
 
-NC-solid maps in the data root's `simulated_map/` folder; see `DATASETS.md`. Not
-committed. The committed calibration `.npz` is the only
-large derived artifact kept in-repo.
+NC-solid maps in the data root's `simulated_map/` folder, not committed; see
+`DATASETS.md`, which says which scripts need which maps. The committed
+calibration `.npz` is the only large derived artifact kept in-repo.
 
 ## Run
 
@@ -80,7 +80,8 @@ does not matter on this bed.
 `width_debias` (`GaussianModel`, `noise.WhiteNoise`, `truncation`, `validate`,
 `weights`). Local sibling modules `nc_data.py`, `nc_solid_sim.py`,
 `nc_solid_alpha_vs_cnr.py`. Optional `curved_text` (the figure's curved label;
-`pip install -e ../curved-text`).
+`pip install -e ../curved-text`). The loader reads its folder through
+`scripts/collaborator_data.py` (the data root and its folders).
 
 ## See also
 

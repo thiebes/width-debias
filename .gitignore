@@ -42,7 +42,7 @@ Thumbs.db
 
 # Collaborator data -- never committed. The scripts read it from the data root
 # (WIDTH_DEBIAS_DATA_ROOT, or else data/ at the repository root; see
-# scripts/data_root.py). Some sets keep a local data/ dir; see each set's
+# scripts/collaborator_data.py). Some sets keep a local data/ dir; see each set's
 # DATASETS.md.
 /data/
 mc_experiments/**/data/

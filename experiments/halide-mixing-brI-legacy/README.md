@@ -43,7 +43,8 @@ the floor, so the correction is inactive (naive ~ corrected). Figure:
 
 ## Depends on
 
-`width_debias`. Local sibling loader `br_data.py`.
+`width_debias`. Local sibling loader `br_data.py`, which reads its folder through
+`scripts/collaborator_data.py` (the data root and its folders).
 
 ## See also
 

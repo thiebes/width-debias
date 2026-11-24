@@ -162,7 +162,8 @@ CPU contention.
 
 `width_debias` (`calibration`, `truncation`, `weights`, `cnr`, `fit`,
 `noise`). `fft-cnr` for per-frame CNR. The diagnostic scripts share
-`realdata_diagnostics.py` (local sibling).
+`realdata_diagnostics.py` (local sibling), which reads the scans through
+`scripts/collaborator_data.py` (the data root and its folders).
 
 ## See also
 

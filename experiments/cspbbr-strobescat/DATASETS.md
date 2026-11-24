@@ -1,14 +1,14 @@
 # Datasets -- cspbbr-strobescat
 
-Collaborator data (Upasana; the Antonella/Carlos diffusion paper), read only and
-never committed.
+Collaborator data: Upasana's CsPbBr3 single-crystal scans (the Antonella/Carlos
+diffusion paper). They are not part of this repository; place a copy in the
+`cspbbr_sample_1/` folder of the data root. The data root is the folder that
+`WIDTH_DEBIAS_DATA_ROOT` names, or else `data/` at the repository root;
+`scripts/collaborator_data.py` holds its layout.
 
 ## Source
 
-Raw CsPbBr3 single-crystal transient-PL-microscopy acquisition CSVs, organised
-by fluence subfolder under the sample root, the `cspbbr_sample_1/` folder of
-the data root (`scripts/data_root.py`: the folder `WIDTH_DEBIAS_DATA_ROOT`
-names, or else `data/` at the repository root):
+Raw transient-PL-microscopy acquisition CSVs, one subfolder per fluence:
 
 ```text
 cspbbr_sample_1/<fluence folder>/

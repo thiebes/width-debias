@@ -14,6 +14,7 @@ scripts/             shared calibration tooling and figure rendering
 docs/                derivation, validation design, calibration how-to, this map
 tests/               package tests
 output/              regenerated run outputs and cached calibrations (not tracked)
+data/                default data root for collaborator data (not tracked)
 ```
 
 ## Experiment sets
@@ -36,7 +37,7 @@ output/              regenerated run outputs and cached calibrations (not tracke
 | [fisher-calibration](../experiments/fisher-calibration/) | `compare_calibrations.py`, `fisher_check.py`, `diagnose_criterion3.py` | pre-registered switch test: `calibrate_fisher` matches the raw path's accuracy with 0.20-0.32 of its calibration SE but fails the criterion on Voigt and p = 4 (predicted SE too small: per-draw GCV smoothing choice) and p = 1.5 (cells beyond 2 SE), so the raw path stays recommended; Fisher A matches Monte Carlo to 0.998-1.003 on four shapes; width scaling not established | `.txt` tables |
 | [fft-cnr-recovery](../experiments/fft-cnr-recovery/) | `build_fft_cnr_recovery_figure.py` (+ committed summary `.npz`) | fft-cnr recovers the true CNR on the 1:1 line from CNR 2 to 100, N = 128-1024 | `fft_cnr_recovery.png` |
 
-### Transport-simulation beds (Marc Meléndez; data root, see each `DATASETS.md`)
+### Transport-simulation beds (Marc Meléndez; data per row, see each `DATASETS.md`)
 
 | Set | Scripts | Main result | Data |
 | ------- | ------- | ------- | ------- |
@@ -74,13 +75,15 @@ figure with its build script, figure, and caption. See
 - `scripts/poster_figures.py`, `scripts/poster_fftcnr_dense.py`,
   `scripts/poster_style.py`: render the summary figures and hold their shared
   palette and axis style.
+- `scripts/collaborator_data.py`: the data root and its folders, where the
+  loaders read collaborator data.
 
-## Datasets (data root, not tracked)
+## Datasets (not tracked)
 
 Each collaborator and measured-data set carries a `DATASETS.md` naming the files
 it reads. The scripts read collaborator data from the data root: the folder that
 `WIDTH_DEBIAS_DATA_ROOT` names, or else `data/` at the repository root (ignored
-by git). `scripts/data_root.py` holds the folder layout.
+by git). `scripts/collaborator_data.py` holds the folder layout.
 
 | Set | Source |
 | ------- | ------- |
