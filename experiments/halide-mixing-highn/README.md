@@ -227,6 +227,15 @@ with Br fraction confirms that mixing inhibits transport. (The legacy maps'
 apparent subdiffusion is a short-window / narrow-box artifact, not real
 transport.)
 
+`axis_check.py` (`axis_check.txt`) compares the two projections with that
+reference. On the bin centres, each projection's binned second moment is
+within 0.0123 of the halved moment over all frames, and the two differ by at
+most 0.0143, against about 0.003 from walker sampling alone. Their shapes
+differ more: over the usable band at CNR0 15, the Gaussian fit of the
+noise-free `prof_y` gives D/D_ref 1.009, 0.992 and 0.984, against 0.992, 0.958
+and 0.960 for `prof_x`, which the experiment reads. The shape gap therefore
+depends on the axis.
+
 Over the 3 ns window the peak drops ~147x, so most late frames fall below CNR 1
 and are excluded by the floor; the correction is tested on the usable band (a
 shorter effective window, which is the fair test).
@@ -254,6 +263,9 @@ shorter effective window, which is the fair test).
   the joint grid, which the figure shows, and both Fisher width-table arms, each
   with its calibration SE).
 - `key_sensitivity.py` -- the key-sensitivity comparison (`key_sensitivity.txt`).
+- `axis_check.py` -- the x and y projections against the halved 2-D moment
+  (centroid, binned second moment, excess kurtosis, window edges) and the shape
+  gap of each; writes `axis_check.txt` here. Result in "The bed" above.
 - `br_halide_highn_perframe.png` -- the figure (CNR0 = 15); caption in
   `br_halide_highn_perframe_caption.md`.
 

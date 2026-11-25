@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `experiments/halide-mixing-highn/axis_check.py` compares the x and y
+  projections of the high-N Br-I maps with the halved 2-D moment that the
+  experiment takes as its reference, and writes `axis_check.txt`: per Br
+  fraction and at seven frames, each projection's centroid, binned second
+  moment, excess kurtosis and window-edge fraction, and the shape gap of each
+  axis. On the bin centres the binned moments are within 0.0123 of the halved
+  moment and differ from each other by at most 0.0143, but over the usable band
+  at CNR0 15 the noise-free fit of `prof_y` gives D/D_ref 1.009, 0.992 and
+  0.984 against 0.992, 0.958 and 0.960 for `prof_x`, so the shape gap depends
+  on the axis. The loader still reads `prof_x`, and no result of the
+  experiment changes. The loader's docstrings, which stated without a table
+  how closely the axes agree and how closely the binned moment matches the
+  reference (an offset they gave to bin width alone), now give the table's
+  values. Part of that offset is the files' x axis, whose spacing is 600/599 of
+  the bin width.
+
 ### Changed
 
 - Experiment scripts read collaborator data from a data root instead of fixed

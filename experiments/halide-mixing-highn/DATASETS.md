@@ -11,7 +11,8 @@ at the repository root; `scripts/collaborator_data.py` holds its layout.
 
 One subfolder per Br fraction `x_<frac>`, `<frac>` in `0.25`, `0.5`, `0.75`.
 `br_highn_data.py` reads the first two files below; the others are listed for
-completeness.
+completeness. `axis_check.py` reads the same two files and uses `prof_y` as
+well as `prof_x` (`axis_check.txt`).
 
 | dataset | path under `halide_mixing_highn/` | what it is |
 | ------- | ----------- | ---------- |
