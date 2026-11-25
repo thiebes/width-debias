@@ -83,13 +83,15 @@ window.
    (each instance writes a diffmap; at 500 bins that is ~2 GB, at 250 bins
    ~0.5 GB).
 2. Make one folder per fraction, `x_<frac>/`, under a common root, and copy
-   into each the four files above and `average_diffmaps.py`; then
-   `chmod +x landscapeBD.diffmap`. `rerun_all_unique.sh` expects the root at
-   `~/halide_rerun` (or the folder `ROOT` names) and runs `average_diffmaps.py`
-   from each fraction folder. Widen the parameter file's diffmap window as
-   needed; the high-N run used `diffmap_Lx` and `diffmap_Ly` 3000 and
-   `diffmap_nx` and `diffmap_ny` 600 (5 nm/bin). The run scripts set the walker
-   count `N` of each instance from their arguments.
+   into each the four files above, `average_diffmaps.py` and
+   `collapse_diffmaps.py`; then `chmod +x landscapeBD.diffmap`.
+   `rerun_all_unique.sh` takes the root from the environment variable `ROOT`
+   (default `~/halide_rerun`) and runs `average_diffmaps.py` from each fraction
+   folder. Widen the parameter file's diffmap window as needed; the high-N run
+   used `diffmap_Lx` and `diffmap_Ly` 3000 and `diffmap_nx` and `diffmap_ny`
+   600 (5 nm/bin). The run scripts set the walker count `N` of each instance
+   from their arguments. Steps 3, 4, 6 and 7, and `rerun_unique.sh`, run inside
+   a fraction folder; `rerun_all_unique.sh` runs from anywhere.
 3. **Verify randomisation first** (the parameter file has no seed): run two quick
    instances and confirm they differ.
    ```bash
@@ -112,22 +114,25 @@ window.
    clock second, counts an instance as distinct by the hash of its variance
    file, and writes the distinct instance directories to
    `unique_instances.txt`. Both reuse the fraction folder's parameter file and
-   keep the instances already there. Neither stops on an error, and
-   `rerun_all_unique.sh` prints "TOP-UP COMPLETE" even when an instance or the
-   averaging failed. Before step 7, check each instance's `run.err`, the
-   per-fraction line that gives the number of distinct instances, and the
-   "averaged N instances" line of step 6.
+   keep the instances already there. Neither stops when an instance or the
+   averaging fails, and `rerun_all_unique.sh` prints "TOP-UP COMPLETE" even
+   then. Before step 7, check the last `x_<frac>: <n> unique` line of each
+   fraction, the "averaged <n> instances" line of step 6 (and any "skip" line
+   before it), and that every listed instance's `variance.x_<frac>.dat` has
+   `tmax / tsamp + 1` rows. `run.err` holds the simulator's set-up messages
+   even after a successful run, so read it for an instance that is incomplete.
 6. Average the distinct instances with
    `python3 average_diffmaps.py <frac> $(cat unique_instances.txt)`, which
    writes `diffmap.x_<frac>.avg.npy` and `variance.x_<frac>.avg.dat`
    (`rerun_all_unique.sh` runs this step itself).
-7. Collapse the averaged map to 1-D by running `collapse_diffmaps.py <frac>` in
-   the fraction folder, which writes `collapsed_1d.x_<frac>.npz`. The script
-   refuses to replace an existing profile file, to collapse a map whose frame
-   count is not `tmax / tsamp + 1`, and to record instance counts the map does
-   not hold: every instance in `unique_instances.txt` must be present with the
-   same `N`, and the averaged variance file must be the mean of their variance
-   files.
+7. Collapse the averaged map to 1-D with `python3 collapse_diffmaps.py <frac>`,
+   which writes `collapsed_1d.x_<frac>.npz`. The script refuses to replace an
+   existing profile file, to collapse a map whose frame count is not
+   `tmax / tsamp + 1`, and to record instance counts the map does not hold:
+   every instance in `unique_instances.txt` must be present with the same `N`
+   and a full variance file, no two may have identical variance files (copies
+   of one realisation), and the averaged variance file must be the mean of
+   theirs.
 8. Copy back the collapsed file and the averaged variance file, the two files
    `experiments/halide-mixing-highn/br_highn_data.py` reads. The averaged map
    needs no de-noising. `br_data.py` carries the legacy 150 nm geometry and
@@ -174,7 +179,7 @@ files with the kept realisations' variance files.
   profile's peak at frame 0, and 0.105 to 0.229 at frames 300 and 600. The two
   sides are different averages (5 realisations, duplication-weighted, against 16
   distinct ones), so the collapsed files cannot be reproduced from the maps that
-  are kept, and the script is not checked against them.
+  are kept, and the script's profiles cannot be verified against them.
 - The 5 shared realisations leave fine structure (second differences) in both
   averages. At frames 300 and 600 the script's `prof_x` correlates with the
   file's `prof_x` (r 0.54 to 0.70) more than with its `prof_y` (r -0.14 to
@@ -183,14 +188,21 @@ files with the kept realisations' variance files.
   `prof_x` sums over a frame's rows and its `prof_y` over the columns, the
   assignment the script uses. At frame 0 the profiles are narrow and the
   correlations do not separate the axes on every fraction.
-- No duplication-weighted mean of the kept realisations' variance files gives
-  the averaged variance files. Such a mean would match to rounding, but every
-  weighting by whole counts summing to 16 differs by at least 61 to 121 nm²
-  (by fraction) in some frame. Read as the mean of 16 distinct realisations
-  that include the 5 kept ones, the largest |z| over the 601 frames is 1.86 to
-  3.79. The spread behind z comes from 5 realisations (4 degrees of freedom),
-  and under Student's t a single frame reaches |z| 3.79 with a two-sided
-  probability of about 0.02, so this reading fits.
+- The averaged variance files are not the first run's kind of average, a
+  duplication-weighted mean of the kept realisations' variance files. Copies
+  have identical files, so if they were, the right weighting would reproduce
+  them to rounding. Of the 1365 weightings (each of the 5 kept realisations
+  counted at least once, 16 in all), the closest still differs by 61 to
+  121 nm² (by fraction) in its worst frame.
+- They are consistent with a mean of 16 distinct realisations that include the
+  5 kept ones, which the top-up scripts keep when they add instances. Per frame,
+  z is the difference between the averaged file and the kept realisations'
+  mean, divided by its standard error estimated from their spread; the largest
+  |z| over the 601 frames is 1.86 to 3.79. This alone does not single out the
+  16-realisation set: the frames are strongly correlated and the spread comes
+  from 5 realisations, so a largest |z| of this size is ordinary, and a
+  duplication-weighted mean can also give a small |z|. The weighting search
+  above is what separates the two.
 
 ## Checks on the run machine
 

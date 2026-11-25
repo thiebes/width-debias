@@ -17,10 +17,9 @@
 # inst_* directories -- i.e. ~/halide_rerun/x_<frac> after run_all_fractions.sh.
 # The parameter file is reused in place (this does not re-stage from the
 # simulation folders), so the widened diffmap window is preserved. New instances
-# are numbered after the
-# highest existing index; existing directories are left untouched, so duplicate
-# instances from a previous run are kept on disk but excluded from the unique
-# count and from the averaging list this script writes.
+# are numbered after the highest existing index; existing directories are left
+# untouched, so duplicate instances from a previous run are kept on disk but
+# excluded from the unique count and from the averaging list this script writes.
 #
 # Usage:
 #   ./rerun_unique.sh <frac> <N_per_instance> <target_unique> [gap_seconds] [max_parallel]

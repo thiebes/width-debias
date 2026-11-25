@@ -2,9 +2,10 @@
 
 Re-runs of Marc Meléndez's Brownian-dynamics Br-I simulator at 400,000 walkers
 (16 distinct realisations of 25,000 walkers, averaged and collapsed to 1-D; the
-procedure and what is kept are in `../halide-mixing-brI-legacy/rerun/README.md`,
-and that folder holds `collapse_diffmaps.py`, a collapse script written
-afterwards and not checked against the profile files). They are not part of this
+procedure and what is kept are in `../halide-mixing-brI-legacy/rerun/README.md`;
+the script that made the collapsed profiles is not kept, and that folder holds
+`collapse_diffmaps.py`, a rewrite whose profiles cannot be verified against
+them). They are not part of this
 repository; place a copy in the `halide_mixing_highn/` folder of the data root.
 The data root is the folder that `WIDTH_DEBIAS_DATA_ROOT` names, or else `data/`
 at the repository root; `scripts/collaborator_data.py` holds its layout.
