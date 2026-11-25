@@ -13,14 +13,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   averaged 2-D map of the high-N Br-I re-run into the 1-D profile file that
   `experiments/halide-mixing-highn/` reads. It refuses to replace an existing
   profile file, to collapse a map whose frame count is not tmax / tsamp + 1,
-  and to record instance counts that the map does not hold. With `--check` it
-  compares chosen frames with an existing profile file, and the averaged
-  variance file with the kept instances' variance files. The script that made
-  the profile files is not kept, and `collapse_check.txt` shows that the
-  averaged maps that are kept, from a first run with only 5 distinct
-  realisations per fraction, do not reproduce them, so the script is not
-  checked against them. `tests/test_collapse_diffmaps.py` pins the file's keys,
-  axes and grid and the refusals on a small hand-built map. The top-up scripts
+  and to record instance counts that the map does not hold (missing instances,
+  copies of one realisation, or a variance file that is not their mean). With
+  `--check` it compares chosen frames with an existing profile file, and the
+  averaged variance file with the kept instances' variance files. The script
+  that made the profile files is not kept, and `collapse_check.txt` shows that
+  the averaged maps that are kept, from a first run with only 5 distinct
+  realisations per fraction, do not reproduce them, so the script's profiles
+  cannot be verified against them. `tests/test_collapse_diffmaps.py` pins the
+  file's keys, axes and grid, the refusals and the variance comparison on small
+  hand-built instances averaged by `average_diffmaps.py`. The top-up scripts
   `rerun_unique.sh` and `rerun_all_unique.sh`, which brought the re-run to 16
   distinct realisations per fraction, are added, `rerun_unique.sh` with one
   comment reworded. The rerun README and the high-N `DATASETS.md` describe the
