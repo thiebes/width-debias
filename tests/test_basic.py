@@ -15,6 +15,7 @@ from width_debias import (AnomalousExperiment, Experiment, GaussianModel,
                             VoigtModel, WhiteNoise, calibrate_d_free,
                             cnr_per_frame, evaluate, frame_stats,
                             model_from_spec, run_ensemble, spec_tag)
+from width_debias.fisher import per_frame_crlb, sequence_fisher_information
 from width_debias.fit import fit_D, fit_variance
 from width_debias.models import MODELS
 from width_debias.simulate import noise_free_series
@@ -229,11 +230,37 @@ def test_multiexp_rejects_mismatched_components():
 # --------------------------------------------------------------------------
 # Spreading peak (Experiment.spread_dims)
 # --------------------------------------------------------------------------
-def test_default_peak_follows_the_decay_alone():
-    """Without spread_dims the peak is the decay law's, bit for bit."""
-    exp = Experiment(D=0.1)
-    assert np.array_equal(exp.amplitude, exp.amplitude0 * np.exp(-exp.times / exp.tau))
-    assert np.array_equal(exp.spread_factor, np.ones(exp.n_frames))
+@pytest.mark.parametrize("bed, decay", [
+    (Experiment(D=0.1), lambda t: np.exp(-t)),
+    (AnomalousExperiment(D=0.1, alpha=0.7), lambda t: np.exp(-t)),
+    (MultiExpExperiment(D=0.1, fractions=(0.3, 0.7), taus=(0.3, 2.0)),
+     lambda t: (0.3 * np.exp(-t / 0.3) + 0.7 * np.exp(-t / 2.0)) / (0.3 + 0.7)),
+], ids=["experiment", "anomalous", "multiexp"])
+def test_default_peak_follows_each_bed_decay_alone(bed, decay):
+    """Without spread_dims the peak is each bed's own decay law, and the profiles carry it.
+
+    The decay is written out here (tau = 1) rather than read from the bed, so a
+    default path that skipped a subclass's decay law, such as the sum of
+    exponentials of MultiExpExperiment, fails.
+    """
+    assert np.array_equal(bed.amplitude, bed.decay_amplitude)
+    assert np.array_equal(bed.spread_factor, np.ones(bed.n_frames))
+    np.testing.assert_allclose(bed.amplitude, bed.amplitude0 * decay(bed.times), rtol=1e-14)
+    assert np.array_equal(noise_free_series(bed).max(axis=1), bed.amplitude)
+
+
+def test_spreading_fields_leave_the_positional_fields_in_place():
+    """The spreading fields are keyword-only, so positional construction is as before them."""
+    from dataclasses import fields
+
+    def positional(cls):
+        return [f.name for f in fields(cls) if not f.kw_only]
+
+    base = ["sigma0", "D", "tau", "amplitude0", "mean", "half_window", "n_pixels",
+            "n_frames", "t_max"]
+    assert positional(Experiment) == base
+    assert positional(AnomalousExperiment) == base + ["alpha"]
+    assert positional(MultiExpExperiment) == base + ["fractions", "taus"]
 
 
 def test_spreading_peak_matches_the_gaussian_closed_form():
@@ -343,16 +370,45 @@ def test_cnr_per_frame_is_the_simulated_cnr_with_a_summed_spreading_peak():
     assert np.all(held[1:] > ens.cnr_frame[1:])
 
 
-def test_spreading_peak_refuses_settings_it_cannot_honour():
-    """A spreading peak computed for another profile's Lorentzian would be silently wrong."""
+def test_spreading_peak_refuses_a_peak_computed_for_another_profile():
+    """A peak computed for another profile's Lorentzian would be silently wrong.
+
+    Every path that draws the profiles or reads their peak refuses it: the
+    Monte Carlo, each model's noise-free series, the Gaussian series, and the
+    Fisher bounds.
+    """
+    voigt_peak = Experiment(D=0.1, spread_dims=1, psf_hwhm=0.3)
+    gaussian_peak = Experiment(D=0.1, spread_dims=1)
     with pytest.raises(ValueError, match="psf_hwhm"):
-        run_ensemble(Experiment(spread_dims=1), 8.0, n_runs=1, model=VoigtModel(gamma=0.3))
+        run_ensemble(gaussian_peak, 8.0, n_runs=1, model=VoigtModel(gamma=0.3))
     with pytest.raises(ValueError, match="psf_hwhm"):
-        run_ensemble(Experiment(spread_dims=1, psf_hwhm=0.3), 8.0, n_runs=1)
-    with pytest.raises(ValueError, match="spread_dims"):
-        Experiment(spread_dims=3)
+        run_ensemble(voigt_peak, 8.0, n_runs=1)
+    for model in (GaussianModel(), GeneralizedGaussianModel(shape=4.0), MomentModel(),
+                  UnboundedGaussianModel(), VoigtModel(gamma=0.2)):
+        with pytest.raises(ValueError, match="psf_hwhm"):
+            model.noise_free_series(voigt_peak)
     with pytest.raises(ValueError, match="psf_hwhm"):
-        Experiment(spread_dims=1, psf_hwhm=-0.1)
+        noise_free_series(voigt_peak)
+    with pytest.raises(ValueError, match="psf_hwhm"):
+        per_frame_crlb(VoigtModel(gamma=0.3), gaussian_peak, 0.1)
+    with pytest.raises(ValueError, match="psf_hwhm"):
+        sequence_fisher_information(GaussianModel(), voigt_peak, 0.1)
+    assert VoigtModel(gamma=0.3).noise_free_series(voigt_peak).shape == (12, 241)
+
+
+@pytest.mark.parametrize("settings, field", [
+    (dict(spread_dims=3), "spread_dims"),
+    (dict(spread_dims=True), "spread_dims"),
+    (dict(spread_dims=1, psf_hwhm=-0.1), "psf_hwhm"),
+    (dict(psf_hwhm=0.3), "psf_hwhm"),
+    (dict(spread_dims=1, D_y=0.01), "D_y"),
+    (dict(spread_dims=2, D_y=-0.01), "D_y"),
+], ids=["spread_3", "spread_bool", "negative_psf", "psf_without_spread", "d_y_summed",
+        "negative_d_y"])
+def test_experiment_refuses_spreading_settings_it_cannot_honour(settings, field):
+    """Settings the peak would ignore or misread raise instead of passing silently."""
+    with pytest.raises(ValueError, match=field):
+        Experiment(**settings)
 
 
 def test_generalized_gaussian_variance_factor():
