@@ -1,12 +1,39 @@
-x_0.25: x equal True; t equal at the frames True; box_nm 3000 / 3000; n_bins 600 / 600; x_frac 0.25 / 0.25; tsamp_ns 0.005 / 0.005
-  frame 0: prof_x equal False, max |diff| 1.33e-03 (0.017 of peak); prof_y equal False, max |diff| 1.50e-03 (0.019 of peak)
-  frame 300: prof_x equal False, max |diff| 1.75e-03 (0.116 of peak); prof_y equal False, max |diff| 1.58e-03 (0.105 of peak)
-  frame 600: prof_x equal False, max |diff| 1.73e-03 (0.159 of peak); prof_y equal False, max |diff| 1.34e-03 (0.127 of peak)
-x_0.5: x equal True; t equal at the frames True; box_nm 3000 / 3000; n_bins 600 / 600; x_frac 0.5 / 0.5; tsamp_ns 0.005 / 0.005
-  frame 0: prof_x equal False, max |diff| 1.65e-03 (0.021 of peak); prof_y equal False, max |diff| 1.01e-03 (0.013 of peak)
-  frame 300: prof_x equal False, max |diff| 5.04e-03 (0.217 of peak); prof_y equal False, max |diff| 4.65e-03 (0.204 of peak)
-  frame 600: prof_x equal False, max |diff| 3.47e-03 (0.205 of peak); prof_y equal False, max |diff| 3.71e-03 (0.229 of peak)
-x_0.75: x equal True; t equal at the frames True; box_nm 3000 / 3000; n_bins 600 / 600; x_frac 0.75 / 0.75; tsamp_ns 0.005 / 0.005
-  frame 0: prof_x equal False, max |diff| 1.41e-03 (0.018 of peak); prof_y equal False, max |diff| 1.67e-03 (0.021 of peak)
-  frame 300: prof_x equal False, max |diff| 3.28e-03 (0.123 of peak); prof_y equal False, max |diff| 4.33e-03 (0.183 of peak)
-  frame 600: prof_x equal False, max |diff| 3.53e-03 (0.177 of peak); prof_y equal False, max |diff| 3.54e-03 (0.206 of peak)
+x_0.25: frames 0 300 600 of diffmap.x_0.25.avg.npy collapsed by collapse_diffmaps.py, against collapsed_1d.x_0.25.npz (values: script / file)
+  keys in the order the script writes them: True
+  x equal True; t equal at the frames True; box_nm 3000 / 3000; n_bins 600 / 600; n_frames 601 / 601; x_frac 0.25 / 0.25; tsamp_ns 0.005 / 0.005
+  instance counts in the file (not checkable from the map): n_unique 16, n_per_instance 25000, n_walkers 400000
+  frame 0 prof_x: equal False, max |diff| 1.33e-03 (0.017 of peak); fine structure r +0.72 with the file's prof_x, +0.70 with its prof_y
+  frame 0 prof_y: equal False, max |diff| 1.50e-03 (0.019 of peak); fine structure r +0.36 with the file's prof_x, +0.77 with its prof_y
+  frame 300 prof_x: equal False, max |diff| 1.75e-03 (0.116 of peak); fine structure r +0.66 with the file's prof_x, +0.21 with its prof_y
+  frame 300 prof_y: equal False, max |diff| 1.58e-03 (0.105 of peak); fine structure r +0.05 with the file's prof_x, +0.53 with its prof_y
+  frame 600 prof_x: equal False, max |diff| 1.73e-03 (0.159 of peak); fine structure r +0.61 with the file's prof_x, +0.17 with its prof_y
+  frame 600 prof_y: equal False, max |diff| 1.34e-03 (0.127 of peak); fine structure r +0.14 with the file's prof_x, +0.61 with its prof_y
+  variance.x_0.25.avg.dat against the 5 kept instances (inst_001 inst_003 inst_005 inst_006 inst_013):
+    as 16 distinct realisations including them: largest |z| 3.79 over 601 frames
+    as a duplication-weighted mean of them (1365 weightings summing to 16): every weighting differs by at least 121 nm^2 in some frame
+x_0.5: frames 0 300 600 of diffmap.x_0.5.avg.npy collapsed by collapse_diffmaps.py, against collapsed_1d.x_0.5.npz (values: script / file)
+  keys in the order the script writes them: True
+  x equal True; t equal at the frames True; box_nm 3000 / 3000; n_bins 600 / 600; n_frames 601 / 601; x_frac 0.5 / 0.5; tsamp_ns 0.005 / 0.005
+  instance counts in the file (not checkable from the map): n_unique 16, n_per_instance 25000, n_walkers 400000
+  frame 0 prof_x: equal False, max |diff| 1.65e-03 (0.021 of peak); fine structure r +0.84 with the file's prof_x, +0.69 with its prof_y
+  frame 0 prof_y: equal False, max |diff| 1.01e-03 (0.013 of peak); fine structure r +0.88 with the file's prof_x, +0.88 with its prof_y
+  frame 300 prof_x: equal False, max |diff| 5.04e-03 (0.217 of peak); fine structure r +0.70 with the file's prof_x, -0.14 with its prof_y
+  frame 300 prof_y: equal False, max |diff| 4.65e-03 (0.204 of peak); fine structure r +0.08 with the file's prof_x, +0.45 with its prof_y
+  frame 600 prof_x: equal False, max |diff| 3.47e-03 (0.205 of peak); fine structure r +0.66 with the file's prof_x, +0.00 with its prof_y
+  frame 600 prof_y: equal False, max |diff| 3.71e-03 (0.229 of peak); fine structure r +0.03 with the file's prof_x, +0.57 with its prof_y
+  variance.x_0.5.avg.dat against the 5 kept instances (inst_001 inst_002 inst_003 inst_005 inst_006):
+    as 16 distinct realisations including them: largest |z| 1.86 over 601 frames
+    as a duplication-weighted mean of them (1365 weightings summing to 16): every weighting differs by at least 61 nm^2 in some frame
+x_0.75: frames 0 300 600 of diffmap.x_0.75.avg.npy collapsed by collapse_diffmaps.py, against collapsed_1d.x_0.75.npz (values: script / file)
+  keys in the order the script writes them: True
+  x equal True; t equal at the frames True; box_nm 3000 / 3000; n_bins 600 / 600; n_frames 601 / 601; x_frac 0.75 / 0.75; tsamp_ns 0.005 / 0.005
+  instance counts in the file (not checkable from the map): n_unique 16, n_per_instance 25000, n_walkers 400000
+  frame 0 prof_x: equal False, max |diff| 1.41e-03 (0.018 of peak); fine structure r +0.79 with the file's prof_x, +0.62 with its prof_y
+  frame 0 prof_y: equal False, max |diff| 1.67e-03 (0.021 of peak); fine structure r +0.70 with the file's prof_x, +0.68 with its prof_y
+  frame 300 prof_x: equal False, max |diff| 3.28e-03 (0.123 of peak); fine structure r +0.54 with the file's prof_x, +0.15 with its prof_y
+  frame 300 prof_y: equal False, max |diff| 4.33e-03 (0.183 of peak); fine structure r +0.44 with the file's prof_x, +0.53 with its prof_y
+  frame 600 prof_x: equal False, max |diff| 3.53e-03 (0.177 of peak); fine structure r +0.59 with the file's prof_x, +0.13 with its prof_y
+  frame 600 prof_y: equal False, max |diff| 3.54e-03 (0.206 of peak); fine structure r +0.30 with the file's prof_x, +0.53 with its prof_y
+  variance.x_0.75.avg.dat against the 5 kept instances (inst_001 inst_002 inst_004 inst_005 inst_008):
+    as 16 distinct realisations including them: largest |z| 2.69 over 601 frames
+    as a duplication-weighted mean of them (1365 weightings summing to 16): every weighting differs by at least 64 nm^2 in some frame
