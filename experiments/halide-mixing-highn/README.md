@@ -217,8 +217,10 @@ walkers (16 distinct realisations of 25,000, averaged) gives a clean reference
 machine (`x_<frac>/collapsed_1d.x_<frac>.npz` in the data root's
 `halide_mixing_highn/` folder); the multi-GB maps of that set are not kept, and
 only the collapsed file and the variance file are read here (`DATASETS.md`).
-The run procedure and `collapse_diffmaps.py`, a rewrite of the collapse step,
-are in `experiments/halide-mixing-brI-legacy/rerun/README.md`.
+The run procedure is in `experiments/halide-mixing-brI-legacy/rerun/README.md`.
+That folder holds `collapse_diffmaps.py`, a rewrite of the collapse step: the
+script that made the profile files is not kept, and the rewrite is not checked
+against them (`collapse_check.txt` there).
 
 Geometry: 600 bins over a 3000 nm window (5 nm/bin), 601 frames at 5 ps to 3.0 ns,
 initial 1-D sigma ~25 nm. The carrier (transport) reference is the particle second

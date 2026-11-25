@@ -15,8 +15,9 @@
 # Run under WSL2/Linux from a fraction working directory that already holds the
 # binary, the lattice files, the (window-widened) parameter file, and the existing
 # inst_* directories -- i.e. ~/halide_rerun/x_<frac> after run_all_fractions.sh.
-# The parameter file is reused in place (this does NOT re-stage from the simulation folders),
-# so the widened diffmap window is preserved. New instances are numbered after the
+# The parameter file is reused in place (this does not re-stage from the
+# simulation folders), so the widened diffmap window is preserved. New instances
+# are numbered after the
 # highest existing index; existing directories are left untouched, so duplicate
 # instances from a previous run are kept on disk but excluded from the unique
 # count and from the averaging list this script writes.
