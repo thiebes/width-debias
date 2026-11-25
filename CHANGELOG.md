@@ -14,14 +14,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   summed over the other axis, 2 for a cut through the centre of a spot that
   also spreads along y (`D_y`, default `D`). For the Voigt profile the peak
   depends on `psf_hwhm`, which must equal the `VoigtModel`'s `gamma` (0 for
-  every other model); every model's `noise_free_series`, `run_ensemble` and
-  the Fisher bounds refuse a mismatch (`models.check_spreading_peak`). The
-  three fields are keyword-only, so the positional fields of
-  `AnomalousExperiment` and `MultiExpExperiment` keep their order, and
-  settings the peak cannot honour (a negative `D_y`, `D_y` without a centre
-  cut, `psf_hwhm` without `spread_dims`) raise `ValueError`. The default
-  (`None`) keeps the peak at the decay alone, so every output is unchanged.
-  The option leaves the peak
+  every other model); every built-in model's `noise_free_series`,
+  `run_ensemble` and the Fisher bounds refuse a mismatch
+  (`models.check_spreading_peak`). The three fields are keyword-only, so the
+  positional fields of `AnomalousExperiment` and `MultiExpExperiment` keep
+  their order, and settings the peak cannot honour (`spread_dims=True`, a
+  negative `D_y`, `D_y` without a centre cut, `psf_hwhm` without
+  `spread_dims`) raise `ValueError`. The default (`None`) keeps the peak at
+  the decay alone, so every output is unchanged. The option leaves the peak
   unchanged at t = 0 and at every t when D = 0, and draws the same white noise
   from the same seed. `Experiment.decay_amplitude` and
   `Experiment.spread_factor` give the two factors of the peak (a subclass with
@@ -40,8 +40,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and its lookup as `.npz` files, and `--report` rebuilds a report from saved
   statistics (a test rebuilds the committed ones). Reports print the SEs and
   the spread to five decimals and the mean to four, so a large calibration's
-  SE at large D is not printed as 0.000. The falling-peak tables for both windows (summed profile, 5000-run
-  calibration) are committed with their statistics and lookups. The corrected
+  SE at large D is not printed as 0.000. The falling-peak tables for both
+  windows (summed profile, 5000-run calibration) are committed with their
+  statistics and lookups. The corrected
   fit (CNR >= 1) has 6 of 140 cells beyond 2 combined SE in the standard
   window and 7 of 96 in the short window, and its pooled bias is within 0.8
   combined SE on every shape; the naive all-frames fit has 45 of 140 and 43 of

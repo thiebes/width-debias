@@ -280,14 +280,34 @@ def test_spreading_peak_matches_the_gaussian_closed_form():
 
 
 def test_spreading_peak_matches_the_unit_area_voigt_peak():
-    """The Voigt peak falls as the unit-area Voigt peak, and the drawn profiles carry it."""
-    from scipy.special import voigt_profile
+    """The Voigt peak falls as the unit-area Voigt peak, and the drawn profiles carry it.
+
+    The reference is the closed form of that peak, erfcx(gamma / (sigma sqrt 2))
+    / sigma up to a constant, not the voigt_profile call the code makes.
+    """
+    from scipy.special import erfcx
     exp = Experiment(D=0.1, spread_dims=1, psf_hwhm=0.3)
-    width = np.sqrt(exp.true_variance)
-    expected = exp.decay_amplitude * voigt_profile(0.0, width, 0.3) / voigt_profile(0.0, 1.0, 0.3)
+
+    def unit_area_peak(sigma):
+        return erfcx(0.3 / (sigma * np.sqrt(2.0))) / sigma
+
+    expected = (exp.decay_amplitude * unit_area_peak(np.sqrt(exp.true_variance))
+                / unit_area_peak(exp.sigma0))
     np.testing.assert_allclose(exp.amplitude, expected, rtol=1e-12)
     clean = VoigtModel(gamma=0.3).noise_free_series(exp)
     np.testing.assert_allclose(clean.max(axis=1), exp.amplitude, rtol=1e-12)
+
+
+def test_summed_voigt_profile_keeps_its_integral_apart_from_the_decay():
+    """spread_dims=1 conserves the population of the Voigt profile too.
+
+    The Lorentzian tails fall as 1/x^2, so the window is wider than for the
+    Gaussian test below and the tolerance is set by the tails beyond it.
+    """
+    exp = Experiment(D=0.1, half_window=40.0, n_pixels=4001, spread_dims=1, psf_hwhm=0.3)
+    clean = VoigtModel(gamma=0.3).noise_free_series(exp)
+    integral_over_decay = clean.sum(axis=1) * (exp.x[1] - exp.x[0]) / exp.decay_amplitude
+    np.testing.assert_allclose(integral_over_decay, integral_over_decay[0], rtol=1e-5)
 
 
 def test_spreading_peak_follows_the_bed_spreading_and_decay_laws():

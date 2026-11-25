@@ -283,16 +283,16 @@ def run_shape(spec: str, geometry: Geometry, spread_dims: int | None = None,
     t0 = time.time()
     trunc = calibrate_d_free(cal_grid, t_max=geometry.t_max, n_runs=cal_runs, seed=cal_seed,
                              model=model)
+    # Saved whole (SE and frame-variance grids included), so a costly
+    # calibration can be read again without rerunning it, before the check below.
+    trunc.save(Path(stem + "_lookup.npz"))
+    print(f"{spec}: D=0 calibration {time.time() - t0:.0f} s", flush=True)
     # The range check ran on a prediction of the lookup's lower edge; hold the
     # lookup to it, so the check and the report describe the lookup used.
     if not np.isclose(trunc.lowest_calibrated_cnr, lowest_calibrated, rtol=RANGE_RTOL, atol=0.0):
         raise RuntimeError(f"{spec}: the lookup's lowest calibrated CNR "
                            f"{trunc.lowest_calibrated_cnr!r} is not the {lowest_calibrated!r} "
-                           "the range check predicted")
-    # Saved whole (SE and frame-variance grids included), so a costly
-    # calibration can be read again without rerunning it.
-    trunc.save(Path(stem + "_lookup.npz"))
-    print(f"{spec}: D=0 calibration {time.time() - t0:.0f} s", flush=True)
+                           f"the range check predicted (lookup kept in {stem}_lookup.npz)")
 
     # (arm, D, CNR_0, statistic): mean, evaluation SE, calibration SE, spread
     res = np.full((len(ARMS), len(d_values), grid.size, 4), np.nan)
@@ -306,8 +306,8 @@ def run_shape(spec: str, geometry: Geometry, spread_dims: int | None = None,
         print(f"{spec}: D = {d_true:g} {time.time() - t0:.0f} s", flush=True)
 
     np.savez(stem + ".npz", res=res, spec=spec, t_max=geometry.t_max, cnr0_grid=grid,
-             d_values=np.array(d_values), cal_grid=cal_grid, n_extra=n_extra, cal_runs=cal_runs, n_runs=geometry.n_runs,
-             cal_seed=cal_seed, eval_seed=eval_seed,
+             d_values=np.array(d_values), cal_grid=cal_grid, n_extra=n_extra,
+             cal_runs=cal_runs, n_runs=geometry.n_runs, cal_seed=cal_seed, eval_seed=eval_seed,
              spread_dims=0 if spread_dims is None else spread_dims,
              lowest_calibrated=lowest_calibrated, lowest_kept=lowest_kept,
              lowest_frame=lowest_frame, elapsed=time.time() - t0)

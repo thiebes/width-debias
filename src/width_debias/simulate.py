@@ -83,9 +83,10 @@ class Experiment:
     Gaussian at a fixed shape exponent. For the Voigt profile it depends on the
     Lorentzian half-width ``psf_hwhm``, which must equal the ``gamma`` of the
     :class:`~width_debias.models.VoigtModel` that draws the profiles, and 0 for
-    every other model. Every model's ``noise_free_series``,
-    :func:`~width_debias.montecarlo.run_ensemble` and the Fisher bounds check
-    this (:func:`~width_debias.models.check_spreading_peak`). The factor is 1
+    every other model. Every built-in model's ``noise_free_series``,
+    :func:`~width_debias.montecarlo.run_ensemble` (for any model) and the
+    Fisher bounds check this (:func:`~width_debias.models.check_spreading_peak`).
+    The factor is 1
     at t = 0, so ``amplitude0`` and the initial CNR keep their meaning, and 1
     at every t when D = 0, so a D = 0 calibration is the same under either
     peak.

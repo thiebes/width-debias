@@ -377,7 +377,12 @@ class UnboundedGaussianModel:
 # The spreading peak's Lorentzian half-width
 # --------------------------------------------------------------------------
 def lorentzian_hwhm(model) -> float:
-    """Lorentzian half-width of the profile a model draws: a VoigtModel's ``gamma``, else 0."""
+    """Lorentzian half-width of the profile a model draws: a VoigtModel's ``gamma``, else 0.
+
+    The class decides, not an attribute name: another model may use ``gamma``
+    for something else, so a model that draws a Voigt profile is checked as one
+    only if it subclasses :class:`VoigtModel`.
+    """
     return float(model.gamma) if isinstance(model, VoigtModel) else 0.0
 
 
