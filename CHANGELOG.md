@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `experiments/halide-mixing-brI-legacy/rerun/collapse_diffmaps.py` collapses an
+  averaged 2-D map of the high-N Br-I re-run into the 1-D profile file that
+  `experiments/halide-mixing-highn/` reads, and with `--check` compares chosen
+  frames with an existing profile file. The script that made the profile files
+  is not kept, and `collapse_check.txt` shows that the averaged maps that are
+  kept, from a first run with only 5 distinct realisations per fraction, do not
+  reproduce them, so the script is not checked against them. The top-up scripts
+  `rerun_unique.sh` and `rerun_all_unique.sh`, which brought the re-run to 16
+  distinct realisations per fraction, are added unchanged. The rerun README and
+  the high-N `DATASETS.md` describe the full chain and which of its inputs are
+  not kept.
+
 ### Changed
 
 - Experiment scripts read collaborator data from a data root instead of fixed

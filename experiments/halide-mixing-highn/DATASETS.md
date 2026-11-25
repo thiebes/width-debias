@@ -1,7 +1,8 @@
 # Datasets -- high-N Br-I bed
 
 Re-runs of Marc Meléndez's Brownian-dynamics Br-I simulator at 400,000 walkers
-(16 instances of 25,000, averaged; procedure in
+(16 distinct realisations of 25,000 walkers, averaged and collapsed to 1-D; the
+procedure, the collapse script `collapse_diffmaps.py` and what is kept are in
 `../halide-mixing-brI-legacy/rerun/README.md`). They are not part of this
 repository; place a copy in the `halide_mixing_highn/` folder of the data root.
 The data root is the folder that `WIDTH_DEBIAS_DATA_ROOT` names, or else `data/`
@@ -17,9 +18,11 @@ completeness.
 | ------- | ----------- | ---------- |
 | collapsed 1-D profiles | `x_<frac>/collapsed_1d.x_<frac>.npz` | the 400,000-walker averaged map projected to 1-D (prof_x/prof_y + axes + metadata). ~1 MB each. |
 | carrier variance truth | `x_<frac>/variance.x_<frac>.avg.dat` | the particle second moment per frame; the 1-D carrier truth is this / 2. ~30 KB each. |
-| averaged 2-D map | `x_<frac>/diffmap.x_<frac>.avg.npy` | the 600x600x601 averaged density map before the 1-D collapse. ~865 MB each. |
-| per-instance raw runs | `x_<frac>/inst_*/` | the 16 individual 25,000-walker realizations that were averaged. |
+| first-run 2-D map | `x_<frac>/diffmap.x_<frac>.avg.npy` | the first run's averaged density map (600x600x601), a duplication-weighted average over 5 distinct realisations; not the map the collapsed profiles come from. ~865 MB each. |
+| per-instance raw runs | `x_<frac>/inst_*/` | the 5 distinct 25,000-walker realisations of the first run; the 11 added by the top-up are not kept. |
 | run config | `x_<frac>/parameters.x_<frac>.dat` | the Brownian-dynamics parameters for this fraction. |
 
-The multi-GB raw simulation outputs (full per-instance diffmaps) remain on the
-machine that produced them.
+The averaged 2-D maps of the 16-realisation set, the 11 instances added per
+fraction, and the script that made the collapsed profiles are not kept, so the
+collapsed profiles cannot be re-derived from the files above; the rerun README
+gives the check.

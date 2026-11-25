@@ -91,16 +91,74 @@ window.
    binary uses a fixed seed and averaging adds no statistics. If they differ,
    restore `N` and `tmax` and continue.
 4. Run the instances with `run_instances.sh` (see its header for arguments).
-5. Average them with `average_diffmaps.py`, which writes a clean
-   `diffmap.x_<frac>.avg.npy` and `variance.x_<frac>.avg.dat`.
-6. Copy the two averaged files back. The averaged map needs no de-noising. The
-   loader must use the run's geometry (bin count, box size, frame count);
-   `br_data.py` carries the legacy 150 nm geometry, and
-   `experiments/halide-mixing-highn/br_highn_data.py` reads the averaged bed.
+   The simulator seeds its random number generator from the wall clock at
+   one-second resolution, and this script staggers the starts by 0 to 4 s, so
+   instances that start in the same second are identical: at most five
+   distinct realisations result, whatever the number of instances.
+5. Top up to the number of distinct realisations wanted with
+   `rerun_all_unique.sh` (all three fractions in one pool of workers) or
+   `rerun_unique.sh` (one fraction). Each starts every new instance in its own
+   clock second, counts an instance as distinct by the hash of its variance
+   file, and writes the distinct instance directories to
+   `unique_instances.txt`.
+6. Average the distinct instances with `average_diffmaps.py`, which writes
+   `diffmap.x_<frac>.avg.npy` and `variance.x_<frac>.avg.dat`
+   (`rerun_all_unique.sh` runs this step itself).
+7. Collapse the averaged map to 1-D with `collapse_diffmaps.py`, which writes
+   `collapsed_1d.x_<frac>.npz`.
+8. Copy back the collapsed file and the averaged variance file, the two files
+   `experiments/halide-mixing-highn/br_highn_data.py` reads. The averaged map
+   needs no de-noising. `br_data.py` carries the legacy 150 nm geometry and
+   does not read these files.
+
+## How the high-N files were made
+
+The files that `experiments/halide-mixing-highn/` reads were made with the
+steps above, with the parameter files changed to a 600 x 600 diffmap over a
+3000 nm window (5 nm/bin) and 25,000 walkers per instance. A driver script,
+`run_all_fractions.sh`, made those changes and ran steps 4 and 6 for the three
+fractions; it reads its inputs from a fixed location of the group's storage and
+is not included here. `rerun_all_unique.sh` is included unchanged, and
+`rerun_unique.sh` with one comment reworded.
+
+1. A first run of 16 instances per fraction gave only 5 distinct realisations
+   per fraction (step 4); each other instance was an exact copy of one of the
+   five. Its averaged maps are therefore duplication-weighted averages over 5
+   realisations.
+2. A top-up (step 5) added 11 instances per fraction, giving 16 distinct
+   realisations of 25,000 walkers (400,000 walkers per fraction). These were
+   averaged (step 6) and collapsed (step 7). Either top-up script produces this
+   set; the record of which one ran is not kept.
+
+Kept with the run's files: the parameter files, the 5 distinct realisations of
+the first run, the first run's averaged maps, and the collapsed files and
+averaged variance files of the 16-realisation set. Not kept: the 11 instances
+added per fraction, the averaged 2-D maps of the 16-realisation set, the log of
+the top-up, and the script that made the collapsed files. `collapse_diffmaps.py`
+was written afterwards to describe that step.
+
+`collapse_check.txt` holds the output of `collapse_diffmaps.py --check`: the
+script's collapse of frames 0, 300 and 600 of the first run's averaged maps,
+compared with the collapsed files. The grids and window metadata (x, t, window,
+bins, fraction, sampling time) agree exactly; the profiles do not. The largest
+absolute difference per frame is 1.0e-3 to 5.0e-3 (each profile sums to 1 over
+600 bins), 0.013 to 0.229 of the profile's peak, the larger values at frames 300
+and 600. The two sides are different averages (5 realisations,
+duplication-weighted, against 16 distinct ones), so the collapsed files cannot
+be reproduced from the maps that are kept, and the script is not checked
+against them. At frames 300 and 600 the fine structure that the 5 shared
+realisations leave in both averages matches `prof_x` to the sum over a frame's
+rows and `prof_y` to the sum over its columns, the assignment the script uses.
+The averaged variance files are not the first run's duplication-weighted mean
+of the kept realisations' variance files, as expected for the 16-realisation
+set.
 
 ## Checks on the run machine
 
 - **Seed / randomisation** (step 3) determines whether averaging is valid.
+  Step 3 detects a fixed seed but not two instances that started in the same
+  second; check that all instances are distinct (the top-up scripts compare
+  the hashes of their variance files).
 - **Frame count:** the diffmap can hold a few more frame blocks than
   `variance.dat` has rows (605 vs 601 in the shared file). Take the frame count
   from `tmax / tsamp + 1` and check whether the diffmap carries a header or

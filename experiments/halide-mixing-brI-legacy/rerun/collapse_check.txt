@@ -1,0 +1,12 @@
+x_0.25: x equal True; t equal at the frames True; box_nm 3000 / 3000; n_bins 600 / 600; x_frac 0.25 / 0.25; tsamp_ns 0.005 / 0.005
+  frame 0: prof_x equal False, max |diff| 1.33e-03 (0.017 of peak); prof_y equal False, max |diff| 1.50e-03 (0.019 of peak)
+  frame 300: prof_x equal False, max |diff| 1.75e-03 (0.116 of peak); prof_y equal False, max |diff| 1.58e-03 (0.105 of peak)
+  frame 600: prof_x equal False, max |diff| 1.73e-03 (0.159 of peak); prof_y equal False, max |diff| 1.34e-03 (0.127 of peak)
+x_0.5: x equal True; t equal at the frames True; box_nm 3000 / 3000; n_bins 600 / 600; x_frac 0.5 / 0.5; tsamp_ns 0.005 / 0.005
+  frame 0: prof_x equal False, max |diff| 1.65e-03 (0.021 of peak); prof_y equal False, max |diff| 1.01e-03 (0.013 of peak)
+  frame 300: prof_x equal False, max |diff| 5.04e-03 (0.217 of peak); prof_y equal False, max |diff| 4.65e-03 (0.204 of peak)
+  frame 600: prof_x equal False, max |diff| 3.47e-03 (0.205 of peak); prof_y equal False, max |diff| 3.71e-03 (0.229 of peak)
+x_0.75: x equal True; t equal at the frames True; box_nm 3000 / 3000; n_bins 600 / 600; x_frac 0.75 / 0.75; tsamp_ns 0.005 / 0.005
+  frame 0: prof_x equal False, max |diff| 1.41e-03 (0.018 of peak); prof_y equal False, max |diff| 1.67e-03 (0.021 of peak)
+  frame 300: prof_x equal False, max |diff| 3.28e-03 (0.123 of peak); prof_y equal False, max |diff| 4.33e-03 (0.183 of peak)
+  frame 600: prof_x equal False, max |diff| 3.53e-03 (0.177 of peak); prof_y equal False, max |diff| 3.54e-03 (0.206 of peak)
