@@ -23,7 +23,8 @@ back the corrected-bias curves.
   their mean. `--short-window` runs a dim-sample geometry (window 0.5τ,
   CNR₀ 2 to 12, D 0.02 to 0.2 σ₀²/τ). `--spread-dims 1` (or 2) evaluates with
   a peak that also falls as the profile spreads (a summed profile, or a cut
-  through the centre), and `--cal-runs N` sets the calibration runs per CNR₀
+  through the centre; the short window then adds CNR₀ 1.8, or 1.6, to its
+  calibration), and `--cal-runs N` sets the calibration runs per CNR₀
   point apart from the evaluation runs. Each run saves its cell statistics and
   its lookup as `.npz` files beside its report, and `--report NPZ ...`
   rebuilds reports from saved statistics without rerunning.
@@ -173,10 +174,11 @@ profile spreads, by σ₀/σ, so the late frames reach a lower per-frame CNR. Th
 calibration stays at D = 0, where the profile does not spread, and has 5000
 runs per CNR₀ point; the evaluation cells, runs, and seeds are those above. In
 the short window the calibration grid gains CNR₀ 1.8, so that every frame lies
-inside the calibrated range (lowest frame 1.107, lowest calibrated 1.092). In
-the standard window the arms without a cut read the lookup's edge value for
-frames below per-frame CNR 0.249 (lowest frame 0.197). Cells beyond 2
-combined SE, per shape (Gaussian, Voigt, p = 1.5, p = 4) and in total:
+inside the calibrated range (lowest frame 1.107 to 1.128 over the shapes,
+lowest calibrated 1.092). In the standard window the arms without a cut read
+the lookup's edge value for frames below per-frame CNR 0.249 (lowest frame
+0.197 to 0.206). Cells beyond 2 combined SE, per shape (Gaussian, Voigt,
+p = 1.5, p = 4) and in total:
 
 | Arm | Standard window | Short window |
 | ------- | ------- | ------- |
@@ -187,7 +189,11 @@ combined SE, per shape (Gaussian, Voigt, p = 1.5, p = 4) and in total:
 | naive, all frames | 9, 15, 17, 4 (45 of 140) | 10, 12, 13, 8 (43 of 96) |
 
 By chance about 6 cells are expected beyond 2 SE in the standard window and
-about 4 in the short window. The corrected (CNR ≥ 1)
+about 4 in the short window. The corrected counts are not a like-for-like
+comparison with those of the decay-alone runs above: their calibrations have
+300 (standard) and 2000 (short) runs per CNR₀ point against 5000 here, so here
+the combined SE is smaller and a cell of the same bias lies more SE from 1.
+The naive arms carry no calibration SE. The corrected (CNR ≥ 1)
 D/D_ref − 1, pooled over a shape's cells, is −0.0004 ± 0.0021 (Gaussian),
 −0.0017 ± 0.0026 (Voigt), +0.0021 ± 0.0029 (p = 1.5), and −0.0004 ± 0.0012
 (p = 4) in the standard window, and −0.0013 ± 0.0077, −0.0020 ± 0.0090,

@@ -48,12 +48,12 @@ spread of D/D_ref over realizations (one measurement)
   0.1000     0.63973   0.37589   0.20253   0.12780   0.07625   0.04398   0.02673
 
 pooled D/D_ref - 1 (inverse combined variance; calibration SE as one shared systematic, fully correlated, an upper bound)
-  D 0.0050: +0.0045 +/- 0.0196 (evaluation) +/- 0.0085 (calibration); +0.21 combined SE
-  D 0.0100: +0.0101 +/- 0.0101 (evaluation) +/- 0.0042 (calibration); +0.92 combined SE
-  D 0.0200: +0.0070 +/- 0.0052 (evaluation) +/- 0.0020 (calibration); +1.26 combined SE
-  D 0.0500: +0.0012 +/- 0.0022 (evaluation) +/- 0.0008 (calibration); +0.52 combined SE
-  D 0.1000: -0.0018 +/- 0.0012 (evaluation) +/- 0.0004 (calibration); -1.37 combined SE
-  all cells: -0.0006 +/- 0.0010 (evaluation) +/- 0.0006 (calibration); -0.49 combined SE
+  D 0.0050: +0.0045 +/- 0.01960 (evaluation) +/- 0.00850 (calibration); +0.21 combined SE
+  D 0.0100: +0.0101 +/- 0.01010 (evaluation) +/- 0.00417 (calibration); +0.92 combined SE
+  D 0.0200: +0.0070 +/- 0.00523 (evaluation) +/- 0.00197 (calibration); +1.26 combined SE
+  D 0.0500: +0.0012 +/- 0.00219 (evaluation) +/- 0.00085 (calibration); +0.52 combined SE
+  D 0.1000: -0.0018 +/- 0.00124 (evaluation) +/- 0.00043 (calibration); -1.37 combined SE
+  all cells: -0.0006 +/- 0.00105 (evaluation) +/- 0.00065 (calibration); -0.49 combined SE
 
 ==============================================================================
 --- corrected, CNR >= 1
@@ -100,12 +100,12 @@ spread of D/D_ref over realizations (one measurement)
   0.1000     0.71243   0.38241   0.20731   0.12788   0.07625   0.04398   0.02673
 
 pooled D/D_ref - 1 (inverse combined variance; calibration SE as one shared systematic, fully correlated, an upper bound)
-  D 0.0050: +0.0040 +/- 0.0196 (evaluation) +/- 0.0085 (calibration); +0.19 combined SE
-  D 0.0100: +0.0107 +/- 0.0101 (evaluation) +/- 0.0042 (calibration); +0.98 combined SE
-  D 0.0200: +0.0070 +/- 0.0052 (evaluation) +/- 0.0020 (calibration); +1.25 combined SE
-  D 0.0500: +0.0014 +/- 0.0022 (evaluation) +/- 0.0008 (calibration); +0.59 combined SE
-  D 0.1000: -0.0016 +/- 0.0012 (evaluation) +/- 0.0004 (calibration); -1.20 combined SE
-  all cells: -0.0004 +/- 0.0010 (evaluation) +/- 0.0006 (calibration); -0.33 combined SE
+  D 0.0050: +0.0040 +/- 0.01961 (evaluation) +/- 0.00850 (calibration); +0.19 combined SE
+  D 0.0100: +0.0107 +/- 0.01011 (evaluation) +/- 0.00415 (calibration); +0.98 combined SE
+  D 0.0200: +0.0070 +/- 0.00524 (evaluation) +/- 0.00196 (calibration); +1.25 combined SE
+  D 0.0500: +0.0014 +/- 0.00220 (evaluation) +/- 0.00085 (calibration); +0.59 combined SE
+  D 0.1000: -0.0016 +/- 0.00124 (evaluation) +/- 0.00043 (calibration); -1.20 combined SE
+  all cells: -0.0004 +/- 0.00105 (evaluation) +/- 0.00065 (calibration); -0.33 combined SE
 
 ==============================================================================
 --- naive, CNR >= 3
@@ -144,12 +144,12 @@ spread of D/D_ref over realizations (one measurement)
   0.1000     1.70486   0.52719   0.25271   0.13366   0.08081   0.04567   0.02673
 
 pooled D/D_ref - 1 (inverse combined variance; calibration SE as one shared systematic, fully correlated, an upper bound)
-  D 0.0050: +0.0226 +/- 0.0200 (evaluation) +/- 0.0000 (calibration); +1.13 combined SE
-  D 0.0100: +0.0175 +/- 0.0102 (evaluation) +/- 0.0000 (calibration); +1.71 combined SE
-  D 0.0200: +0.0104 +/- 0.0053 (evaluation) +/- 0.0000 (calibration); +1.96 combined SE
-  D 0.0500: +0.0035 +/- 0.0022 (evaluation) +/- 0.0000 (calibration); +1.57 combined SE
-  D 0.1000: -0.0010 +/- 0.0013 (evaluation) +/- 0.0000 (calibration); -0.82 combined SE
-  all cells: +0.0007 +/- 0.0011 (evaluation) +/- 0.0000 (calibration); +0.70 combined SE
+  D 0.0050: +0.0226 +/- 0.02002 (evaluation) +/- 0.00000 (calibration); +1.13 combined SE
+  D 0.0100: +0.0175 +/- 0.01024 (evaluation) +/- 0.00000 (calibration); +1.71 combined SE
+  D 0.0200: +0.0104 +/- 0.00530 (evaluation) +/- 0.00000 (calibration); +1.96 combined SE
+  D 0.0500: +0.0035 +/- 0.00221 (evaluation) +/- 0.00000 (calibration); +1.57 combined SE
+  D 0.1000: -0.0010 +/- 0.00126 (evaluation) +/- 0.00000 (calibration); -0.82 combined SE
+  all cells: +0.0007 +/- 0.00106 (evaluation) +/- 0.00000 (calibration); +0.70 combined SE
 
 ==============================================================================
 --- naive, CNR >= 2
@@ -188,12 +188,12 @@ spread of D/D_ref over realizations (one measurement)
   0.1000     0.84433   0.46142   0.22064   0.13486   0.07819   0.04398   0.02673
 
 pooled D/D_ref - 1 (inverse combined variance; calibration SE as one shared systematic, fully correlated, an upper bound)
-  D 0.0050: +0.0212 +/- 0.0197 (evaluation) +/- 0.0000 (calibration); +1.08 combined SE
-  D 0.0100: +0.0203 +/- 0.0101 (evaluation) +/- 0.0000 (calibration); +2.00 combined SE
-  D 0.0200: +0.0109 +/- 0.0053 (evaluation) +/- 0.0000 (calibration); +2.06 combined SE
-  D 0.0500: +0.0035 +/- 0.0022 (evaluation) +/- 0.0000 (calibration); +1.59 combined SE
-  D 0.1000: -0.0006 +/- 0.0012 (evaluation) +/- 0.0000 (calibration); -0.51 combined SE
-  all cells: +0.0011 +/- 0.0011 (evaluation) +/- 0.0000 (calibration); +1.00 combined SE
+  D 0.0050: +0.0212 +/- 0.01968 (evaluation) +/- 0.00000 (calibration); +1.08 combined SE
+  D 0.0100: +0.0203 +/- 0.01015 (evaluation) +/- 0.00000 (calibration); +2.00 combined SE
+  D 0.0200: +0.0109 +/- 0.00526 (evaluation) +/- 0.00000 (calibration); +2.06 combined SE
+  D 0.0500: +0.0035 +/- 0.00220 (evaluation) +/- 0.00000 (calibration); +1.59 combined SE
+  D 0.1000: -0.0006 +/- 0.00124 (evaluation) +/- 0.00000 (calibration); -0.51 combined SE
+  all cells: +0.0011 +/- 0.00105 (evaluation) +/- 0.00000 (calibration); +1.00 combined SE
 
 ==============================================================================
 --- naive, all frames
@@ -232,12 +232,12 @@ spread of D/D_ref over realizations (one measurement)
   0.1000     0.63973   0.37589   0.20253   0.12780   0.07625   0.04398   0.02673
 
 pooled D/D_ref - 1 (inverse combined variance; calibration SE as one shared systematic, fully correlated, an upper bound)
-  D 0.0050: +0.0184 +/- 0.0196 (evaluation) +/- 0.0000 (calibration); +0.94 combined SE
-  D 0.0100: +0.0173 +/- 0.0101 (evaluation) +/- 0.0000 (calibration); +1.71 combined SE
-  D 0.0200: +0.0107 +/- 0.0052 (evaluation) +/- 0.0000 (calibration); +2.05 combined SE
-  D 0.0500: +0.0028 +/- 0.0022 (evaluation) +/- 0.0000 (calibration); +1.27 combined SE
-  D 0.1000: -0.0010 +/- 0.0012 (evaluation) +/- 0.0000 (calibration); -0.84 combined SE
-  all cells: +0.0006 +/- 0.0010 (evaluation) +/- 0.0000 (calibration); +0.53 combined SE
+  D 0.0050: +0.0184 +/- 0.01960 (evaluation) +/- 0.00000 (calibration); +0.94 combined SE
+  D 0.0100: +0.0173 +/- 0.01010 (evaluation) +/- 0.00000 (calibration); +1.71 combined SE
+  D 0.0200: +0.0107 +/- 0.00523 (evaluation) +/- 0.00000 (calibration); +2.05 combined SE
+  D 0.0500: +0.0028 +/- 0.00219 (evaluation) +/- 0.00000 (calibration); +1.27 combined SE
+  D 0.1000: -0.0010 +/- 0.00124 (evaluation) +/- 0.00000 (calibration); -0.84 combined SE
+  all cells: +0.0006 +/- 0.00105 (evaluation) +/- 0.00000 (calibration); +0.53 combined SE
 
 ==============================================================================
 --- comparison: RMS error of one measurement, sqrt(bias^2 + spread^2 / 1), bias^2 = max((D/D_ref - 1)^2 - evaluation SE^2, 0)

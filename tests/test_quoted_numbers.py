@@ -42,8 +42,6 @@ POC_SHAPES = ("gaussian", "voigt", "generalized_gaussian_p1.5", "generalized_gau
 # calibrated with 5000 runs; their names carry the script's spec tags.
 DFREE_FALLING = "_spread1_cal5000"
 DFREE_FALLING_SHAPES = POC_SHAPES
-DFREE_ARMS = ("corrected, all frames", "corrected, CNR >= 1", "naive, CNR >= 3",
-              "naive, CNR >= 2", "naive, all frames")
 ANALYTICAL_SHAPES = ("gaussian", "voigt", "generalized_gaussian_p1.5",
                      "generalized_gaussian_p4")
 EFFICIENCY_SPECS = ("gaussian", "voigt", "generalized_gaussian:1.5", "generalized_gaussian:4")
