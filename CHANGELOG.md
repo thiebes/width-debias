@@ -116,6 +116,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `experiments/halide-mixing-brI-legacy/rerun/run_instances.sh` starts each
+  instance after its own offset (2 s apart by default), because the simulator
+  seeds from the wall clock at one-second resolution. Its random 0 to 4 s
+  stagger gave at most five distinct realisations when the instances started
+  together. When the instances are done, it lists the distinct ones, by the
+  hash of their variance files, in `unique_instances.txt`, as the top-up
+  scripts do. Its closing hint averages those, where it averaged every
+  instance, copies included (#25).
 - `experiments/halide-mixing-highn/br_halide_highn_validation.py`, the test of
   the 1-D D-free lookup on the high-N halide bed, caps the fitted width at 12
   sigma_0 = 300 nm in the calibration and in the application, as the rest of
