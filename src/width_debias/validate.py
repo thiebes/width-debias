@@ -87,11 +87,24 @@ def calibrate_d_free(cnr0_grid: np.ndarray, *, sigma0: float = 1.0,
     Quote a corrected D with the combined SE, the fit's own and
     :func:`~width_debias.weights.calibration_D_se`.
 
-    All parameters except ``cnr0_grid`` describe the experimental geometry
-    (pixel grid, frame count, lifetime); the calibration must match the
-    geometry of the data it will be applied to. Lengths are in the unit of
-    ``sigma0``: with the default ``sigma0 = 1``, the fitted variances passed to
-    the lookup must be in units of sigma_0^2. The lookup records the pixel grid
+    ``n_runs`` is the number of realisations per CNR_0 point. The calibration
+    SE of D falls as 1/sqrt(n_runs). In the D-free validation
+    (``experiments/dfree-calibration``) it is at most about the spread of D
+    over single measurements divided by sqrt(n_runs): close to that at small
+    D when each frame falls at a calibrated CNR, and lower where the width
+    grows more over the measurement or a frame falls between calibrated CNRs,
+    which the lookup interpolates. It is shared by every measurement made
+    with the lookup and does not average
+    down, so for a mean of N measurements it is up to about sqrt(N / n_runs)
+    times the statistical error of the mean. Choose ``n_runs`` well above the
+    number of measurements to be averaged.
+
+    All parameters except ``cnr0_grid``, ``n_runs`` and ``seed`` describe the
+    experiment: its geometry (pixel grid, frame count, lifetime), profile
+    model and noise; the calibration must match the data it will be applied
+    to. Lengths are in the unit of ``sigma0``: with the default
+    ``sigma0 = 1``, the fitted variances passed to the lookup must be in units
+    of sigma_0^2. The lookup records the pixel grid
     (``pixel_x``), the profile model (``model_spec``) and the lowest calibrated
     CNR (``lowest_calibrated_cnr``), so an application can check its data
     against them.

@@ -139,16 +139,17 @@ after 15 to 91 averaged measurements (spread²/bias², 46 cells). The corrected
 arm resolves a bias in 4 cells (27 to 46 measurements), fewer than the 6
 expected by chance.
 
-At equal runs the calibration SE of a cell is about its evaluation SE (at 300
-runs each, for example 0.193 against 0.195 for p = 1.5 at D = 0.02, CNR₀ 8).
+At equal runs the calibration SE of a cell is at most about its evaluation SE
+(at 300 runs each, for example 0.193 against 0.195 for p = 1.5 at D = 0.02,
+CNR₀ 8).
 The calibration error is shared by every measurement made with that
 calibration, so it does not average down. The mean of N measurements carries
 the full calibration SE, and the calibration runs per CNR₀ point should be well
 above the number of measurements averaged to keep it below the statistical
-error of the mean. With 300 runs the mean-of-100 comparison already shows the
-calibration error. The naive-to-corrected RMS ratio there spans 0.63 to 5.3,
-and the ratios below 1 are consistent with this calibration draw's error in the
-corrected arm.
+error of the mean (see the ratio after the short-window results). With 300 runs
+the mean-of-100 comparison already shows the calibration error. The
+naive-to-corrected RMS ratio there spans 0.63 to 5.3, and the ratios below 1
+are consistent with this calibration draw's error in the corrected arm.
 
 `validate_d_zero --short-window` (window 0.5τ, CNR₀ 2 to 12, D 0.02 to
 0.2 σ₀²/τ; per shape one calibration of 6 CNR₀ points × 2000 runs and 2000
@@ -167,6 +168,27 @@ corrected and naive all-frames fits have the same RMS error (ratio 1.00 to
 1.01). The naive bias exceeds the error of the mean after 47 to 652 averaged
 measurements. On p = 4 the corrected D reads low at CNR₀ 3 and 4 for
 D ≤ 0.05 σ₀²/τ (0.65 to 0.87, up to 2.4 combined SE).
+
+In both windows, over the cells of the corrected arm (CNR ≥ 1), the calibration
+SE times the square root of the calibration runs per CNR₀ point, divided by the
+spread of D/D_ref over single measurements, each summed over the cells, is 0.92
+to 0.98 per shape and window. Summed, the larger cells, which the tables print
+with the most digits, set the ratio. Over the row at the smallest D it is 0.96
+to 0.99 in the standard window and 0.93 to 0.99 in the short, and at the
+largest D 0.82 to 0.89 and 0.88 to 0.95. In these runs the calibration SE of
+D, in absolute units, is the same at every D: every D has the same per-frame
+CNRs, because the simulated profiles keep their peak height as they spread,
+and the lookup, built at D = 0, is read by the per-frame CNR alone, so each
+frame falls exactly at a CNR the lookup was calibrated at. The spread of
+single measurements grows with the width, which grows more at larger D. In
+general, at a given CNR the scatter of a fitted width grows with the width,
+while the lookup's error is that of the width at σ₀, and a frame between two
+calibrated CNRs reads an interpolation of two independent values, whose error
+is smaller. So the calibration SE is at most about the single-measurement
+spread divided by the square root of the calibration runs.
+At a ratio of 1, the mean of N measurements has a combined SE of √2 times its
+statistical error with N calibration runs per point and 1.12 times with 4N;
+where the ratio is below 1 the factors are smaller.
 
 Falling peak (`--spread-dims 1 --cal-runs 5000`, both windows). In the runs
 above the peak falls with the decay alone. Here it also falls as the summed
@@ -201,7 +223,16 @@ D/D_ref − 1, pooled over a shape's cells, is −0.0004 ± 0.0021 (Gaussian),
 combined SE. Pooled per D it is within 1.6 combined SE on every shape in both
 windows. The pooled biases are of the same order as with the decay alone (at
 most 0.0068 against 0.0053); their combined SE is smaller because the
-calibration has more runs. The naive all-frames fit pools to +0.0046 (2.5 SE),
+calibration has more runs. The calibration SE times the square root of the
+calibration runs, over the single-measurement spread, summed over the cells as
+above, is 0.89 to 0.91 per shape in the standard window and 0.80 to 0.85 in
+the short window: below 1, as with the decay alone, and read from tables that
+print both to five decimals. It is lower than with the decay alone even at the
+smallest D, where the width hardly grows, because the falling peak moves every
+frame after t = 0 between the CNRs at which the lookup was calibrated. Unlike
+the decay-alone runs above, these runs read the lookup between its calibrated
+CNRs, as `calibration_se_check` and the dense sweep also do. The naive
+all-frames fit pools to +0.0046 (2.5 SE),
 +0.0054 (2.5 SE), +0.0100 (4.1 SE), and +0.0006 (0.5 SE) in the standard
 window, and +0.0165 (4.4 SE), +0.0247 (5.5 SE), +0.0344 (6.8 SE), and +0.0071
 (3.3 SE) in the short window. On p = 4 in the short window the corrected D

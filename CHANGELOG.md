@@ -148,6 +148,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Documentation
 
+- The README's "On real data" list and the `calibrate_d_free` and
+  `calibration_D_se` docstrings say that the calibration's own error is shared
+  by every measurement made with a lookup and does not average down. A mean of
+  N measurements carries the full calibration SE, combined once in quadrature
+  with the statistical error of the mean (the mean of the per-measurement
+  values is an upper bound), and the calibration runs per initial-CNR point
+  should be well above N. The D-free calibration README gives the calibration
+  SE against the single-measurement spread of D divided by the square root of
+  the calibration runs, summed over the cells of each table: at most about 1,
+  close to 1 at the smallest D and lower where the width grows more, since the
+  lookup's error does not grow with the width, and lower again (0.80 to 0.91)
+  with a peak that also falls as the profile spreads, which moves the frames
+  between the calibrated CNRs. The `--n-runs` entry of
+  `docs/calibration_runs.md` says that the joint lookup's error is shared in
+  the same way and links the README, whose numbers are for the 1-D lookup.
+  `docs/DERIVATION.md`, `docs/REPO_MAP.md` and the D-free calibration README
+  say the calibration SE is at most about the evaluation SE at equal runs,
+  where they said about equal, and the first two say the calibration runs
+  should be well above the number of measurements averaged, where they said
+  exceed.
 - The high-N halide README, `br_halide_highn_perframe.py`,
   `key_sensitivity.py`, `docs/DERIVATION.md` and the `BiasLookup.var_bias`
   docstring give the width growth over the fitted frames, 11- to 24-fold at

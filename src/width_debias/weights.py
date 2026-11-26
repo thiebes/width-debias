@@ -252,8 +252,12 @@ def calibration_D_se(times: np.ndarray, msd: np.ndarray, weights: np.ndarray,
     Pass the same ``times``, ``msd``, and ``weights`` given to ``fit_D`` so the
     frame set matches, and ``variance_row`` (the raw fitted variances) when the
     model is a joint (CNR, sigma^2) calibration. Combine with the fit's own SE
-    as ``sqrt(D_se**2 + calibration_D_se**2)``. This is exact for
-    ``subtract``; for ``mas`` it ignores the gate's dependence on the bias
+    as ``sqrt(D_se**2 + calibration_D_se**2)``. The calibration error is
+    shared by every measurement made with the lookup, so for a mean of N
+    measurements combine the calibration SE once, in the same way, with the
+    statistical SE of the mean, not divided by sqrt(N); the mean of the
+    per-measurement values is an upper bound on it. The propagation is exact
+    for ``subtract``; for ``mas`` it ignores the gate's dependence on the bias
     and is approximate. The weights' own dependence on the calibration is
     second order and not included. Sixteen independent calibrations on a
     48-point CNR_0 grid confirm the prediction: observed / predicted variance
