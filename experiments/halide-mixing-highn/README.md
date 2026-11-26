@@ -228,13 +228,19 @@ apparent subdiffusion is a short-window / narrow-box artifact, not real
 transport.)
 
 `axis_check.py` (`axis_check.txt`) compares the two projections with that
-reference. On the bin centres, each projection's binned second moment is
-within 0.0123 of the halved moment over all frames, and the two differ by at
-most 0.0143, against about 0.003 from walker sampling alone. Their shapes
-differ more: over the usable band at CNR0 15, the Gaussian fit of the
-noise-free `prof_y` gives D/D_ref 1.009, 0.992 and 0.984, against 0.992, 0.958
-and 0.960 for `prof_x`, which the experiment reads. The shape gap therefore
-depends on the axis.
+reference. On the bin centres, over all frames, the binned second moments of
+the two projections add to within 0.0108 of the 2-D moment, as a fraction of
+it, each is within 0.0123 of the halved moment, and their ratio M_x/M_y is
+within 0.0143 of 1. Walker sampling alone gives about 0.003 for that ratio,
+but only as a lower bound: the centroids drift by many times their walker-only
+error, so the 16 realizations of the disorder set the scatter, and the table
+does not test isotropy. Over the usable band at CNR0 15, the power-law fit of
+the binned moments gives D/D_ref within 0.006 of 1 on both projections, while
+the Gaussian fit of the noise-free `prof_y` gives 1.009, 0.992 and 0.984,
+against 0.992, 0.958 and 0.960 for `prof_x`, which the experiment reads. The
+shape gaps of the two projections thus differ by 0.017 to 0.034 of D_ref,
+mostly through the profiles' shape, and these files cannot tell whether that
+comes from the transport or from the finite set of realizations.
 
 Over the 3 ns window the peak drops ~147x, so most late frames fall below CNR 1
 and are excluded by the floor; the correction is tested on the usable band (a
@@ -249,9 +255,9 @@ shorter effective window, which is the fair test).
   calibration SE on the corrected arms); writes `br_halide_highn_validation.txt`
   here. Result in "The 1-D D-free lookup at σ₀" above. It also defines the
   bounded width fit (`fit_each_row`), the cap (`G_MAX`, `MAX_VAR`) and the
-  per-frame CNR floor (`FLOOR_CNR`): `br_halide_highn_perframe.py` imports
-  them, and `key_sensitivity.py` and `render_perframe_figure.py` read the fit
-  and the floor through it.
+  per-frame CNR floor (`FLOOR_CNR`): `br_halide_highn_perframe.py` and
+  `axis_check.py` import them, and `key_sensitivity.py` and
+  `render_perframe_figure.py` read the fit and the floor through it.
 - `br_halide_highn_perframe.py [cnr_sigma2|daware|fisher|fisher_late] [CNR0]` --
   the per-frame residual (with a signed per-frame table), short-window D, and
   the figure. Default calibration is the joint (CNR, sigma^2) one; `daware` is
@@ -264,8 +270,10 @@ shorter effective window, which is the fair test).
   with its calibration SE).
 - `key_sensitivity.py` -- the key-sensitivity comparison (`key_sensitivity.txt`).
 - `axis_check.py` -- the x and y projections against the halved 2-D moment
-  (centroid, binned second moment, excess kurtosis, window edges) and the shape
-  gap of each; writes `axis_check.txt` here. Result in "The bed" above.
+  (centroid, binned second moment, excess kurtosis, window edges, and the
+  extremes over all frames with their times) and, per axis, D/D_ref over the
+  usable band from the noise-free fit and from the binned moments; writes
+  `axis_check.txt` here. Result in "The bed" above.
 - `br_halide_highn_perframe.png` -- the figure (CNR0 = 15); caption in
   `br_halide_highn_perframe_caption.md`.
 

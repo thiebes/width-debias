@@ -552,7 +552,6 @@ def _halide_lookup(column: int, cnrs: tuple[str, ...] = HALIDE_LOOKUP_CNR) -> tu
     return tuple(rows[cnr][column] for cnr in cnrs)
 
 
-
 AXIS_CHECK = f"{HALIDE}/axis_check.txt"
 
 
@@ -560,12 +559,15 @@ def _axis_check_extremes() -> list[tuple[Decimal, ...]]:
     """Per Br fraction, the all-frame extremes of the axis check: |M_x/M_y - 1|
     (0), the walker-sampling scale (1), |(M_x+M_y)/V - 1| (2), |M_x/(V/2) - 1|
     (3) and |M_y/(V/2) - 1| (4)."""
-    rows = [tuple(Decimal(v) for v in m.groups()) for m in re.finditer(
-        r"all \d+ frames: \|M_x/M_y - 1\| <= ([\d.]+) \(walker sampling alone about "
-        r"([\d.]+)\); \|\(M_x\+M_y\)/V - 1\| <= ([\d.]+); \|M_x/\(V/2\) - 1\| <= "
-        r"([\d.]+); \|M_y/\(V/2\) - 1\| <= ([\d.]+);", _read(AXIS_CHECK))]
-    assert len(rows) == 3, f"{AXIS_CHECK}: {len(rows)} summary lines, not 3"
-    return rows
+    text = _read(AXIS_CHECK)
+    first = re.findall(
+        r"all \d+ frames: \|M_x/M_y - 1\| <= ([\d.]+) at [\d.]+ ns \(walker sampling alone "
+        r"about ([\d.]+), a lower bound\); \|\(M_x\+M_y\)/V - 1\| <= ([\d.]+) at", text)
+    second = re.findall(
+        r"all \d+ frames: \|M_x/\(V/2\) - 1\| <= ([\d.]+) at [\d.]+ ns; "
+        r"\|M_y/\(V/2\) - 1\| <= ([\d.]+) at", text)
+    assert len(first) == len(second) == 3, f"{AXIS_CHECK}: summary lines are not 3 and 3"
+    return [tuple(Decimal(v) for v in a + b) for a, b in zip(first, second)]
 
 
 def _axis_check_largest(*columns: int) -> tuple[str, ...]:
@@ -573,11 +575,13 @@ def _axis_check_largest(*columns: int) -> tuple[str, ...]:
     return (str(max(row[c] for row in _axis_check_extremes() for c in columns)),)
 
 
-def _axis_check_shape_gaps() -> list[tuple[Decimal, Decimal]]:
-    """Per Br fraction, the noise-free fit's D / D_ref for prof_x and prof_y."""
-    rows = [(Decimal(m.group(1)), Decimal(m.group(2))) for m in re.finditer(
-        r"noise-free fit D / D_ref .*: prof_x ([\d.]+), prof_y ([\d.]+)", _read(AXIS_CHECK))]
-    assert len(rows) == 3, f"{AXIS_CHECK}: {len(rows)} shape-gap lines, not 3"
+def _axis_check_band_d() -> list[tuple[Decimal, ...]]:
+    """Per Br fraction, D / D_ref over the usable band: the noise-free fit of prof_x
+    (0) and prof_y (1), and the binned moment of prof_x (2) and prof_y (3)."""
+    rows = [tuple(Decimal(v) for v in m.groups()) for m in re.finditer(
+        r"noise-free Gaussian fit prof_x ([\d.]+), prof_y ([\d.]+); binned moment "
+        r"prof_x ([\d.]+), prof_y ([\d.]+);", _read(AXIS_CHECK))]
+    assert len(rows) == 3, f"{AXIS_CHECK}: {len(rows)} usable-band lines, not 3"
     return rows
 
 
@@ -587,6 +591,7 @@ def _axis_check_frame0_range() -> tuple[str, ...]:
                if line.startswith("   0.00 ") for v in _numbers(line)[3:5]]
     assert len(moments) == 6, f"{AXIS_CHECK}: {len(moments)} frame-0 moments, not 6"
     return str(min(moments)), str(max(moments))
+
 
 def _coverage_rows() -> list[dict[str, Decimal]]:
     """The per-cell rows of coverage_check.txt."""
@@ -915,29 +920,37 @@ CLAIMS = [
               "cor_strict_cal", (5, 8), expected=5)), 2),), {
               f"{HALIDE}/README.md": ("(calibration SE up to 0.16)",)}),
     Claim("high-N axis check, largest |M_x/M_y - 1|", lambda: _axis_check_largest(0), {
-        f"{HALIDE}/br_highn_data.py": ("by at most 0.0143",),
-        f"{HALIDE}/README.md": ("the two differ by at most 0.0143",),
-        "docs/REPO_MAP.md": ("binned second moments differ by at most 0.0143",)}),
+        f"{HALIDE}/br_highn_data.py": ("is within 0.0143 of 1",),
+        f"{HALIDE}/README.md": ("their ratio M_x/M_y is within 0.0143 of 1",),
+        "docs/REPO_MAP.md": ("binned-moment ratio is within 0.0143 of 1",)}),
     Claim("high-N axis check, walker-sampling scale of M_x/M_y",
           lambda: (_rounded(max(row[1] for row in _axis_check_extremes()), 3),), {
-              f"{HALIDE}/br_highn_data.py": ("about 0.003 from walker sampling alone",),
-              f"{HALIDE}/README.md": ("about 0.003 from walker sampling alone",)}),
+              f"{HALIDE}/br_highn_data.py": ("Walker sampling alone gives about 0.003",),
+              f"{HALIDE}/README.md": ("Walker sampling alone gives about 0.003",),
+              "docs/REPO_MAP.md": ("(walker sampling about 0.003, a lower bound)",)}),
     Claim("high-N axis check, largest |M/(V/2) - 1| over both axes",
           lambda: _axis_check_largest(3, 4), {
               f"{HALIDE}/br_highn_data.py": ("each is within 0.0123 of the halved moment",),
-              f"{HALIDE}/README.md": ("within 0.0123 of the halved moment",)}),
+              f"{HALIDE}/README.md": ("each is within 0.0123 of the halved moment",)}),
     Claim("high-N axis check, largest |(M_x+M_y)/V - 1|", lambda: _axis_check_largest(2), {
-        f"{HALIDE}/br_highn_data.py": ("add to within 0.0108 of the 2-D moment",)}),
+        f"{HALIDE}/br_highn_data.py": ("add to within 0.0108 of the 2-D moment",),
+        f"{HALIDE}/README.md": ("add to within 0.0108 of the 2-D moment",)}),
     Claim("high-N axis check, noise-free fit D / D_ref of prof_y",
-          lambda: tuple(str(y) for _, y in _axis_check_shape_gaps()), {
-              f"{HALIDE}/README.md": ("gives D/D_ref 1.009, 0.992 and 0.984",)}),
+          lambda: tuple(str(row[1]) for row in _axis_check_band_d()), {
+              f"{HALIDE}/README.md": ("noise-free `prof_y` gives 1.009, 0.992 and 0.984",)}),
     Claim("high-N axis check, noise-free fit D / D_ref of prof_x",
-          lambda: tuple(str(x) for x, _ in _axis_check_shape_gaps()), {
+          lambda: tuple(str(row[0]) for row in _axis_check_band_d()), {
               f"{HALIDE}/README.md": ("against 0.992, 0.958 and 0.960 for `prof_x`",)}),
     Claim("high-N axis check, prof_y's noise-free D above prof_x's, in D_ref",
-          lambda: tuple(str(f(y - x for x, y in _axis_check_shape_gaps())) for f in (min, max)), {
+          lambda: tuple(str(f(row[1] - row[0] for row in _axis_check_band_d()))
+                        for f in (min, max)), {
               f"{HALIDE}/br_highn_data.py": ("gives a D higher by 0.017 to 0.034",),
+              f"{HALIDE}/README.md": ("thus differ by 0.017 to 0.034 of D_ref",),
               "docs/REPO_MAP.md": ("differs between them by 0.017-0.034",)}),
+    Claim("high-N axis check, binned-moment D / D_ref on both axes",
+          lambda: (_bound(max(abs(row[c] - 1) for row in _axis_check_band_d()
+                              for c in (2, 3)), 3),), {
+              f"{HALIDE}/README.md": ("gives D/D_ref within 0.006 of 1 on both projections",)}),
     Claim("high-N axis check, frame-0 binned second moments", _axis_check_frame0_range, {
         f"{HALIDE}/br_highn_data.py": ("622.1 to 625.4 nm^2 on the bin centres",)}),
     Claim("high-N axis check, second moments on the files' x axis",

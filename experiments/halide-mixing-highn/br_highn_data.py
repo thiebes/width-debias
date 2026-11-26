@@ -23,8 +23,9 @@ walkers' unwrapped positions and so free of any binning or box truncation);
 halving it gives the isotropic 1-D truth, the same convention as
 :mod:`br_data`. ``axis_check.py`` tests both steps (``axis_check.txt``). On the
 bin centres, with Sheppard's bin-width term subtracted, the binned second
-moments of the two projections add to within 0.0108 of the 2-D moment, and
-each is within 0.0123 of the halved moment, over all 601 frames. The files'
+moments of the two projections add to within 0.0108 of the 2-D moment, as a
+fraction of it, and each is within 0.0123 of the halved moment, over all 601
+frames. The files'
 x axis, which the fits use, spaces the bins by 600/599 of their 5 nm width, so
 every second moment on it is larger by a factor 1.0033.
 
@@ -106,13 +107,14 @@ def available(frac: str) -> bool:
 def load_case(frac: str, tau_ns: float = DEFAULT_TAU_NS, n0: float = 1.0) -> BrCase:
     """Load one Br fraction from the collapsed npz, with the decay envelope applied.
 
-    Uses the ``prof_x`` projection. Its binned second moment differs from that
-    of ``prof_y`` by at most 0.0143 (about 0.003 from walker sampling alone),
-    but the two profiles differ in shape: over the usable band at CNR0 15, the
+    Uses the ``prof_x`` projection. The ratio of its binned second moment to
+    that of ``prof_y`` is within 0.0143 of 1. Walker sampling alone gives about
+    0.003, a lower bound, since the 16 realizations of the disorder add scatter
+    the averaged files cannot show. Over the usable band at CNR0 15, the
     Gaussian fit of the noise-free ``prof_y`` gives a D higher by 0.017 to
-    0.034 of D_ref, so the shape gap depends on the axis
-    (``axis_check.txt``). The truth is ``variance.avg.dat / 2``; both are keyed
-    on the same frame times.
+    0.034 of D_ref, so the shape gap read from one projection is uncertain by
+    that much (``axis_check.txt``). The truth is ``variance.avg.dat / 2``; both
+    are keyed on the same frame times.
     """
     folder = _case_dir(frac)
     d = np.load(folder / f"collapsed_1d.x_{frac}.npz")

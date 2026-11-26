@@ -54,17 +54,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   projections of the high-N Br-I maps with the halved 2-D moment that the
   experiment takes as its reference, and writes `axis_check.txt`: per Br
   fraction and at seven frames, each projection's centroid, binned second
-  moment, excess kurtosis and window-edge fraction, and the shape gap of each
-  axis. On the bin centres the binned moments are within 0.0123 of the halved
-  moment and differ from each other by at most 0.0143, but over the usable band
-  at CNR0 15 the noise-free fit of `prof_y` gives D/D_ref 1.009, 0.992 and
-  0.984 against 0.992, 0.958 and 0.960 for `prof_x`, so the shape gap depends
-  on the axis. The loader still reads `prof_x`, and no result of the
-  experiment changes. The loader's docstrings, which stated without a table
-  how closely the axes agree and how closely the binned moment matches the
-  reference (an offset they gave to bin width alone), now give the table's
-  values. Part of that offset is the files' x axis, whose spacing is 600/599 of
-  the bin width.
+  moment, excess kurtosis and window-edge fraction; the extremes over all
+  frames with their times; and, over the usable band at CNR0 15, the D/D_ref
+  of each axis from the noise-free fit and from the binned moments. On the bin
+  centres the binned moments are within 0.0123 of the halved moment and their
+  ratio is within 0.0143 of 1; walker sampling alone gives about 0.003, a lower
+  bound, since the 16 disorder realizations add scatter the averaged files
+  cannot show, so the table does not test isotropy. The binned moments give
+  D/D_ref within 0.006 of 1 on both axes, but the noise-free fit of `prof_y`
+  gives 1.009, 0.992 and 0.984 against 0.992, 0.958 and 0.960 for `prof_x`, so
+  the shape gap read from one projection is uncertain by 0.017 to 0.034 of
+  D_ref. The loader still reads `prof_x`, and no result of the experiment
+  changes. The loader's docstrings, which stated without a table that the axes
+  agree to within one part in a hundred and gave the binned moment's offset
+  from the reference to bin width alone, now give the table's values. Part of
+  that offset is the files' x axis, whose spacing is 600/599 of the bin width.
 
 ### Changed
 
