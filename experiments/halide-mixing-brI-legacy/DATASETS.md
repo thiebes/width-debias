@@ -1,19 +1,21 @@
 # Datasets -- halide-mixing-brI-legacy
 
-Collaborator data (Marc Meléndez). Referenced by pointer only -- never copied
-into git, never moved or renamed on the pshare.
+Collaborator data: Marc Meléndez's ~20,000-walker kinetic-Monte-Carlo Br-I
+halide-mixing simulations. They are not part of this repository; place a copy in
+the `halide_mixing/` folder of the data root. The data root is the folder that
+`WIDTH_DEBIAS_DATA_ROOT` names, or else `data/` at the repository root;
+`scripts/collaborator_data.py` holds its layout.
 
 ## Source
 
-The loader `br_data.py` reads directly from the pshare:
-
 ```text
-P:/Marc/shared_data/Halide_mixing
+halide_mixing/BrI_x_<frac>/diffmap.x_<frac>.dat
+halide_mixing/BrI_x_<frac>/variance.x_<frac>.dat
 ```
 
-These are the legacy ~20,000-walker kinetic-Monte-Carlo Br-I halide-mixing
-diffmaps (three Br fractions: 0.25, 0.5, 0.75). No local copy is kept in the
-repo; the loader reads the pshare at run time.
+`br_data.py` reads the diffmaps and particle variances for three Br fractions
+(0.25, 0.5, 0.75); the fractions present are used. The same folders hold the
+simulator and its input files, which `rerun/README.md` copies for a re-run.
 
 ## Note
 

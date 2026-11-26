@@ -31,6 +31,7 @@ from types import SimpleNamespace
 
 import numpy as np
 
+from .models import check_spreading_peak
 from .simulate import Experiment, noise_sigma_for_cnr0
 
 
@@ -141,6 +142,7 @@ def sequence_fisher_information(model, exp: Experiment,
     d mu_i / d D = 2 t_i d mu_i / d v_i. Every model is peak-normalised, so
     d mu_i / d A_i = mu_i / A_i.
     """
+    check_spreading_peak(exp, model)
     v, t, amp, c = exp.true_variance, exp.times, exp.amplitude, exp.mean
     n = exp.n_frames
     hv = 1e-4 * v
@@ -163,6 +165,7 @@ def sequence_fisher_information(model, exp: Experiment,
 
 def per_frame_crlb(model, exp: Experiment, noise_sigma: float) -> np.ndarray:
     """Var(sigma_hat_i^2) floor for each frame alone (A_i, c_i as nuisances)."""
+    check_spreading_peak(exp, model)
     return np.array([
         var_of_fitted_variance(model, exp.x, v, noise_sigma ** 2,
                                amplitude=a, mean=exp.mean, estimator="ml")

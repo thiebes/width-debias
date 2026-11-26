@@ -24,7 +24,7 @@ which is shared by every measurement and so does not shrink with the seeds.
 
     .venv/Scripts/python.exe experiments/halide-mixing-highn/render_perframe_figure.py
 
-Needs the pshare (collapsed maps) and the dense calibration in ``output/``
+Needs the collapsed maps in the data root and the dense calibration in ``output/``
 (``output/build_highn_dense_cal.py`` or ``br_halide_highn_perframe.cnr_sigma2_calibration``).
 """
 import os
@@ -134,13 +134,16 @@ def main():
     from br_halide_validation import fit_msd_powerlaw
 
     from br_halide_highn_validation import STRIDE, subsample
-    from br_highn_data import load_all
+    from br_highn_data import MAP_DIR, load_all
 
     if hp.N_RUNS_CAL2 != 4000:
         sys.exit("expects the dense calibration (HIGHN_CAL2_RUNS unset or 4000)")
+    cases = load_all()
+    if not cases:
+        sys.exit(f"No high-N collapsed maps found in {MAP_DIR} (WIDTH_DEBIAS_DATA_ROOT, or else data/). See DATASETS.md.")
     # Every map shares the pixel grid; build (or load) the Fisher calibrations
     # once here, before the workers would each try to build them.
-    pixel_x = subsample(load_all()[0], STRIDE).x
+    pixel_x = subsample(cases[0], STRIDE).x
     truncs = _truncs(pixel_x)
     with ProcessPoolExecutor(max_workers=3) as ex:
         results = list(ex.map(_panel, ["0.25", "0.5", "0.75"]))

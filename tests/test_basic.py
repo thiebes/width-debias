@@ -12,9 +12,10 @@ import pytest
 from width_debias import (AnomalousExperiment, Experiment, GaussianModel,
                             GeneralizedGaussianModel, MomentModel,
                             MultiExpExperiment, UnboundedGaussianModel,
-                            VoigtModel, calibrate_d_free, evaluate,
-                            frame_stats, model_from_spec, run_ensemble,
-                            spec_tag)
+                            VoigtModel, WhiteNoise, calibrate_d_free,
+                            cnr_per_frame, evaluate, frame_stats,
+                            model_from_spec, run_ensemble, spec_tag)
+from width_debias.fisher import per_frame_crlb, sequence_fisher_information
 from width_debias.fit import fit_D, fit_variance
 from width_debias.models import MODELS
 from width_debias.simulate import noise_free_series
@@ -224,6 +225,210 @@ def test_multiexp_rejects_mismatched_components():
     """fractions and taus must pair up; a mismatch is a silent-bug risk."""
     with pytest.raises(ValueError):
         MultiExpExperiment(fractions=(0.5, 0.5), taus=(1.0,))
+
+
+# --------------------------------------------------------------------------
+# Spreading peak (Experiment.spread_dims)
+# --------------------------------------------------------------------------
+@pytest.mark.parametrize("bed, decay", [
+    (Experiment(D=0.1), lambda t: np.exp(-t)),
+    (AnomalousExperiment(D=0.1, alpha=0.7), lambda t: np.exp(-t)),
+    (MultiExpExperiment(D=0.1, fractions=(0.3, 0.7), taus=(0.3, 2.0)),
+     lambda t: (0.3 * np.exp(-t / 0.3) + 0.7 * np.exp(-t / 2.0)) / (0.3 + 0.7)),
+], ids=["experiment", "anomalous", "multiexp"])
+def test_default_peak_follows_each_bed_decay_alone(bed, decay):
+    """Without spread_dims the peak is each bed's own decay law, and the profiles carry it.
+
+    The decay is written out here (tau = 1) rather than read from the bed, so a
+    default path that skipped a subclass's decay law, such as the sum of
+    exponentials of MultiExpExperiment, fails.
+    """
+    assert np.array_equal(bed.amplitude, bed.decay_amplitude)
+    assert np.array_equal(bed.spread_factor, np.ones(bed.n_frames))
+    np.testing.assert_allclose(bed.amplitude, bed.amplitude0 * decay(bed.times), rtol=1e-14)
+    assert np.array_equal(noise_free_series(bed).max(axis=1), bed.amplitude)
+
+
+def test_spreading_fields_leave_the_positional_fields_in_place():
+    """The spreading fields are keyword-only, so positional construction is as before them."""
+    from dataclasses import fields
+
+    def positional(cls):
+        return [f.name for f in fields(cls) if not f.kw_only]
+
+    base = ["sigma0", "D", "tau", "amplitude0", "mean", "half_window", "n_pixels",
+            "n_frames", "t_max"]
+    assert positional(Experiment) == base
+    assert positional(AnomalousExperiment) == base + ["alpha"]
+    assert positional(MultiExpExperiment) == base + ["fractions", "taus"]
+
+
+def test_spreading_peak_matches_the_gaussian_closed_form():
+    """A summed profile loses peak as sigma0 / sigma_x; a centre cut also as sigma0 / sigma_y."""
+    sigma0, amplitude0, D, D_y = 0.7, 2.5, 0.05, 0.02
+    t = Experiment().times
+    decay = amplitude0 * np.exp(-t)
+    sigma_x = np.sqrt(sigma0 ** 2 + 2 * D * t)
+    sigma_y = np.sqrt(sigma0 ** 2 + 2 * D_y * t)
+    common = dict(sigma0=sigma0, amplitude0=amplitude0, D=D)
+    np.testing.assert_allclose(Experiment(**common, spread_dims=1).amplitude,
+                               decay * sigma0 / sigma_x, rtol=1e-13)
+    np.testing.assert_allclose(Experiment(**common, spread_dims=2, D_y=D_y).amplitude,
+                               decay * sigma0 / sigma_x * sigma0 / sigma_y, rtol=1e-13)
+    np.testing.assert_allclose(Experiment(**common, spread_dims=2).amplitude,
+                               decay * (sigma0 / sigma_x) ** 2, rtol=1e-13)
+
+
+def test_spreading_peak_matches_the_unit_area_voigt_peak():
+    """The Voigt peak falls as the unit-area Voigt peak, and the drawn profiles carry it.
+
+    The reference is the closed form of that peak, erfcx(gamma / (sigma sqrt 2))
+    / sigma up to a constant, not the voigt_profile call the code makes.
+    """
+    from scipy.special import erfcx
+    exp = Experiment(D=0.1, spread_dims=1, psf_hwhm=0.3)
+
+    def unit_area_peak(sigma):
+        return erfcx(0.3 / (sigma * np.sqrt(2.0))) / sigma
+
+    expected = (exp.decay_amplitude * unit_area_peak(np.sqrt(exp.true_variance))
+                / unit_area_peak(exp.sigma0))
+    np.testing.assert_allclose(exp.amplitude, expected, rtol=1e-12)
+    clean = VoigtModel(gamma=0.3).noise_free_series(exp)
+    np.testing.assert_allclose(clean.max(axis=1), exp.amplitude, rtol=1e-12)
+
+
+def test_summed_voigt_profile_keeps_its_integral_apart_from_the_decay():
+    """spread_dims=1 conserves the population of the Voigt profile too.
+
+    The Lorentzian tails fall as 1/x^2, so the window is wider than for the
+    Gaussian test below and the tolerance is set by the tails beyond it.
+    """
+    exp = Experiment(D=0.1, half_window=40.0, n_pixels=4001, spread_dims=1, psf_hwhm=0.3)
+    clean = VoigtModel(gamma=0.3).noise_free_series(exp)
+    integral_over_decay = clean.sum(axis=1) * (exp.x[1] - exp.x[0]) / exp.decay_amplitude
+    np.testing.assert_allclose(integral_over_decay, integral_over_decay[0], rtol=1e-5)
+
+
+def test_spreading_peak_follows_the_bed_spreading_and_decay_laws():
+    """The factor reads each bed's own true_variance and multiplies its own decay."""
+    anomalous = AnomalousExperiment(D=0.05, alpha=0.7, spread_dims=1)
+    t = anomalous.times
+    np.testing.assert_allclose(anomalous.amplitude,
+                               np.exp(-t) / np.sqrt(1 + 2 * 0.05 * t ** 0.7), rtol=1e-13)
+    multi = MultiExpExperiment(D=0.05, fractions=(0.3, 0.7), taus=(0.3, 2.0), spread_dims=2)
+    decay = (0.3 * np.exp(-t / 0.3) + 0.7 * np.exp(-t / 2.0)) / (0.3 + 0.7)
+    np.testing.assert_allclose(multi.amplitude, decay / (1 + 2 * 0.05 * t), rtol=1e-13)
+
+
+@pytest.mark.parametrize("model", [GaussianModel(), GeneralizedGaussianModel(shape=4.0)],
+                         ids=["gaussian", "p4"])
+def test_summed_profile_keeps_its_integral_apart_from_the_decay(model):
+    """spread_dims=1 conserves the population: the integral over the decay is constant.
+
+    With the default peak the integral grows as sigma_x(t) / sigma0 instead. The
+    window is wide enough that the tails beyond it are negligible.
+    """
+    def integral_over_decay(exp):
+        clean = model.noise_free_series(exp)
+        return clean.sum(axis=1) * (exp.x[1] - exp.x[0]) / exp.decay_amplitude
+
+    geometry = dict(D=0.1, half_window=12.0, n_pixels=481)
+    spreading = integral_over_decay(Experiment(**geometry, spread_dims=1))
+    np.testing.assert_allclose(spreading, spreading[0], rtol=1e-9)
+    exp = Experiment(**geometry)
+    np.testing.assert_allclose(integral_over_decay(exp) / spreading,
+                               np.sqrt(exp.true_variance) / exp.sigma0, rtol=1e-9)
+
+
+@pytest.mark.parametrize("spread", [dict(spread_dims=1), dict(spread_dims=2, D_y=0.03),
+                                    dict(spread_dims=1, psf_hwhm=0.3)],
+                         ids=["summed", "centre_cut", "voigt"])
+def test_spreading_peak_keeps_the_initial_peak_and_changes_nothing_at_d_zero(spread):
+    """amplitude(0) = amplitude0, so CNR_0 keeps its meaning; at D = 0 the peak is the decay's."""
+    common = dict(sigma0=0.3, amplitude0=2.5)
+    assert Experiment(D=0.05, **common, **spread).amplitude[0] == 2.5
+    assert np.array_equal(Experiment(D=0.0, **common, **spread).amplitude,
+                          Experiment(D=0.0, **common).amplitude)
+
+
+@pytest.mark.parametrize("noise_model", [None, WhiteNoise()], ids=["inline", "white"])
+def test_spreading_peak_draws_the_same_noise_from_the_same_seed(noise_model):
+    """The noise depends only on the seed and amplitude0 / CNR_0, so the two peaks are paired."""
+    class Recording(GaussianModel):
+        def __init__(self):
+            super().__init__()
+            self.frames = []
+
+        def fit_variance(self, x, y):
+            self.frames.append(y.copy())
+            return super().fit_variance(x, y)
+
+    noise = {}
+    for name, spread in (("decay", {}), ("spreading", dict(spread_dims=1))):
+        exp = Experiment(D=0.1, n_frames=6, **spread)
+        model = Recording()
+        run_ensemble(exp, 8.0, n_runs=2, seed=3, model=model, workers=1, noise_model=noise_model)
+        noise[name] = np.array(model.frames).reshape(2, 6, -1) - noise_free_series(exp)
+    np.testing.assert_allclose(noise["spreading"], noise["decay"], rtol=0, atol=1e-14)
+
+
+def test_cnr_per_frame_is_the_simulated_cnr_with_a_summed_spreading_peak():
+    """With spread_dims=1, cnr_per_frame is Ensemble.cnr_frame for a Gaussian.
+
+    With the default peak it is still the summed profile's CNR, which the
+    default simulation's frames do not have.
+    """
+    spreading = Experiment(D=0.1, spread_dims=1)
+    ens = run_ensemble(spreading, 8.0, n_runs=1, seed=0, workers=1)
+    np.testing.assert_allclose(cnr_per_frame(spreading, ens.noise_sigma), ens.cnr_frame,
+                               rtol=1e-15)
+    default = Experiment(D=0.1)
+    np.testing.assert_allclose(cnr_per_frame(default, ens.noise_sigma), ens.cnr_frame,
+                               rtol=1e-14)
+    held = run_ensemble(default, 8.0, n_runs=1, seed=0, workers=1).cnr_frame
+    assert np.all(held[1:] > ens.cnr_frame[1:])
+
+
+def test_spreading_peak_refuses_a_peak_computed_for_another_profile():
+    """A peak computed for another profile's Lorentzian would be silently wrong.
+
+    Every path that draws the profiles or reads their peak refuses it: the
+    Monte Carlo, each model's noise-free series, the Gaussian series, and the
+    Fisher bounds.
+    """
+    voigt_peak = Experiment(D=0.1, spread_dims=1, psf_hwhm=0.3)
+    gaussian_peak = Experiment(D=0.1, spread_dims=1)
+    with pytest.raises(ValueError, match="psf_hwhm"):
+        run_ensemble(gaussian_peak, 8.0, n_runs=1, model=VoigtModel(gamma=0.3))
+    with pytest.raises(ValueError, match="psf_hwhm"):
+        run_ensemble(voigt_peak, 8.0, n_runs=1)
+    for model in (GaussianModel(), GeneralizedGaussianModel(shape=4.0), MomentModel(),
+                  UnboundedGaussianModel(), VoigtModel(gamma=0.2)):
+        with pytest.raises(ValueError, match="psf_hwhm"):
+            model.noise_free_series(voigt_peak)
+    with pytest.raises(ValueError, match="psf_hwhm"):
+        noise_free_series(voigt_peak)
+    with pytest.raises(ValueError, match="psf_hwhm"):
+        per_frame_crlb(VoigtModel(gamma=0.3), gaussian_peak, 0.1)
+    with pytest.raises(ValueError, match="psf_hwhm"):
+        sequence_fisher_information(GaussianModel(), voigt_peak, 0.1)
+    assert VoigtModel(gamma=0.3).noise_free_series(voigt_peak).shape == (12, 241)
+
+
+@pytest.mark.parametrize("settings, field", [
+    (dict(spread_dims=3), "spread_dims"),
+    (dict(spread_dims=True), "spread_dims"),
+    (dict(spread_dims=1, psf_hwhm=-0.1), "psf_hwhm"),
+    (dict(psf_hwhm=0.3), "psf_hwhm"),
+    (dict(spread_dims=1, D_y=0.01), "D_y"),
+    (dict(spread_dims=2, D_y=-0.01), "D_y"),
+], ids=["spread_3", "spread_bool", "negative_psf", "psf_without_spread", "d_y_summed",
+        "negative_d_y"])
+def test_experiment_refuses_spreading_settings_it_cannot_honour(settings, field):
+    """Settings the peak would ignore or misread raise instead of passing silently."""
+    with pytest.raises(ValueError, match=field):
+        Experiment(**settings)
 
 
 def test_generalized_gaussian_variance_factor():

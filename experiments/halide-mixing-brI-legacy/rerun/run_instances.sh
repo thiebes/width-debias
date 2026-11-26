@@ -20,7 +20,7 @@ JOBS="${4:-$(nproc)}"
 BIN="landscapeBD.diffmap"
 BASE="parameters.x_${FRAC}.dat"
 for f in "$BIN" "basis_BrI.dat" "vectors_BrI.dat" "$BASE"; do
-    [ -f "$f" ] || { echo "missing required file: $f (copy it from the pshare)"; exit 1; }
+    [ -f "$f" ] || { echo "missing required file: $f (copy it from halide_mixing/BrI_x_${FRAC}/ in the data root; see README.md)"; exit 1; }
 done
 chmod +x "$BIN"
 

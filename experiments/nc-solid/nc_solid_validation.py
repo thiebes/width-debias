@@ -56,7 +56,7 @@ from width_debias.fit import fit_variance as fit_gaussian  # noqa: E402
 from width_debias.bias_lookup import BiasLookup  # noqa: E402
 from width_debias.weights import corrected_variance  # noqa: E402
 
-from nc_data import load_all  # noqa: E402
+from nc_data import MAP_DIR, load_all  # noqa: E402
 
 OUTPUT = Path(__file__).resolve().parents[2] / "output"
 OUTPUT.mkdir(exist_ok=True)
@@ -161,7 +161,7 @@ def main() -> None:
     trunc = BiasLookup.from_calibration(CalibrationGrid.load(CAL_PATH))
     cases = load_all()
     if not cases:
-        print("No NC-solid maps found on the pshare; nothing to validate.")
+        print(f"No NC-solid maps found in {MAP_DIR} (WIDTH_DEBIAS_DATA_ROOT, or else data/). See DATASETS.md; nothing to validate.")
         return
 
     lines = [

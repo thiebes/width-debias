@@ -1,21 +1,51 @@
 """Generation of synthetic 1-D profile sequences for Monte Carlo validation.
 
 A population of excited states is modelled as a 1-D Gaussian that broadens by
-Fickian diffusion and decays by a single exponential lifetime.  White noise is
+Fickian diffusion and decays by a single exponential lifetime.  By default the
+peak follows the decay alone, an approximation for small diffusion; with
+``Experiment.spread_dims`` set it also falls as the profile spreads, so the
+population changes only by the decay.  White noise is
 added at the level of the raw spatial profile -- the only level at which it can
 be added correctly, because the fitting hierarchy reshapes the error
 distribution downstream (Thiebes & Grumstrup, JCP 2024).
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
+from scipy.special import voigt_profile
 
 
 def gaussian(x: np.ndarray, amplitude: float, mean: float, sigma: float) -> np.ndarray:
     """A 1-D Gaussian profile."""
     return amplitude * np.exp(-0.5 * ((x - mean) / sigma) ** 2)
+
+
+def _unit_area_peak(width: np.ndarray, psf_hwhm: float) -> np.ndarray:
+    """Peak height of the unit-area profile of Gaussian width ``width``.
+
+    The Gaussian convolved with a Lorentzian of half-width ``psf_hwhm``, the
+    Voigt profile as :class:`~width_debias.models.VoigtModel` draws it; with
+    ``psf_hwhm = 0`` the Gaussian, whose ratios ``sigma0 / sigma`` are also
+    those of the generalized Gaussian at a fixed shape exponent.
+    """
+    return voigt_profile(0.0, np.asarray(width, float), psf_hwhm)
+
+
+def _require_psf_hwhm(exp, lorentzian_hwhm: float, profile: str) -> None:
+    """Refuse a spreading peak computed for another Lorentzian half-width than the profile's.
+
+    With ``spread_dims`` set, ``exp.amplitude`` lowers the peak by the
+    unit-area peak of a Voigt profile of half-width ``exp.psf_hwhm``; drawn
+    with any other half-width, the peak and every per-frame CNR would be
+    silently wrong. A stand-in without ``spread_dims`` (as the Fisher bounds
+    pass to a model) has a peak already computed, and passes.
+    """
+    if getattr(exp, "spread_dims", None) is not None and exp.psf_hwhm != lorentzian_hwhm:
+        raise ValueError(
+            f"the spreading peak uses psf_hwhm={exp.psf_hwhm}, but the {profile} profile "
+            f"has a Lorentzian half-width of {lorentzian_hwhm}; set Experiment.psf_hwhm to match")
 
 
 @dataclass(frozen=True)
@@ -26,6 +56,43 @@ class Experiment:
     sets the scale.  The nanocrystal-solid regime targeted here is
     ``L_D / FWHM_0`` of order 0.05--0.2 (e.g. a 30--80 nm diffusion length
     against a ~400 nm diffraction-limited spot).
+
+    By default (``spread_dims=None``) the peak follows the decay law alone: the
+    simulated profiles hold it as they spread, so the integral of a profile
+    grows with its width, an approximation for small diffusion.
+    ``spread_dims`` selects a peak that also falls as the profile spreads, at a
+    population that changes only by the decay::
+
+        amplitude(t) = decay_amplitude(t) * h(sigma_x(t)) / h(sigma0)
+                       * [h(sigma_y(t)) / h(sigma0)] ** (spread_dims - 1)
+
+    with ``sigma_x(t) ** 2`` the ``true_variance`` and h(s) the peak height of
+    the unit-area profile of width s. ``spread_dims=1`` is a profile summed over
+    the other axis, whose integral is conserved apart from the decay.
+    ``spread_dims=2`` is a cut through the centre of a spot that also spreads
+    along y, with
+    ``sigma_y(t) ** 2 = sigma0 ** 2 + (sigma_x(t) ** 2 - sigma0 ** 2) * D_y / D``:
+    the y width follows the bed's own law (``true_variance``, so the exponent of
+    :class:`AnomalousExperiment` too), scaled by D_y / D, and with D = 0 neither
+    axis spreads. The product of the two factors assumes a profile that
+    separates into x and y parts. The Gaussian does; the Voigt and
+    generalized-Gaussian profiles do only if their 2-D form is a product of 1-D
+    profiles, which an isotropic 2-D Lorentzian PSF, for one, is not.
+
+    h(s) is proportional to ``1 / s`` for the Gaussian and the generalized
+    Gaussian at a fixed shape exponent. For the Voigt profile it depends on the
+    Lorentzian half-width ``psf_hwhm``, which must equal the ``gamma`` of the
+    :class:`~width_debias.models.VoigtModel` that draws the profiles, and 0 for
+    every other model. Every built-in model's ``noise_free_series``,
+    :func:`~width_debias.montecarlo.run_ensemble` (for any model) and the
+    Fisher bounds check this (:func:`~width_debias.models.check_spreading_peak`).
+    The factor is 1
+    at t = 0, so ``amplitude0`` and the initial CNR keep their meaning, and 1
+    at every t when D = 0, so a D = 0 calibration is the same under either
+    peak.
+
+    The three spreading fields are keyword-only, so the positional order of the
+    fields, and of the subclasses' own fields after them, is unchanged.
     """
 
     sigma0: float = 1.0          # initial Gaussian width (sets the length scale)
@@ -37,6 +104,29 @@ class Experiment:
     n_pixels: int = 241          # spatial samples
     n_frames: int = 12           # number of time points
     t_max: float = 3.0           # last time point (in units of tau)
+    # None: decay alone; 1 summed profile, 2 centre cut
+    spread_dims: int | None = field(default=None, kw_only=True)
+    # diffusion coefficient along y for spread_dims = 2; None means D
+    D_y: float | None = field(default=None, kw_only=True)
+    # Lorentzian half-width of a Voigt profile, for the spreading peak
+    psf_hwhm: float = field(default=0.0, kw_only=True)
+
+    def __post_init__(self) -> None:
+        # A bool is an int, so True would otherwise pass as a summed profile.
+        if self.spread_dims is not None and (isinstance(self.spread_dims, bool)
+                                             or self.spread_dims not in (1, 2)):
+            raise ValueError(f"spread_dims must be None, 1 or 2, not {self.spread_dims!r}")
+        if self.D_y is not None:
+            if self.spread_dims != 2:
+                raise ValueError("D_y sets the spreading along y of a centre cut; "
+                                 f"it needs spread_dims=2, not {self.spread_dims!r}")
+            if self.D_y < 0:
+                raise ValueError(f"D_y must be >= 0, not {self.D_y}")
+        if self.psf_hwhm < 0:
+            raise ValueError(f"psf_hwhm must be >= 0, not {self.psf_hwhm}")
+        if self.psf_hwhm > 0 and self.spread_dims is None:
+            raise ValueError("psf_hwhm sets the spreading peak of a Voigt profile; "
+                             "it needs spread_dims")
 
     @property
     def x(self) -> np.ndarray:
@@ -58,14 +148,42 @@ class Experiment:
         return 2.0 * self.D * self.times
 
     @property
-    def amplitude(self) -> np.ndarray:
-        """Peak amplitude at each frame (exponential decay only).
+    def decay_amplitude(self) -> np.ndarray:
+        """Peak amplitude at each frame under the decay law alone: a single exponential.
 
-        The simulated profiles hold this peak as they spread (see
-        :func:`noise_free_series`), and the noise floor is constant, so the
-        per-frame CNR falls with the decay alone.
+        A subclass with another decay law overrides this property, not
+        ``amplitude``, so that ``spread_dims`` still applies.
         """
         return self.amplitude0 * np.exp(-self.times / self.tau)
+
+    @property
+    def spread_factor(self) -> np.ndarray:
+        """Factor by which spreading lowers the peak at each frame; ones without ``spread_dims``."""
+        if self.spread_dims is None:
+            return np.ones(self.n_frames)
+        var_x = np.asarray(self.true_variance, float)
+        h0 = _unit_area_peak(self.sigma0, self.psf_hwhm)
+        factor = _unit_area_peak(np.sqrt(var_x), self.psf_hwhm) / h0
+        if self.spread_dims == 2:
+            d_y = self.D if self.D_y is None else self.D_y
+            ratio = d_y / self.D if self.D > 0 else 0.0
+            var_y = self.sigma0 ** 2 + (var_x - self.sigma0 ** 2) * ratio
+            factor = factor * _unit_area_peak(np.sqrt(var_y), self.psf_hwhm) / h0
+        return factor
+
+    @property
+    def amplitude(self) -> np.ndarray:
+        """Peak amplitude of the simulated profile at each frame.
+
+        By default this is ``decay_amplitude``: the profiles hold the peak as
+        they spread (see :func:`noise_free_series`), and the noise floor is
+        constant, so the per-frame CNR falls with the decay alone. With
+        ``spread_dims`` set it is ``decay_amplitude * spread_factor``, and the
+        per-frame CNR falls with the spreading as well.
+        """
+        if self.spread_dims is None:
+            return self.decay_amplitude
+        return self.decay_amplitude * self.spread_factor
 
 
 @dataclass(frozen=True)
@@ -80,9 +198,10 @@ class AnomalousExperiment(Experiment):
     exactly, which is the consistency check the validation leans on.
 
     Only the two truth properties change; the geometry (``x``, ``times``), the
-    single-exponential decay (``amplitude``), and the CNR bookkeeping are
+    single-exponential decay (``decay_amplitude``), and the CNR bookkeeping are
     inherited unchanged, so the whole Monte Carlo / fit / weighting pipeline
-    runs on this bed with no other change. The noise bias lifts the
+    runs on this bed with no other change. A spreading peak (``spread_dims``)
+    follows this bed's ``true_variance``. The noise bias lifts the
     low-CNR late frames more than the high-CNR early ones, which tilts the MSD
     curve toward a steeper apparent exponent -- so the bias contaminates alpha,
     not only D, and this bed is how the correction's recovery of alpha is
@@ -116,13 +235,14 @@ class MultiExpExperiment(Experiment):
     Real photoluminescence rarely decays as a single exponential: a fast
     surface/trap channel plus a slow bulk channel give a bi-exponential, and a
     distribution of trap depths gives a stretched-exponential-like curve. The
-    peak amplitude here is a normalised sum of exponentials,
+    decay of the peak here is a normalised sum of exponentials,
 
-        amplitude(t) = amplitude0 * sum_i f_i exp(-t/tau_i) / sum_i f_i,
+        decay_amplitude(t) = amplitude0 * sum_i f_i exp(-t/tau_i) / sum_i f_i,
 
-    so amplitude(0) = amplitude0 and CNR_0 keeps its meaning. The diffusion law
-    is the inherited Fickian one; only the decay (hence the per-frame CNR
-    trajectory) changes.
+    so amplitude(0) = amplitude0 and CNR_0 keeps its meaning; a spreading peak
+    (``spread_dims``) multiplies it by the inherited ``spread_factor``. The
+    diffusion law is the inherited Fickian one; only the decay (hence the
+    per-frame CNR trajectory) changes.
 
     The point of this bed is that the correction keys on the
     *per-frame CNR*, not on the decay law: the per-frame residual bias is the
@@ -141,12 +261,13 @@ class MultiExpExperiment(Experiment):
     taus: tuple = (1.0,)         # component lifetimes, same units as ``tau``
 
     def __post_init__(self) -> None:
+        super().__post_init__()
         if len(self.fractions) != len(self.taus):
             raise ValueError("fractions and taus must have the same length")
 
     @property
-    def amplitude(self) -> np.ndarray:
-        """Peak amplitude at each frame: normalised sum of exponentials."""
+    def decay_amplitude(self) -> np.ndarray:
+        """Peak amplitude at each frame under the decay alone: normalised sum of exponentials."""
         f = np.asarray(self.fractions, float)
         tau_i = np.asarray(self.taus, float)
         decay = (f[:, None] * np.exp(-self.times[None, :] / tau_i[:, None])).sum(0)
@@ -162,21 +283,33 @@ def noise_sigma_for_cnr0(exp: Experiment, cnr0: float) -> float:
 
 
 def cnr_per_frame(exp: Experiment, noise_sigma: float) -> np.ndarray:
-    """Per-frame contrast-to-noise ratio of an area-conserving profile.
+    """Per-frame contrast-to-noise ratio of a profile whose peak falls as it spreads.
 
-    The peak falls with the decay and, as ``sigma0 / sigma(t)``, with diffusive
-    spreading. The simulated profiles hold the peak at ``amplitude`` instead
-    (see :func:`noise_free_series`), so this is not the CNR of a simulated
-    frame; for that, use ``Ensemble.cnr_frame`` from
+    With ``exp.spread_dims`` set, this is the peak of the simulated frames,
+    ``exp.amplitude``, over the noise RMS; for white noise and a profile
+    centred on a pixel it equals ``Ensemble.cnr_frame`` from
     :func:`~width_debias.montecarlo.run_ensemble`, which the calibration is
-    keyed on.
+    keyed on. With the default peak (the decay alone), the simulated profiles
+    hold the peak as they spread (see :func:`noise_free_series`), and this
+    returns instead the CNR of a Gaussian profile summed over the other axis,
+    whose peak falls also as ``sigma0 / sigma(t)``: the CNR of the frames that
+    ``spread_dims=1`` would simulate, not of the frames ``exp`` simulates.
     """
+    if exp.spread_dims is not None:
+        return exp.amplitude / noise_sigma
     peak = exp.amplitude * (exp.sigma0 / np.sqrt(exp.true_variance))
     return peak / noise_sigma
 
 
 def noise_free_series(exp: Experiment) -> np.ndarray:
-    """Stack of noise-free profiles, shape (n_frames, n_pixels)."""
+    """Stack of noise-free Gaussian profiles, shape (n_frames, n_pixels).
+
+    Each frame's peak is ``exp.amplitude``: by default the decay alone, so a
+    profile holds its peak as it spreads; with ``exp.spread_dims`` set, a peak
+    that also falls with the spreading, which for these Gaussian profiles needs
+    ``exp.psf_hwhm`` = 0.
+    """
+    _require_psf_hwhm(exp, 0.0, "gaussian")
     x = exp.x
     return np.array([
         gaussian(x, a, exp.mean, np.sqrt(v))

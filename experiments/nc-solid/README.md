@@ -14,8 +14,9 @@ the synthetic beds.
 
 ## Contents
 
-- `nc_data.py` -- loader for the NC-solid maps (reads the pshare; `denoise=True`
-  reconstructs the smooth Gaussian per frame before measurement noise).
+- `nc_data.py` -- loader for the NC-solid maps (reads the data root;
+  `denoise=True` reconstructs the smooth Gaussian per frame before measurement
+  noise).
 - `nc_solid_sim.py` -- the Solari hopping-KMC simulator.
 - `nc_solid_sim_run.py` -- runs the KMC simulator (`nc_solid_sim`).
 - `nc_solid_alpha_vs_cnr.py` -- naive vs corrected alpha against CNR0 (the core
@@ -32,9 +33,9 @@ the synthetic beds.
 
 ## Data
 
-NC-solid maps on the pshare (`P:/Marc/shared_data/disordered_perovskite_nanocrystals_solids`);
-see `DATASETS.md`. No local copy. The committed calibration `.npz` is the only
-large derived artifact kept in-repo.
+NC-solid maps in the data root's `simulated_map/` folder, not committed; see
+`DATASETS.md`, which says which scripts need which maps. The committed
+calibration `.npz` is the only large derived artifact kept in-repo.
 
 ## Run
 
@@ -79,7 +80,8 @@ does not matter on this bed.
 `width_debias` (`GaussianModel`, `noise.WhiteNoise`, `truncation`, `validate`,
 `weights`). Local sibling modules `nc_data.py`, `nc_solid_sim.py`,
 `nc_solid_alpha_vs_cnr.py`. Optional `curved_text` (the figure's curved label;
-`pip install -e ../curved-text`).
+`pip install -e ../curved-text`). The loader reads its folder through
+`scripts/collaborator_data.py` (the data root and its folders).
 
 ## See also
 

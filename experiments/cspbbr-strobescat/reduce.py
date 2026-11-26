@@ -16,10 +16,11 @@ match (``half_window_um``, ``max_var``). Feed it to ``apply_correction.py``.
 Example::
 
     python experiments/cspbbr-strobescat/reduce.py \
-        --data "P:/Upasana/CsPbBr_SingleCrystal/Sample_1/13.47 uJ_Fluence_19_May_2026" \
+        --data "data/cspbbr_sample_1/13.47 uJ_Fluence_19_May_2026" \
         --n-files 3 --max-var 6.25 --out output/cspbbr_13p47.npz
 
-``--max-var`` must equal the calibration's ``--max-var`` (the fit's variance cap
+(``data/`` is the default data root; with ``WIDTH_DEBIAS_DATA_ROOT`` set, the
+folder is under that root.) ``--max-var`` must equal the calibration's ``--max-var`` (the fit's variance cap
 must be identical in calibration and application).
 """
 from __future__ import annotations

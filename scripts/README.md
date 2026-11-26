@@ -7,6 +7,18 @@ share.
 All scripts run from the repository root with `.venv/Scripts/python.exe` on
 Windows. Outputs go to `output/` with matching base names.
 
+## Collaborator data
+
+- **`collaborator_data.py`** -- where the experiment sets read collaborator
+  data: the folder `WIDTH_DEBIAS_DATA_ROOT` names (`~` and relative paths are
+  resolved), or else `data/` at the repository root (ignored by git), and the
+  fixed folders inside it (`stroboscat_scans/`, `simulated_map/`,
+  `halide_mixing/`, `halide_mixing_highn/`, `cspbbr_sample_1/`). The loaders of
+  `nc-solid`, the two halide-mixing sets and `wse2-strobescat`, and the
+  `cspbbr-strobescat` driver, import it; each set's `DATASETS.md` lists the
+  files its folder holds. Result files of an external simulation study are read
+  from `WIDTH_DEBIAS_EXTERNAL_RESULTS` instead (below).
+
 ## Calibration tooling
 
 - **`build_calibration.py --tag <name> ...`** -- builds a geometry-specific joint

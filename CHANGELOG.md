@@ -7,6 +7,70 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `Experiment.spread_dims` lets the simulated peak fall as the profile
+  spreads, at a population that changes only by the decay: 1 for a profile
+  summed over the other axis, 2 for a cut through the centre of a spot that
+  also spreads along y (`D_y`, default `D`). For the Voigt profile the peak
+  depends on `psf_hwhm`, which must equal the `VoigtModel`'s `gamma` (0 for
+  every other model); every built-in model's `noise_free_series`,
+  `run_ensemble` and the Fisher bounds refuse a mismatch
+  (`models.check_spreading_peak`). The three fields are keyword-only, so the
+  positional fields of `AnomalousExperiment` and `MultiExpExperiment` keep
+  their order, and settings the peak cannot honour (`spread_dims=True`, a
+  negative `D_y`, `D_y` without a centre cut, `psf_hwhm` without
+  `spread_dims`) raise `ValueError`. The default (`None`) keeps the peak at
+  the decay alone, so every output is unchanged. The option leaves the peak
+  unchanged at t = 0 and at every t when D = 0, and draws the same white noise
+  from the same seed. `Experiment.decay_amplitude` and
+  `Experiment.spread_factor` give the two factors of the peak (a subclass with
+  its own decay law overrides `decay_amplitude`, as `MultiExpExperiment`
+  does), and with the option on `cnr_per_frame` returns the CNR of the
+  simulated frames.
+- `experiments/dfree-calibration/validate_d_zero.py` takes `--spread-dims`,
+  to evaluate with a peak that also falls as the profile spreads, and
+  `--cal-runs`, to set the calibration runs per CNR_0 point apart from the
+  evaluation runs. A falling peak takes the late frames to a lower per-frame
+  CNR than the D = 0 calibration reaches, so each window names, for each
+  `--spread-dims`, CNR_0 points that extend its calibration grid down (for
+  the short window CNR_0 1.8 for a summed profile and 1.6 for a centre cut),
+  and the script stops before calibrating if a frame kept at CNR >= 1 would
+  still lie below the calibrated range. Each run saves its cell statistics
+  and its lookup as `.npz` files, and `--report` rebuilds a report from saved
+  statistics (a test rebuilds the committed ones). Reports print the SEs and
+  the spread to five decimals and the mean to four, so a large calibration's
+  SE at large D is not printed as 0.000. The falling-peak tables for both
+  windows (summed profile, 5000-run calibration) are committed with their
+  statistics and lookups. The corrected
+  fit (CNR >= 1) has 6 of 140 cells beyond 2 combined SE in the standard
+  window and 7 of 96 in the short window, and its pooled bias is within 0.8
+  combined SE on every shape; the naive all-frames fit has 45 of 140 and 43 of
+  96. With the decay alone, at 300 and 2000 calibration runs, the corrected
+  fit has 4 of 140 and 5 of 96 and the naive fit 46 of 140 and 41 of 96; the
+  smaller calibration gives the corrected fit a larger combined SE, so its
+  counts are not a like-for-like comparison.
+
+### Changed
+
+- Experiment scripts read collaborator data from a data root instead of fixed
+  shared-drive paths: the folder `WIDTH_DEBIAS_DATA_ROOT` names (`~` and
+  relative paths are resolved), or else `data/` at the repository root, which
+  git ignores. `scripts/collaborator_data.py` holds the folders
+  (`stroboscat_scans/`, `simulated_map/`, `halide_mixing/`,
+  `halide_mixing_highn/`, `cspbbr_sample_1/`). The loaders in `nc-solid`,
+  `halide-mixing-brI-legacy`, `halide-mixing-highn` and `wse2-strobescat` read
+  their folders there, and `cspbbr-strobescat/run_all.py` takes its
+  `--sample-root` default from it. `nc_data.load_case` and `load_all` take a
+  keyword-only `map_dir` that overrides the folder. With each folder mapped to
+  its old location the scripts resolve the same folders, files and keys in the
+  same order, so no result changes. When data is missing, the scripts name the
+  folder they searched and the variable that sets it. Each set's `DATASETS.md`
+  and README and the repository map name the data-root folders, and
+  `.gitignore` ignores `data/`. `tests/test_data_root.py` checks how the root
+  resolves, the folder names, and that no tracked text file names a drive
+  path.
+
 ### Fixed
 
 - `experiments/halide-mixing-highn/br_halide_highn_validation.py`, the test of

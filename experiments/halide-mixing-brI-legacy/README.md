@@ -12,7 +12,8 @@ stress test. The clean high-statistics Br-I bed is
 
 ## Contents
 
-- `br_data.py` -- loader; reads the diffmaps directly from the pshare.
+- `br_data.py` -- loader; reads the diffmaps from the data root's `halide_mixing/`
+  folder.
 - `br_halide_validation.py` -- Gaussian fit + `subtract` + floor cut; naive vs
   corrected vs particle truth across three Br fractions and a CNR0 sweep.
 - `rerun/` -- instructions and helpers for running and averaging multiple
@@ -20,8 +21,8 @@ stress test. The clean high-statistics Br-I bed is
 
 ## Data
 
-Pshare only; see `DATASETS.md` (`P:/Marc/shared_data/Halide_mixing`). No local
-copy.
+Read from the data root's `halide_mixing/` folder; see `DATASETS.md`. Not
+committed.
 
 ## Run
 
@@ -42,7 +43,8 @@ the floor, so the correction is inactive (naive ~ corrected). Figure:
 
 ## Depends on
 
-`width_debias`. Local sibling loader `br_data.py`.
+`width_debias`. Local sibling loader `br_data.py`, which reads its folder through
+`scripts/collaborator_data.py` (the data root and its folders).
 
 ## See also
 

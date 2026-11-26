@@ -214,8 +214,9 @@ Marc Melendez's 20k-walker Br-I maps carry Poisson sampling noise that floors th
 intrinsic peak CNR ~30. Running his C Brownian-dynamics simulator at 400,000
 walkers (16 instances of 25,000, averaged) gives a clean reference (intrinsic
 peak CNR ~50). The 2-D averaged map is collapsed to 1-D on the run machine
-(`P:/jthiebes/WIP/BrI_halide_highN/x_<frac>/collapsed_1d.x_<frac>.npz`); the
-multi-GB maps stay on the desktop, and only the small collapsed file is read here.
+(`x_<frac>/collapsed_1d.x_<frac>.npz` in the data root's `halide_mixing_highn/`
+folder); the multi-GB maps stay on the machine that produced them, and only the
+collapsed file and the variance file are read here (`DATASETS.md`).
 The run procedure is in `experiments/halide-mixing-brI-legacy/rerun/README.md`.
 
 Geometry: 600 bins over a 3000 nm window (5 nm/bin), 601 frames at 5 ps to 3.0 ns,
@@ -266,12 +267,14 @@ implementation:
 - `src/width_debias/models.py` -- `GaussianModel(max_var=...)` forwards it.
 
 The scripts reuse `fit_msd_powerlaw` and its exponent bounds (`ALPHA_BOUNDS`)
-from `experiments/halide-mixing-brI-legacy/br_halide_validation.py`.
+from `experiments/halide-mixing-brI-legacy/br_halide_validation.py`, and the
+loader reads its folder through `scripts/collaborator_data.py` (the data root and its folders).
 
 ## Running
 
-Needs the pshare for the collapsed maps. Pin the BLAS threads so the process pool
-does not oversubscribe, and use a modest worker count if the machine is busy:
+Needs the collapsed maps in the data root (`DATASETS.md`). Pin the BLAS threads
+so the process pool does not oversubscribe, and use a modest worker count if the
+machine is busy:
 
 ```bash
 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 WIDTH_DEBIAS_WORKERS=4 \

@@ -99,12 +99,12 @@ tested the combination on the four validation shapes.
 
 ## Data
 
-Read-only from the pshare; see `DATASETS.md`. Raw collaborator scans stay on the
-pshare (never committed). The scripts write their outputs under `diagnostics/`
-(per-measurement folders, `_frame_ladder/`, `_calib/` calibration caches,
-`index.md`, `METHOD.md`, `triage*.csv`). That folder holds values and images
-derived from unpublished scans, so it is not tracked; the commands below
-regenerate it. The `diagnostics/` paths cited in this README refer to those
+Read only, from the data root's `stroboscat_scans/` folder; see `DATASETS.md`.
+The raw collaborator scans are never committed. The scripts write their outputs
+under `diagnostics/` (per-measurement folders, `_frame_ladder/`, `_calib/`
+calibration caches, `index.md`, `METHOD.md`, `triage*.csv`). That folder holds
+values and images derived from unpublished scans, so it is not tracked; the
+commands below regenerate it. The `diagnostics/` paths cited in this README refer to those
 generated files.
 
 ## Run
@@ -162,7 +162,8 @@ CPU contention.
 
 `width_debias` (`calibration`, `truncation`, `weights`, `cnr`, `fit`,
 `noise`). `fft-cnr` for per-frame CNR. The diagnostic scripts share
-`realdata_diagnostics.py` (local sibling).
+`realdata_diagnostics.py` (local sibling), which reads the scans through
+`scripts/collaborator_data.py` (the data root and its folders).
 
 ## See also
 

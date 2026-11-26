@@ -18,5 +18,5 @@ out of band.
 
 ## Note
 
-This is published-paper data, not collaborator pshare data; there is no pshare
-pointer.
+This is published-paper data, not collaborator data; the data root holds nothing
+for this set.

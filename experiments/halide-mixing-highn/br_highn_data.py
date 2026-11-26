@@ -4,11 +4,13 @@ Marc Meléndez's original maps are histograms of only 20,000 walkers, so each
 frame carries Poisson sampling noise that, read off the peak, sets an intrinsic
 contrast-to-noise floor (~30) right inside the CNR range we want to test. To get
 a clean ground-truth profile with no shape assumption, Marc's simulator was
-re-run at high walker count and the independent instances averaged; see
-``P:/jthiebes/WIP/BrI_halide_highN/README.md``. The 2-D averaged map was
-collapsed to 1-D on the run machine (``collapsed_1d.x_<frac>.npz``: the
-``prof_x``/``prof_y`` projections plus axes and metadata), so only the small npz
-is read here -- never the multi-GB map.
+re-run at high walker count and the independent instances averaged (the run
+procedure is in ``experiments/halide-mixing-brI-legacy/rerun/README.md``). The
+files are read from the ``halide_mixing_highn/`` folder of the data root
+(``scripts/collaborator_data.py``). The 2-D averaged map was collapsed to 1-D on
+the run machine (``collapsed_1d.x_<frac>.npz``: the ``prof_x``/``prof_y``
+projections plus axes and metadata), so only that small npz and the variance file
+are read here -- never the multi-GB map.
 
 Geometry: 600 bins over a 3000 nm window (5 nm/bin), 601 frames at 5 ps to 3.0
 ns, initial 1-D sigma ~25 nm. The wide box leaves the spot well inside even the
@@ -38,10 +40,15 @@ Two modelling points the validation depends on (shared with :mod:`br_data`):
 """
 from __future__ import annotations
 
+import os
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "scripts"))
+from collaborator_data import halide_mixing_highn_dir  # noqa: E402
 
 # Representative 2D-perovskite exciton lifetime (ns); over the 3 ns window the
 # decay drives the per-frame contrast-to-noise falloff.
@@ -64,7 +71,7 @@ class BrCase:
     tau_ns: float
 
 
-HIGHN = Path("P:/jthiebes/WIP/BrI_halide_highN")
+MAP_DIR = halide_mixing_highn_dir()
 NBINS = 600
 NFRAMES = 601
 TSAMP_NS = 0.005      # 5 ps per frame
@@ -84,7 +91,7 @@ INTRINSIC_PEAK_CNR = 50.0
 
 
 def _case_dir(frac: str) -> Path:
-    return HIGHN / f"x_{frac}"
+    return MAP_DIR / f"x_{frac}"
 
 
 def available(frac: str) -> bool:

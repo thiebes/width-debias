@@ -31,9 +31,9 @@ cached. The Gaussian fit on a mildly flat-topped profile (shape exponent ~ 2.35)
 carries a small shape gap, reported separately; gen-Gaussian / Voigt fits recover
 a near-identical alpha.
 
-Run from the repository root (needs the pshare for the maps)::
+Run from the repository root (needs the maps in the data root)::
 
-    .venv/Scripts/python.exe scripts/br_halide_validation.py
+    .venv/Scripts/python.exe experiments/halide-mixing-brI-legacy/br_halide_validation.py
 
 Set ``WIDTH_DEBIAS_WORKERS=0`` to use all cores for the calibration.
 Outputs ``output/br_halide_validation.{png,txt}``.
@@ -58,7 +58,7 @@ from width_debias.models import MomentModel  # noqa: E402
 from width_debias.bias_lookup import BiasLookup  # noqa: E402
 from width_debias.weights import corrected_variance  # noqa: E402
 
-from br_data import load_all  # noqa: E402
+from br_data import MAP_DIR, load_all  # noqa: E402
 
 OUTPUT = Path(__file__).resolve().parents[2] / "output"
 OUTPUT.mkdir(exist_ok=True)
@@ -275,7 +275,7 @@ def make_figure(results: list[CaseResult], path: Path) -> None:
 def main() -> None:
     cases = load_all()
     if not cases:
-        print("No Br-I maps found on the pshare; nothing to validate.")
+        print(f"No Br-I maps found in {MAP_DIR} (WIDTH_DEBIAS_DATA_ROOT, or else data/). See DATASETS.md; nothing to validate.")
         return
     print(f"Building/loading Br-I Gaussian D-free calibration "
           f"({len(CAL_CNR0)} CNR0 x {N_RUNS_CAL} runs) ...")

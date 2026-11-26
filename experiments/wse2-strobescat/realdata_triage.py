@@ -32,10 +32,12 @@ from scipy.ndimage import gaussian_filter1d
 
 sys.path.insert(0, os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "src"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "scripts"))
 import fft_cnr  # noqa: E402
 from width_debias.fit import fit_D, fit_variance  # noqa: E402
+from collaborator_data import stroboscat_scans_dir  # noqa: E402
 
-ROOT = r"P:\Lab\Enrique\lab"   # raw collaborator data stays on the pshare
+ROOT = str(stroboscat_scans_dir())   # the scan directory (DATASETS.md), read only
 OUT = os.path.join(os.path.dirname(__file__), "diagnostics", "triage_deparity.csv")
 FLOOR = 1.3
 A_WHITE = 0.4
@@ -126,6 +128,8 @@ def _process(folder):
 
 
 def main():
+    if not os.path.isdir(ROOT):
+        sys.exit(f"No scan directory at {ROOT} (WIDTH_DEBIAS_DATA_ROOT, or else data/). See DATASETS.md.")
     files = [f for f in glob.glob(os.path.join(ROOT, "**", "analysis_*_.npy"),
                                   recursive=True) if not f.endswith("_dataset.npy")]
     bydir = {}

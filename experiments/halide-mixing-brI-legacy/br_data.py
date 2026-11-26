@@ -1,4 +1,4 @@
-"""Load Marc Melendez's Br-I halide-mixing diffusion maps (read-only from P:).
+"""Load Marc Melendez's Br-I halide-mixing diffusion maps (read only, from the data root).
 
 Source: a 2D-perovskite exciton-diffusion Monte Carlo on a halide-mixing energy
 landscape (Br fraction x), the regime of "halide mixing inhibits exciton
@@ -38,12 +38,16 @@ Two modelling points the validation depends on:
 """
 from __future__ import annotations
 
+import os
+import sys
 from dataclasses import dataclass
-from pathlib import Path
 
 import numpy as np
 
-PSHARE = Path("P:/Marc/shared_data/Halide_mixing")
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "scripts"))
+from collaborator_data import halide_mixing_dir  # noqa: E402
+
+MAP_DIR = halide_mixing_dir()
 L_NM = 150.0          # box length (nm); the parameters file labels it "um" in error
 NBINS = 250
 NFRAMES = 21
@@ -68,7 +72,7 @@ class BrCase:
 
 def load_case(frac: str, tau_ns: float = DEFAULT_TAU_NS, n0: float = 1.0) -> BrCase:
     """Load one Br fraction (``"0.25"`` / ``"0.5"`` / ``"0.75"``) with decay applied."""
-    folder = PSHARE / f"BrI_x_{frac}"
+    folder = MAP_DIR / f"BrI_x_{frac}"
     cube = np.loadtxt(folder / f"diffmap.x_{frac}.dat").reshape(NFRAMES, NBINS, NBINS)
     varf = np.loadtxt(folder / f"variance.x_{frac}.dat")
     x = np.linspace(-L_NM / 2.0, L_NM / 2.0, NBINS)
@@ -81,6 +85,6 @@ def load_case(frac: str, tau_ns: float = DEFAULT_TAU_NS, n0: float = 1.0) -> BrC
 
 
 def load_all(tau_ns: float = DEFAULT_TAU_NS) -> list[BrCase]:
-    """Load every Br fraction present on the pshare, in increasing-x order."""
+    """Load every Br fraction present in the data root, in increasing-x order."""
     return [load_case(frac, tau_ns=tau_ns) for frac in CASES
-            if (PSHARE / f"BrI_x_{frac}" / f"diffmap.x_{frac}.dat").exists()]
+            if (MAP_DIR / f"BrI_x_{frac}" / f"diffmap.x_{frac}.dat").exists()]
