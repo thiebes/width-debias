@@ -51,11 +51,14 @@ are independent trajectories, so runtime scales linearly with `N`: a single
 2-million-walker run would take roughly 1,300 hours.
 
 The practical approach is to run many independent instances in parallel and
-average their outputs. Each instance is a fresh random realisation (different
-halide disorder and different initial sampling), so averaging `K` instances of
-`N_inst` walkers gives both `K * N_inst` effective statistics and the
-disorder-averaged density, which is the smooth quantity of interest. The
-sampling noise of the average falls as `1 / sqrt(K * N_inst)`.
+average their outputs. An instance with its own seed is a fresh random
+realisation (different halide disorder and different initial sampling), so
+averaging `K` distinct instances of `N_inst` walkers gives both `K * N_inst`
+effective statistics and the disorder-averaged density, which is the smooth
+quantity of interest. The sampling noise of the average falls as
+`1 / sqrt(K * N_inst)`. The simulator takes its seed from the wall clock (step
+4), so two instances that start in the same second are copies of one
+realisation.
 
 The total walker count follows from the contrast required. The intrinsic 1-D
 peak contrast-to-noise is roughly `sqrt(N_total * f_peak)` with `f_peak ~ 0.006`
@@ -79,7 +82,16 @@ window.
    shell, and `cd` to a working directory on a disk with room for the outputs
    (each instance writes a diffmap; at 500 bins that is ~2 GB, at 250 bins
    ~0.5 GB).
-2. Copy the four files above into that directory and `chmod +x landscapeBD.diffmap`.
+2. Make one folder per fraction, `x_<frac>/`, under a common root, and copy
+   into each the four files above, `average_diffmaps.py` and
+   `collapse_diffmaps.py`; then `chmod +x landscapeBD.diffmap`.
+   `rerun_all_unique.sh` takes the root from the environment variable `ROOT`
+   (default `~/halide_rerun`) and runs `average_diffmaps.py` from each fraction
+   folder. Widen the parameter file's diffmap window as needed; the high-N run
+   used `diffmap_Lx` and `diffmap_Ly` 3000 and `diffmap_nx` and `diffmap_ny`
+   600 (5 nm/bin). The run scripts set the walker count `N` of each instance
+   from their arguments. Steps 3, 4, 6 and 7, and `rerun_unique.sh`, run inside
+   a fraction folder; `rerun_all_unique.sh` runs from anywhere.
 3. **Verify randomisation first** (the parameter file has no seed): run two quick
    instances and confirm they differ.
    ```bash
@@ -91,19 +103,117 @@ window.
    binary uses a fixed seed and averaging adds no statistics. If they differ,
    restore `N` and `tmax` and continue.
 4. Run the instances with `run_instances.sh` (see its header for arguments).
-5. Average them with `average_diffmaps.py`, which writes a clean
-   `diffmap.x_<frac>.avg.npy` and `variance.x_<frac>.avg.dat`.
-6. Copy the two averaged files back. The averaged map needs no de-noising. The
-   loader must use the run's geometry (bin count, box size, frame count);
-   `br_data.py` carries the legacy 150 nm geometry, and
-   `experiments/halide-mixing-highn/br_highn_data.py` reads the averaged bed.
+   The simulator seeds its random number generator from the wall clock at
+   one-second resolution, and this script staggers the starts by 0 to 4 s, so
+   instances that start in the same second are identical. When all instances
+   start together (no more instances than parallel slots), at most five
+   distinct realisations result.
+5. Top up to the number of distinct realisations wanted with
+   `rerun_all_unique.sh` (all three fractions in one pool of workers) or
+   `rerun_unique.sh` (one fraction). Each starts every new instance in its own
+   clock second, counts an instance as distinct by the hash of its variance
+   file, and writes the distinct instance directories to
+   `unique_instances.txt`. Both reuse the fraction folder's parameter file and
+   keep the instances already there. Neither stops when an instance or the
+   averaging fails, and `rerun_all_unique.sh` prints "TOP-UP COMPLETE" even
+   then. Before step 7, check the last `x_<frac>: <n> unique` line of each
+   fraction, the "averaged <n> instances" line of step 6 (and any "skip" line
+   before it), and that every listed instance's `variance.x_<frac>.dat` has
+   `tmax / tsamp + 1` rows. `run.err` holds the simulator's set-up messages
+   even after a successful run, so read it for an instance that is incomplete.
+6. Average the distinct instances with
+   `python3 average_diffmaps.py <frac> $(cat unique_instances.txt)`, which
+   writes `diffmap.x_<frac>.avg.npy` and `variance.x_<frac>.avg.dat`
+   (`rerun_all_unique.sh` runs this step itself).
+7. Collapse the averaged map to 1-D with `python3 collapse_diffmaps.py <frac>`,
+   which writes `collapsed_1d.x_<frac>.npz`. The script refuses to replace an
+   existing profile file, to collapse a map whose frame count is not
+   `tmax / tsamp + 1`, and to record instance counts the map does not hold:
+   every instance in `unique_instances.txt` must be present with the same `N`
+   and a full variance file, no two may have identical variance files (copies
+   of one realisation), and the averaged variance file must be the mean of
+   theirs.
+8. Copy back the collapsed file and the averaged variance file, the two files
+   `experiments/halide-mixing-highn/br_highn_data.py` reads. The averaged map
+   needs no de-noising. `br_data.py` carries the legacy 150 nm geometry and
+   does not read these files.
+
+## How the high-N files were made
+
+The files that `experiments/halide-mixing-highn/` reads were made with the
+steps above, with the parameter files changed to a 600 x 600 diffmap over a
+3000 nm window (5 nm/bin) and 25,000 walkers per instance. A driver script,
+`run_all_fractions.sh`, made those changes, set up the fraction folders, ran
+step 4 for the three fractions, and averaged all 16 instances of each fraction,
+duplicates included, with `average_diffmaps.py`. It reads its inputs from a
+fixed location of the group's storage and is not included here.
+`rerun_all_unique.sh` is included unchanged, and `rerun_unique.sh` with one
+comment reworded.
+
+1. A first run of 16 instances per fraction gave only 5 distinct realisations
+   per fraction (step 4); each other instance was an exact copy of one of the
+   five. Its averaged maps are therefore duplication-weighted averages over 5
+   realisations.
+2. A top-up (step 5) added 11 instances per fraction, giving 16 distinct
+   realisations of 25,000 walkers (400,000 walkers per fraction). These were
+   averaged (step 6) and collapsed to 1-D by a script that is not kept. Either
+   top-up script produces this set; the record of which one ran is not kept.
+
+Kept with the run's files: the parameter files, the 5 distinct realisations of
+the first run (its 11 duplicate instances are not kept), the first run's
+averaged maps, and the collapsed files and averaged variance files of the
+16-realisation set. Not kept: the 11 instances added per fraction, the averaged
+2-D maps of the 16-realisation set, the log of the top-up, and the script that
+made the collapsed files. `collapse_diffmaps.py` was written afterwards to
+describe that step.
+
+`collapse_check.txt` holds the output of `collapse_diffmaps.py --check` for
+frames 0, 300 and 600 of each fraction. It compares the script's collapse of the
+first run's averaged maps with the collapsed files, and the averaged variance
+files with the kept realisations' variance files.
+
+- The key order, the grids and the window metadata (x, t, window, bins, frame
+  count, fraction, sampling time) agree exactly.
+- The profiles do not. The largest absolute difference per frame is 1.0e-3 to
+  5.0e-3 (each profile sums to 1 over 600 bins): 0.013 to 0.021 of the
+  profile's peak at frame 0, and 0.105 to 0.229 at frames 300 and 600. The two
+  sides are different averages (5 realisations, duplication-weighted, against 16
+  distinct ones), so the collapsed files cannot be reproduced from the maps that
+  are kept, and the script's profiles cannot be verified against them.
+- The 5 shared realisations leave fine structure (second differences) in both
+  averages. At frames 300 and 600 the script's `prof_x` correlates with the
+  file's `prof_x` (r 0.54 to 0.70) more than with its `prof_y` (r -0.14 to
+  0.21), and the script's `prof_y` with the file's `prof_y` (r 0.45 to 0.61)
+  more than with its `prof_x` (r 0.03 to 0.44), in every case. So the file's
+  `prof_x` sums over a frame's rows and its `prof_y` over the columns, the
+  assignment the script uses. At frame 0 the profiles are narrow and the
+  correlations do not separate the axes on every fraction.
+- The averaged variance files are not the first run's kind of average, a
+  duplication-weighted mean of the kept realisations' variance files. Copies
+  have identical files, so if they were, the right weighting would reproduce
+  them to rounding. Of the 1365 weightings (each of the 5 kept realisations
+  counted at least once, 16 in all), the closest still differs by 61 to
+  121 nm² (by fraction) in its worst frame.
+- They are consistent with a mean of 16 distinct realisations that include the
+  5 kept ones, which the top-up scripts keep when they add instances. Per frame,
+  z is the difference between the averaged file and the kept realisations'
+  mean, divided by its standard error estimated from their spread; the largest
+  |z| over the 601 frames is 1.86 to 3.79. This alone does not single out the
+  16-realisation set: the frames are strongly correlated and the spread comes
+  from 5 realisations, so a largest |z| of this size is ordinary, and a
+  duplication-weighted mean can also give a small |z|. The weighting search
+  above is what separates the two.
 
 ## Checks on the run machine
 
 - **Seed / randomisation** (step 3) determines whether averaging is valid.
+  Step 3 detects a fixed seed but not two instances that started in the same
+  second; check that all instances are distinct (the top-up scripts compare
+  the hashes of their variance files).
 - **Frame count:** the diffmap can hold a few more frame blocks than
   `variance.dat` has rows (605 vs 601 in the shared file). Take the frame count
   from `tmax / tsamp + 1` and check whether the diffmap carries a header or
-  trailer before reshaping.
+  trailer before reshaping. `collapse_diffmaps.py` refuses a map with another
+  frame count.
 - **Box-edge clipping:** at 3 ns the spot can approach the 1500 nm box edge;
   check that the last-frame profile stays well inside before using late frames.
