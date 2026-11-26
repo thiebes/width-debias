@@ -7,12 +7,13 @@ variance. Above a per-frame CNR of about 1.5 the bounded and unbounded fits
 agree: they return the same widths and the same biased D
 (`experiments/estimator-comparison`), and the bound itself carries
 negligible mass above about 1 (Section 3). The correction itself works
-down to a per-frame CNR of about 1 (Section 9). Below about 1,
+down to a CNR of about 1 per profile (Section 9, the per-profile floor).
+Below about 1,
 `experiments/boundary-diagnostic/diagnose_boundary.py` found the
 fitted-variance distribution strictly interior and right-skewed with no
 delta-mass at the lower bound for the Gaussian, Voigt, and generalized-Gaussian
-p = 1.5 and p = 4 fits (a pile-up of 0.05 to 0.06 of fits at the bound appears
-only at CNR ≈ 1 for Voigt and p = 1.5) — **reflection, not clipping**. The
+p = 1.5 and p = 4 fits (a small pile-up at the bound appears only at CNR ≈ 1,
+for Voigt and p = 1.5) — **reflection, not clipping**. The
 model below covers both regimes, and in the model the reflection does not
 change the result (Section 1).
 
@@ -38,8 +39,8 @@ bound, and the folded estimate `|X_i|` and the unbounded one `X_i` have the
 same square. A real
 unbounded fit is a different estimator from the unbounded `X_i` of the model:
 below a per-frame CNR of about 1.5 its fitted variance departs from the
-bounded fit's, slightly at 1.16 (1.0695 against 1.0715 σ₀²) and strongly at
-0.3 (2.03 against 5.63 σ₀²; `experiments/estimator-comparison`).
+bounded fit's, slightly at 1.16 (1.0695 against 1.0715 σ_0²) and strongly at
+0.3 (2.03 against 5.63 σ_0²; `experiments/estimator-comparison`).
 `σ̂²_i / s_i²` is a non-central χ²₁ with non-centrality `(σ_i/s_i)²` —
 continuous, strictly positive, right-skewed, the shape the diagnostic saw.
 
@@ -161,7 +162,7 @@ subtraction, matching `subtract`) and → 0 when it is noise dominated (the
 frame is left uncorrected rather than overshot). On the narrow `CNR₀ ∈ [5,90]`
 sweep (`experiments/estimator-comparison/moment_estimator_failure.py`, table
 `method_comparison.txt`, legacy D-aware calibration), `mas` and `subtract` lie
-within 0.03 of each other from CNR₀ 8 up and depart from 1 together at and
+at most 0.022 apart in any cell from CNR₀ 8 up and depart from 1 together at and
 below CNR₀ 8 (2.76 and 2.68 at CNR₀ 5; 0.80 and 0.77 at CNR₀ 8, where the last frame
 falls below per-frame CNR 0.5); mean |⟨D⟩/D_ref − 1| is 0.298 against 0.292. On that sweep
 the gate neither helps nor hurts.
@@ -172,8 +173,8 @@ large. On `experiments/dfree-calibration/dense_calibration_and_test.py`'s
 100-point sweep on four shapes (a cached 5000-run calibration over 100 CNR₀
 cells, then 100 random test CNR₀ × 1000 runs per shape, seeds offset by 10⁶
 per shape; `dense_calibration_and_test_four_shapes.txt`), the `subtract` bias
-pooled over all 100 test points, with the calibration SE as one shared
-systematic, is within 0.6 combined SE of zero on every shape. MAS reads high
+pooled over all 100 test points, with the calibration standard error (SE) as
+one shared systematic, is within 0.6 combined SE of zero on every shape. MAS reads high
 below CNR₀ about 6.5 on Gaussian, Voigt, and p = 1.5 (pooled +0.13 to +2.7)
 and low on p = 4 (−0.73 at CNR₀ 3 to 4.4, −1.83 at CNR₀ 2 to 3), so it fails
 in a direction set by the shape. `subtract` departs from 1 by more than two
@@ -251,13 +252,19 @@ measurements averaged.
 
 With both terms in the cell SE and the per-frame slope weights
 (`validate_d_zero.py`; seeds offset by 10⁶ per shape), keeping frames with
-per-frame CNR ≥ 1, 4 of 140 cells (four shapes; 5 D from 0.005 to 0.1 σ₀²/τ;
+per-frame CNR ≥ 1, 4 of 140 cells (four shapes; 5 D from 0.005 to 0.1 σ_0²/τ;
 CNR₀ 5 to 90) lie beyond two combined SE, about 6 expected by chance. Pooled
 over a shape's 35 cells, with the calibration SE as one shared systematic, the
 corrected D/D_ref − 1 is within 0.4 combined SE of zero on every shape; the
 uncorrected all-frames fit has 46 of 140 cells beyond 2 SE and pools 2.4 to
 4.0 SE high on Gaussian, Voigt, and p = 1.5. In a short window (t_max = 0.5τ,
-CNR₀ 2 to 12) the counts are 5 of 96 corrected and 41 of 96 uncorrected. One
+CNR₀ 2 to 12; 2000-run calibration and 2000 evaluation runs per cell) the counts
+are 5 of 96 corrected and 41 of 96 uncorrected. With a peak that also falls as
+the summed profile spreads (`Experiment.spread_dims`), so that the late frames
+reach a lower per-frame CNR, and a 5000-run calibration, the corrected counts
+are 6 of 140 and 7 of 96 and the uncorrected ones 45 of 140 and 43 of 96: the
+D = 0 lookup, read at each frame's CNR, holds under a peak that falls with
+spreading as well. One
 calibration serves all cells of a shape, so these counts are indicative, not a
 test against a binomial null. The small-D, low-CNR cells
 have large combined SE and so constrain the bias only loosely. `D = 0.005` has
@@ -340,7 +347,7 @@ p = 1.5 reach 1.6 and 2.3 σ_0², and the flat-topped p = 4 fit reads *low*
 variance there. (The table `per_profile_floor_genGauss.txt` is the p = 2
 generalized-Gaussian fit, a Gaussian profile under that fitter's tighter
 bound, run with a 1000-run lookup and the fixed floor rule |z| > 2 and
-|residual| > 0.01 σ₀².)
+|residual| > 0.01 σ_0².)
 
 ### Analytical handle on where the model breaks
 

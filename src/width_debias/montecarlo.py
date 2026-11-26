@@ -142,12 +142,13 @@ def run_ensemble(exp: Experiment, cnr0: float, n_runs: int = 600,
     ``model`` is a profile model from :mod:`width_debias.models`
     (default :class:`~width_debias.models.GaussianModel`).  The per-frame CNR
     is taken from the actual noise-free profile peak, so it is correct for any
-    profile shape and for either peak model of ``exp`` (see
-    :class:`~width_debias.simulate.Experiment`). A spreading peak must be
-    computed for the profile drawn: ``exp.psf_hwhm`` must equal a
-    :class:`~width_debias.models.VoigtModel`'s ``gamma``, and 0 for every
-    other model, or this raises ``ValueError``
-    (:func:`~width_debias.models.check_spreading_peak`, here for any model).
+    profile shape and for either peak law of ``exp``, the decay alone or the
+    spreading peak (see :class:`~width_debias.simulate.Experiment`). A
+    spreading peak must be computed for the profile drawn: ``exp.psf_hwhm``
+    must equal a :class:`~width_debias.models.VoigtModel`'s ``gamma``, and 0
+    for every other model, or this raises ``ValueError``. The check
+    (:func:`~width_debias.models.check_spreading_peak`) runs here for any
+    model, including one whose ``noise_free_series`` does not make it.
 
     ``noise_model`` (see :mod:`width_debias.noise`) swaps the measurement-
     noise law (white vs shot). ``None`` draws constant-sigma white noise; a

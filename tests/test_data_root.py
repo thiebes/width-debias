@@ -15,6 +15,11 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
+# The source distribution carries the package and its tests, but not the
+# repository's scripts and documents that this module checks; skip it there.
+if not (ROOT / "scripts").is_dir():
+    pytest.skip("needs a full checkout of the repository (scripts/ is absent)",
+                allow_module_level=True)
 sys.path.insert(0, str(ROOT / "scripts"))
 
 import collaborator_data  # noqa: E402

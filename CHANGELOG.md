@@ -5,36 +5,49 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.5.0] - 2026-11-26
+
+One opt-in addition to the package, the spreading peak
+(`Experiment.spread_dims`). With default settings every output of the package
+is byte-identical to 0.4.1: a probe of 877 outputs across the
+calibration, the Monte Carlo, the four correction schemes, the D fit and the
+Fisher bounds gives the same bytes under both versions. The other entries
+concern the experiment scripts, their tables and the documentation.
 
 ### Added
 
-- `Experiment.spread_dims` lets the simulated peak fall as the profile
-  spreads, at a population that changes only by the decay: 1 for a profile
+- `Experiment.spread_dims` selects the spreading peak, which falls as the
+  simulated profile spreads, at a population that changes only by the decay: 1 for a profile
   summed over the other axis, 2 for a cut through the centre of a spot that
   also spreads along y (`D_y`, default `D`). For the Voigt profile the peak
   depends on `psf_hwhm`, which must equal the `VoigtModel`'s `gamma` (0 for
   every other model); every built-in model's `noise_free_series`,
   `run_ensemble` and the Fisher bounds refuse a mismatch
-  (`models.check_spreading_peak`). The three fields are keyword-only, so the
-  positional fields of `AnomalousExperiment` and `MultiExpExperiment` keep
-  their order, and settings the peak cannot honour (`spread_dims=True`, a
-  negative `D_y`, `D_y` without a centre cut, `psf_hwhm` without
-  `spread_dims`) raise `ValueError`. The default (`None`) keeps the peak at
+  (`models.check_spreading_peak`, with `models.lorentzian_hwhm` giving a
+  model's Lorentzian half-width; both provisional, expected to change with
+  issue #27). The three fields are keyword-only, so the positional fields of
+  `AnomalousExperiment` and `MultiExpExperiment` keep their order, and
+  settings the peak cannot honour (`spread_dims=True`, a negative, NaN or
+  infinite `D_y` or `psf_hwhm`, `D_y` without a centre cut, `psf_hwhm`
+  without `spread_dims`) raise `ValueError`; with D = 0 a given `D_y` has no
+  effect, since neither axis spreads. The default (`None`) keeps the peak at
   the decay alone, so every output is unchanged. The option leaves the peak
   unchanged at t = 0 and at every t when D = 0, and draws the same white noise
   from the same seed. `Experiment.decay_amplitude` and
   `Experiment.spread_factor` give the two factors of the peak (a subclass with
   its own decay law overrides `decay_amplitude`, as `MultiExpExperiment`
-  does), and with the option on `cnr_per_frame` returns the CNR of the
-  simulated frames.
+  does; one that overrides `amplitude` instead keeps the decay-alone peak
+  under `spread_dims`), and with the option on `cnr_per_frame` returns the
+  CNR of the simulated frames, for white noise and a profile centred on a
+  pixel.
 - `experiments/dfree-calibration/validate_d_zero.py` takes `--spread-dims`,
   to evaluate with a peak that also falls as the profile spreads, and
-  `--cal-runs`, to set the calibration runs per CNR_0 point apart from the
-  evaluation runs. A falling peak takes the late frames to a lower per-frame
-  CNR than the D = 0 calibration reaches, so each window names, for each
-  `--spread-dims`, CNR_0 points that extend its calibration grid down (for
-  the short window CNR_0 1.8 for a summed profile and 1.6 for a centre cut),
+  `--cal-runs`, to set the calibration runs per initial-CNR point apart from
+  the evaluation runs. A falling peak takes the late frames to a lower
+  per-frame CNR than the D = 0 calibration reaches, so each window names, for
+  each `--spread-dims`, initial-CNR points that extend its calibration grid
+  down (for the short window, initial CNR 1.8 for a summed profile and 1.6 for
+  a centre cut),
   and the script stops before calibrating if a frame kept at CNR >= 1 would
   still lie below the calibrated range. Each run saves its cell statistics
   and its lookup as `.npz` files, and `--report` rebuilds a report from saved
@@ -42,9 +55,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the spread to five decimals and the mean to four, so a large calibration's
   SE at large D is not printed as 0.000. The falling-peak tables for both
   windows (summed profile, 5000-run calibration) are committed with their
-  statistics and lookups. The corrected
-  fit (CNR >= 1) has 6 of 140 cells beyond 2 combined SE in the standard
-  window and 7 of 96 in the short window, and its pooled bias is within 0.8
+  statistics and lookups. The corrected fit (CNR >= 1) has 6 of 140 cells
+  beyond 2 combined SE in the standard window and 7 of 96 in the short window, and its pooled bias is within 0.8
   combined SE on every shape; the naive all-frames fit has 45 of 140 and 43 of
   96. With the decay alone, at 300 and 2000 calibration runs, the corrected
   fit has 4 of 140 and 5 of 96 and the naive fit 46 of 140 and 41 of 96; the
@@ -73,20 +85,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   experiment takes as its reference, and writes `axis_check.txt`: per Br
   fraction and at seven frames, each projection's centroid, binned second
   moment, excess kurtosis and window-edge fraction; the extremes over all
-  frames with their times; and, over the usable band at CNR0 15, the D/D_ref
-  of each axis from the noise-free fit and from the binned moments, with the
-  fit checks. With M the binned second moment of each projection about its
-  own centroid, on the bin centres, and V the walkers' 2-D moment, M/(V/2) is
-  within 0.0123 of 1 on each axis and M_x/M_y within 0.0143 of 1; walker sampling alone gives about 0.003, a
-  lower bound, since the 16 disorder realizations add scatter the averaged
-  files cannot show, so the table does not test isotropy. (M_x + M_y)/V
+  frames with their times; and, over the usable band at initial CNR 15, the
+  D/D_ref of each axis from the noise-free fit and from the binned moments,
+  with the fit checks. With M the binned second moment of each projection
+  about its own centroid, on the bin centres, and V the walkers' 2-D moment,
+  M/(V/2) is within 0.0123 of 1 on each axis and M_x/M_y within 0.0143 of 1;
+  walker sampling alone gives about 0.003, a lower bound, since the 16
+  disorder realisations add scatter the averaged files cannot show, so the
+  table does not test isotropy. (M_x + M_y)/V
   departs from 1 by up to 0.0108, growing with time. The noise-free fit of
   `prof_y` gives D/D_ref 1.009, 0.992 and 0.984 against 0.992, 0.958 and 0.960
   for `prof_x`; the binned moments, whose D is within 0.006 of D_ref on both
   axes, account for 0.004, -0.001 and 0.012 of that difference and the
-  profile shape for the rest, and these files cannot
-  tell whether it comes from the transport or from the finite set of
-  realizations. The loader still reads `prof_x`, and no result of the
+  profile shape for the rest, and these files cannot tell whether it comes
+  from the transport or from the finite set of realisations. The loader still reads `prof_x`, and no result of the
   experiment changes. Its docstrings had stated without a table that the axes
   agree to within one part in a hundred: the projections differ by up to
   0.0143, more than that, and the isotropy of the transport is not tested.
@@ -113,6 +125,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `.gitignore` ignores `data/`. `tests/test_data_root.py` checks how the root
   resolves, the folder names, and that no tracked text file names a drive
   path.
+- The build backend is setuptools 84.2.1, pinned with hashes in
+  `.github/build-constraints.txt`; 84.0.0 carried an advisory for its legacy
+  egg install on Windows, a path this build does not use. CI and the publish
+  workflow use setup-uv v10.3.3.
+- The source distribution carries four more test modules, which check the
+  repository's experiment scripts, tables and documents; outside a full
+  checkout they skip, and the package's own tests run.
 
 ### Fixed
 
@@ -120,8 +139,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the 1-D D-free lookup on the high-N halide bed, caps the fitted width at 12
   sigma_0 = 300 nm in the calibration and in the application, as the rest of
   the set does. With the fit's default bound, the 3000 nm window, low-CNR
-  calibration fits wandered toward the window, the lookup's bias reached about
-  340,000 nm^2 at per-frame CNR 1, and the corrected arm collapsed. The script
+  calibration fits wandered toward the window, the lookup's bias at low
+  per-frame CNR grew far beyond the variance it corrects, and the corrected
+  arm collapsed. The script
   also leaves out frames below per-frame CNR 1.3, divides each arm's D by the
   noise-free fit's D over the same frames, gives SEs of D and of the residuals
   from 200 seeds and from 200 draws of the lookup's own error, prints an arm
@@ -195,8 +215,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   writes its sweeps as `output/gengauss_cnr_sweep_{dense,shot}.npz`, the names
   `scripts/poster_figures.py` reads.
 - The fft-cnr recovery summary and figure are rebuilt from fft-cnr 0.4.0
-  estimates: in every (N, CNR) cell the median over 1000 trials lies between
-  0.989 and 1.006 of the true CNR. The summary records the fft-cnr version and
+  estimates: in every (N, CNR) cell the median over 1000 trials lies on the
+  true CNR. The summary records the fft-cnr version and
   the SHA-256 of its source array, and the build script checks that hash
   whenever the source is available.
 - `tests/test_quoted_numbers.py` recomputes validation numbers that the
@@ -236,11 +256,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `fit` module docstring says the same). Its
   floor section counts the lookup's own error and sets the tolerance
   relative to the end-point MSD.
-- The README, `docs/DERIVATION.md`, and the `calibrate_d_free` and
-  `UnboundedGaussianModel` docstrings state the floor rule in full, the
+- The README and `docs/DERIVATION.md` state the floor rule in full and the
   criterion (two combined standard errors) behind the deciles where `subtract`
-  reads low, the frame filter behind "4 of 140", and the unbounded fit's mean
-  and spread at per-frame CNR 0.52 as the regenerated tables give them.
+  reads low; the `calibrate_d_free` docstring states the frame filter behind
+  "4 of 140"; and the `UnboundedGaussianModel` docstring gives the unbounded
+  fit's mean and spread at per-frame CNR 0.52 as the regenerated tables give
+  them.
 - The experiment tables and figures name the corrected arm `subtract`, the
   scheme's name, instead of "folded-normal". Regenerated with the current
   library, their numbers are unchanged except in the unbounded-fit comparison
@@ -283,6 +304,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   leading order: it is a ratio of two sums linear in the data, taken about an
   estimated centroid, so its bias is of order 1/CNR^2, the same order as a
   fitted width's.
+- The README's estimated-CNR item and the `cnr` module and `per_frame_cnr`
+  docstrings say in words where an estimated CNR can key the lookup; the
+  initial-CNR thresholds they gave are removed. The README's headline gives
+  the corrected fit as 1.01 times the reference, as the regenerated tables do.
+- The `calibration_D_se` docstring quotes `calibration_se_check.txt`: observed
+  over predicted variance of the cell mean 0.89 over 16 independent
+  calibrations, and a weight term of at most 0.04 of the prediction from
+  initial CNR 5 up and 0.22 at initial CNR 3. The `fit_D` docstring gives the
+  interval's coverage as 0.93 to 0.96 for D <= 0.02 sigma_0^2/tau and 0.89 to
+  0.95 at D = 0.1, as `slope_fit_check.txt` gives it.
+- The package docstring and the repository map describe the derivation by
+  the scatter of the fitted width, as `docs/DERIVATION.md` does. The README
+  and `docs/DERIVATION.md` give the falling-peak result beside the decay-alone
+  one, call the floor values per-profile, give the run budget of the
+  short-window counts, and say that the design rule of an initial CNR of
+  about 20 holds for a peak that falls with the decay alone.
 
 ## [0.4.1] - 2026-11-11
 

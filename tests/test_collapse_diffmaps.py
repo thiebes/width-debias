@@ -17,6 +17,11 @@ import numpy as np
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
+# The source distribution carries the package and its tests, but not the
+# repository's experiment scripts that this module checks; skip it there.
+if not (ROOT / "experiments").is_dir():
+    pytest.skip("needs a full checkout of the repository (experiments/ is absent)",
+                allow_module_level=True)
 sys.path.insert(0, str(ROOT / "experiments" / "halide-mixing-brI-legacy" / "rerun"))
 
 import average_diffmaps  # noqa: E402

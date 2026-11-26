@@ -60,8 +60,8 @@ class Experiment:
     By default (``spread_dims=None``) the peak follows the decay law alone: the
     simulated profiles hold it as they spread, so the integral of a profile
     grows with its width, an approximation for small diffusion.
-    ``spread_dims`` selects a peak that also falls as the profile spreads, at a
-    population that changes only by the decay::
+    ``spread_dims`` selects the spreading peak, which also falls as the profile
+    spreads, at a population that changes only by the decay::
 
         amplitude(t) = decay_amplitude(t) * h(sigma_x(t)) / h(sigma0)
                        * [h(sigma_y(t)) / h(sigma0)] ** (spread_dims - 1)
@@ -86,13 +86,14 @@ class Experiment:
     every other model. Every built-in model's ``noise_free_series``,
     :func:`~width_debias.montecarlo.run_ensemble` (for any model) and the
     Fisher bounds check this (:func:`~width_debias.models.check_spreading_peak`).
-    The factor is 1
-    at t = 0, so ``amplitude0`` and the initial CNR keep their meaning, and 1
-    at every t when D = 0, so a D = 0 calibration is the same under either
-    peak.
+    The factor is 1 at t = 0, so ``amplitude0`` and the initial CNR keep their
+    meaning, and 1 at every t when D = 0, so a D = 0 calibration is the same
+    under either peak.
 
-    The three spreading fields are keyword-only, so the positional order of the
-    fields, and of the subclasses' own fields after them, is unchanged.
+    The three spreading fields are keyword-only, so they never shift the
+    positional fields of ``Experiment`` or of a subclass. A subclass with its
+    own decay law overrides ``decay_amplitude``, not ``amplitude``, so that
+    ``spread_dims`` applies to it.
     """
 
     sigma0: float = 1.0          # initial Gaussian width (sets the length scale)
@@ -120,10 +121,12 @@ class Experiment:
             if self.spread_dims != 2:
                 raise ValueError("D_y sets the spreading along y of a centre cut; "
                                  f"it needs spread_dims=2, not {self.spread_dims!r}")
-            if self.D_y < 0:
-                raise ValueError(f"D_y must be >= 0, not {self.D_y}")
-        if self.psf_hwhm < 0:
-            raise ValueError(f"psf_hwhm must be >= 0, not {self.psf_hwhm}")
+            # NaN compares False with everything, so it needs its own test.
+            if not np.isfinite(self.D_y) or self.D_y < 0:
+                raise ValueError(f"D_y must be a finite number >= 0, not {self.D_y!r}")
+        if self.psf_hwhm is None or not np.isfinite(self.psf_hwhm) or self.psf_hwhm < 0:
+            raise ValueError("psf_hwhm must be a finite number >= 0 (0 for every profile but "
+                             f"Voigt), not {self.psf_hwhm!r}")
         if self.psf_hwhm > 0 and self.spread_dims is None:
             raise ValueError("psf_hwhm sets the spreading peak of a Voigt profile; "
                              "it needs spread_dims")
@@ -295,7 +298,7 @@ def cnr_per_frame(exp: Experiment, noise_sigma: float) -> np.ndarray:
     whose peak falls also as ``sigma0 / sigma(t)``: the CNR of the frames that
     ``spread_dims=1`` would simulate, not of the frames ``exp`` simulates.
     """
-    if exp.spread_dims is not None:
+    if getattr(exp, "spread_dims", None) is not None:
         return exp.amplitude / noise_sigma
     peak = exp.amplitude * (exp.sigma0 / np.sqrt(exp.true_variance))
     return peak / noise_sigma

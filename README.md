@@ -26,7 +26,7 @@ fit's lower bound on the width does not help: above a per-frame CNR of about
 Below a per-frame CNR of about 1 the fits spread into a broad upper tail and the
 correction no longer holds (see [On real data](#on-real-data)). The derivation
 of the additive form is in
-[`docs/DERIVATION.md`](https://github.com/thiebes/width-debias/blob/v0.4.1/docs/DERIVATION.md).
+[`docs/DERIVATION.md`](https://github.com/thiebes/width-debias/blob/v0.5.0/docs/DERIVATION.md).
 
 ## Install
 
@@ -102,9 +102,10 @@ calibration's geometry but does not check it against the data.
   variances by sigma_0^2, build the calibration with the data's pixel count and
   half-window in those units
   (`calibrate_d_free(cnr0, half_window=(n_pixels / 2) / sigma0_px, n_pixels=n_pixels, model=..., noise_model=...)`),
-  and multiply the fitted D and its SE by sigma_0^2 at the end. A calibration in
-  units of sigma_0 applied to widths in micrometres subtracts a bias that is
-  off by the square of the unit ratio (16 for sigma_0 = 0.25 μm).
+  and multiply the fitted D and its standard error (SE) by sigma_0^2 at the
+  end. A calibration in units of sigma_0 applied to widths in micrometres
+  subtracts a bias that is off by the square of the unit ratio (16 for
+  sigma_0 = 0.25 μm).
 - **Use enough calibration runs.** The lookup's own Monte Carlo error is
   shared by every measurement made with it, so it does not show in their
   scatter and does not average down. For one measurement, combine
@@ -127,7 +128,8 @@ calibration's geometry but does not check it against the data.
   of the mean is at most about 1.12 times its statistical error, so the
   default suits means of up to about 100 measurements.
 - **Drop frames below the floor.** The correction holds above a per-frame CNR
-  of about 1 (0.89 to 1.51 depending on shape). The validations set the weight of
+  of about 1 (the per-profile floor is 0.89 to 1.51 depending on shape). The
+  validations set the weight of
   frames below a per-frame CNR of 1.0 or 1.3 to zero before `fit_D`;
   `msd_and_weights(..., min_cnr=...)` does the same, and applies no floor
   unless asked. A CNR outside the calibrated grid takes the value at the
@@ -140,7 +142,7 @@ calibration's geometry but does not check it against the data.
   only where every fitted frame stays well above the floor. How far above
   depends on the profile shape and the diffusion length.
   See
-  [`experiments/wse2-strobescat`](https://github.com/thiebes/width-debias/tree/master/experiments/wse2-strobescat).
+  [`experiments/wse2-strobescat`](https://github.com/thiebes/width-debias/tree/v0.5.0/experiments/wse2-strobescat).
 - **Estimate the CNR on the spot.** Cut each profile to about ±4 sigma_0 around
   the spot before calling `per_frame_cnr`. Background and fringe structure in a
   full line cut corrupts the spectral CNR estimate at low signal.
@@ -161,18 +163,25 @@ calibration's geometry but does not check it against the data.
   has 46 of 140. One calibration serves every cell of a shape, so the count is
   indicative rather than a test against a binomial null. At small D and low
   initial CNR the combined SE is large, so those cells constrain the bias only
-  loosely (`experiments/dfree-calibration`).
-- The correction holds above a per-frame CNR of about 1 (0.89 to 1.51 depending
-  on shape: walking down from high CNR, the deepest CNR reached while every
+  loosely (`experiments/dfree-calibration`). With a peak that also falls as the
+  summed profile spreads (`Experiment.spread_dims`), so that the late frames
+  reach a lower per-frame CNR, and a 5000-run calibration, 6 of 140 cells lie
+  beyond two combined standard errors and the uncorrected fit has 45 of 140:
+  the D = 0 lookup, read at each frame's CNR, still corrects D.
+- The correction holds above a per-frame CNR of about 1 (the per-profile floor,
+  0.89 to 1.51 depending on shape: walking down from high per-profile CNR, the
+  deepest CNR reached while every
   cell satisfies |residual| + 2 combined SE <= 0.3 x 2 D t_max, which is
   0.036 sigma_0^2 at D = 0.02 sigma_0^2/tau), where the leading-order bias model
   `var_bias = A / CNR^2` itself breaks (`experiments/correction-floor`). With
   single-exponential decay to 3 tau, every frame stays above the floor from an
-  initial CNR of about 20.
+  initial CNR of about 20 when the peak falls with the decay alone; a peak that
+  also falls as the profile spreads needs a higher initial CNR, the more so at
+  larger D.
 - It corrects the anomalous exponent of subdiffusive transport as well as D
   (`experiments/subdiffusive-alpha`, `experiments/nc-solid`).
 
-[`docs/REPO_MAP.md`](https://github.com/thiebes/width-debias/blob/v0.4.1/docs/REPO_MAP.md)
+[`docs/REPO_MAP.md`](https://github.com/thiebes/width-debias/blob/v0.5.0/docs/REPO_MAP.md)
 lists every experiment set with its result, and each set's README gives the
 details and how to run it.
 
@@ -233,4 +242,4 @@ is updated.
 
 ## License
 
-MIT, see [`LICENSE`](https://github.com/thiebes/width-debias/blob/v0.4.1/LICENSE).
+MIT, see [`LICENSE`](https://github.com/thiebes/width-debias/blob/v0.5.0/LICENSE).

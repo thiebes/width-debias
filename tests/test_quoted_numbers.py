@@ -32,6 +32,11 @@ from typing import Callable
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
+# The source distribution carries the package and its tests, but not the
+# repository's tables and documents that this module checks; skip it there.
+if not (ROOT / "experiments").is_dir():
+    pytest.skip("needs a full checkout of the repository (experiments/ is absent)",
+                allow_module_level=True)
 DFREE = "experiments/dfree-calibration"
 FLOOR = "experiments/correction-floor"
 ESTIMATOR = "experiments/estimator-comparison"
@@ -349,12 +354,6 @@ def _calibration_se_ratio() -> tuple[str, ...]:
     return (_numbers(_search(r"^\s+current\s+(.*)$", _read(path), path).group(1))[-1],)
 
 
-def _calibration_se_ratio_18() -> tuple[str, ...]:
-    """The same ratio over all 18 draws, the 16 here and two external calibrations."""
-    path = f"{DFREE}/calibration_se_check.txt"
-    return (str(_first(r"all 18 draws: mean ratio ([\d.]+)", _read(path), path)),)
-
-
 def _calibration_weight_terms() -> list[Decimal]:
     """The weight term's share of the predicted variance per CNR_0, mean over D."""
     path = f"{DFREE}/calibration_se_check.txt"
@@ -477,6 +476,14 @@ def _unbounded_identical_means() -> tuple[str, ...]:
     path = f"{ESTIMATOR}/unbounded_fit_comparison.txt"
     return tuple(_rounded(_first(rf"^\s+{re.escape(cnr)}\s+([\d.]+)", _read(path), path), 3)
                  for cnr in ("1.52", "2.00", "2.62"))
+
+
+def _unbounded_row_at_cnr_0_52() -> list[Decimal]:
+    """Mean and SD of the fitted variance at per-frame CNR 0.52: bounded, then unbounded."""
+    path = f"{ESTIMATOR}/unbounded_fit_comparison.txt"
+    bnd_mean, bnd_sd, unb_mean, unb_sd = (Decimal(v) for v in _numbers(
+        _search(r"^\s+0\.52\s+(.*)$", _read(path), path).group(1))[:4])
+    return [bnd_mean, bnd_sd, unb_mean, unb_sd]
 
 
 def _poc_gaussian_cnr0_5() -> tuple[str, ...]:
@@ -837,6 +844,9 @@ CLAIMS = [
         "docs/DERIVATION.md": ("41 of 96 uncorrected",),
         "docs/REPO_MAP.md": ("46 of 140 and 41 of 96",),
         f"{DFREE}/README.md": ("(41 of 96)",)}),
+    Claim("dfree pooled corrected bias bound, short window",
+          lambda: _dfree_pooled_bound(("short",)), {
+              "docs/REPO_MAP.md": ("(0.8 in the short window)",)}),
     Claim("dfree pooled corrected bias bound", _dfree_pooled_bound, {
         "README.md": ("within 0.4 combined standard errors",),
         "docs/DERIVATION.md": ("within 0.4 combined SE of zero",),
@@ -857,6 +867,18 @@ CLAIMS = [
           lambda: (_cells_beyond("standard", "corrected, CNR >= 1", DFREE_FALLING)
                    + _cells_beyond("short", "corrected, CNR >= 1", DFREE_FALLING)), {
               "docs/REPO_MAP.md": ("corrected D 6 of 140 and 7 of 96",)}),
+    Claim("dfree falling-peak corrected and naive cells, standard window",
+          lambda: (_cells_beyond("standard", "corrected, CNR >= 1", DFREE_FALLING)
+                   + _cells_beyond("standard", "naive, all frames", DFREE_FALLING)), {
+              "README.md": ("6 of 140 cells lie beyond two combined standard errors and the "
+                            "uncorrected fit has 45 of 140",)}),
+    Claim("dfree falling-peak corrected and naive cells, both windows",
+          lambda: (_cells_beyond("standard", "corrected, CNR >= 1", DFREE_FALLING)
+                   + _cells_beyond("short", "corrected, CNR >= 1", DFREE_FALLING)
+                   + _cells_beyond("standard", "naive, all frames", DFREE_FALLING)
+                   + _cells_beyond("short", "naive, all frames", DFREE_FALLING)), {
+              "docs/DERIVATION.md": ("the corrected counts are 6 of 140 and 7 of 96 and the "
+                                     "uncorrected ones 45 of 140 and 43 of 96",)}),
     Claim("dfree falling-peak naive cells, both windows",
           lambda: (_cells_beyond("standard", "naive, all frames", DFREE_FALLING)
                    + _cells_beyond("short", "naive, all frames", DFREE_FALLING)), {
@@ -876,9 +898,6 @@ CLAIMS = [
         "docs/DERIVATION.md": ("variance of the cell mean 0.89 with the per-frame slope weights",),
         "docs/REPO_MAP.md": ("observed/predicted 0.89 over 16 draws",),
         "src/width_debias/weights.py": ("of the cell mean 0.89 over the 16 draws",)}),
-    Claim("calibration SE, observed over predicted variance, 18 draws",
-          _calibration_se_ratio_18, {
-              "src/width_debias/weights.py": ("and 0.93 with two external calibrations",)}),
     Claim("calibration SE, weight term from CNR_0 5", _weight_term_from_cnr0_5, {
         f"{DFREE}/README.md": ("term is at most 0.04 of the prediction",),
         "src/width_debias/weights.py": ("the weight term is at most 0.04 of it",)}),
@@ -919,7 +938,8 @@ CLAIMS = [
     *[Claim(f"per-profile floor, {DFREE_SHAPES[i]}", lambda i=i: (_per_profile_floors()[i],), {
         "docs/REPO_MAP.md": (phrase,)}) for i, phrase in FLOOR_PHRASES.items()],
     Claim("per-profile floor range", _floor_range, {
-        "README.md": ("(0.89 to 1.51 depending on shape)", "(0.89 to 1.51 depending on shape:")}),
+        "README.md": ("floor is 0.89 to 1.51 depending on shape)",
+                      "floor, 0.89 to 1.51 depending on shape:")}),
     *[Claim(f"analytical floor, {shape}", lambda shape=shape: _analytical(shape), {
         "docs/DERIVATION.md": (ANALYTICAL_ROWS[shape],)}) for shape in ANALYTICAL_SHAPES],
     *[Claim(f"Fisher A, {shape}", lambda shape=shape: _analytical(shape)[:1], {
@@ -1128,6 +1148,12 @@ CLAIMS = [
               f"{HALIDE}/axis_check.py": ("(n/(n - 1))^2 = 1.0033",)}),
     Claim("high-N axis check, bins per side", lambda: (_axis_check_grid()["n_bins"],), {
         f"{HALIDE}/axis_check.py": ("for n = 600",)}),
+    Claim("unbounded fit, mean fitted variance at per-frame CNR 0.52",
+          lambda: tuple(_rounded(_unbounded_row_at_cnr_0_52()[i], 2) for i in (0, 2)), {
+              "src/width_debias/models.py": ("falls from 2.64 to 1.76 sigma_0^2",)}),
+    Claim("unbounded fit, SD of the fitted variance at per-frame CNR 0.52",
+          lambda: tuple(_rounded(_unbounded_row_at_cnr_0_52()[i], 2) for i in (3, 1)), {
+              "src/width_debias/models.py": ("(SD 5.97 against 10.06 sigma_0^2 at CNR 0.52)",)}),
     Claim("unbounded comparison, OLS at CNR_0 34",
           lambda: (_rounded(_unbounded_d_row(34)[0], 2),), {
               "README.md": ("an unweighted fit returns 1.20 times the reference D",)}),
