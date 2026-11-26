@@ -117,7 +117,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   SE against the single-measurement spread of D divided by the square root of
   the calibration runs, summed over the cells of each table: at most about 1,
   close to 1 at the smallest D and lower where the width grows more, since the
-  lookup's error does not grow with the width. The `--n-runs` entry of
+  lookup's error does not grow with the width, and lower again (0.80 to 0.91)
+  with a peak that also falls as the profile spreads, which moves the frames
+  between the calibrated CNRs. The `--n-runs` entry of
   `docs/calibration_runs.md` says that the joint lookup's error is shared in
   the same way and links the README, whose numbers are for the 1-D lookup.
   `docs/DERIVATION.md`, `docs/REPO_MAP.md` and the D-free calibration README

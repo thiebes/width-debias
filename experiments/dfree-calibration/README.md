@@ -175,14 +175,17 @@ spread of D/D_ref over single measurements, each summed over the cells, is 0.92
 to 0.98 per shape and window. Summed, the larger cells, which the tables print
 with the most digits, set the ratio. Over the row at the smallest D it is 0.96
 to 0.99 in the standard window and 0.93 to 0.99 in the short, and at the
-largest D 0.82 to 0.89 and 0.88 to 0.95. In absolute units the calibration SE
-of D is the same at every D: every D has the same per-frame CNRs, because in
-these runs the simulated profiles keep their peak height as they spread, and
-the lookup, built at D = 0, is read by the per-frame CNR alone. The spread of single measurements
-grows with the width, which grows more at larger D. In general, at a given CNR
-the scatter of a fitted width grows with the width, while the lookup's error is
-that of the width at σ₀, so the calibration SE is at most about the
-single-measurement spread divided by the square root of the calibration runs.
+largest D 0.82 to 0.89 and 0.88 to 0.95. In these runs the calibration SE of
+D, in absolute units, is the same at every D: every D has the same per-frame
+CNRs, because the simulated profiles keep their peak height as they spread,
+and the lookup, built at D = 0, is read by the per-frame CNR alone, so each
+frame falls exactly at a CNR the lookup was calibrated at. The spread of
+single measurements grows with the width, which grows more at larger D. In
+general, at a given CNR the scatter of a fitted width grows with the width,
+while the lookup's error is that of the width at σ₀, and a frame between two
+calibrated CNRs reads an interpolation of two independent values, whose error
+is smaller. So the calibration SE is at most about the single-measurement
+spread divided by the square root of the calibration runs.
 At a ratio of 1, the mean of N measurements has a combined SE of √2 times its
 statistical error with N calibration runs per point and 1.12 times with 4N;
 where the ratio is below 1 the factors are smaller.
@@ -224,7 +227,11 @@ calibration has more runs. The calibration SE times the square root of the
 calibration runs, over the single-measurement spread, summed over the cells as
 above, is 0.89 to 0.91 per shape in the standard window and 0.80 to 0.85 in
 the short window: below 1, as with the decay alone, and read from tables that
-print both to five decimals. The naive all-frames fit pools to +0.0046 (2.5 SE),
+print both to five decimals. It is lower than with the decay alone even at the
+smallest D, where the width hardly grows, because the falling peak moves each
+frame between the CNRs at which the lookup was calibrated. These runs are thus
+the first of this set to read the lookup between its calibrated CNRs, and the
+corrected counts above hold there. The naive all-frames fit pools to +0.0046 (2.5 SE),
 +0.0054 (2.5 SE), +0.0100 (4.1 SE), and +0.0006 (0.5 SE) in the standard
 window, and +0.0165 (4.4 SE), +0.0247 (5.5 SE), +0.0344 (6.8 SE), and +0.0071
 (3.3 SE) in the short window. On p = 4 in the short window the corrected D

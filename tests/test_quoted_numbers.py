@@ -379,7 +379,7 @@ def _pooled_calibration_se_over_spread(shape: str, window: str,
     or over the row at the D that ``pick_d`` (min or max) picks. Summed, the large
     cells, which the table prints with the most digits, set the ratio. Cells the
     table prints as nan (no fit) are left out, as the table's own counts leave
-    them out."""
+    them out. ``variant`` picks the table as in ``_dfree_arm``."""
     arm, path = _dfree_arm(shape, window, "corrected, CNR >= 1", variant)
     runs = _first(r"calibrate_d_free, CNR0 [\d., ]+?, (\d+) runs", _read(path), path)
     calibration_se = _dfree_matrix(arm, "calibration SE (propagated", path)
@@ -404,17 +404,6 @@ def _calibration_se_over_spread() -> tuple[str, ...]:
     return _rounded(min(ratios), 2), _rounded(max(ratios), 2)
 
 
-
-def _falling_calibration_se_over_spread() -> tuple[str, ...]:
-    """The pooled ratio under the falling peak: its range over the shapes in the
-    standard window, then in the short window."""
-    ranges = []
-    for window in ("standard", "short"):
-        ratios = [_pooled_calibration_se_over_spread(shape, window, variant=DFREE_FALLING)
-                  for shape in DFREE_FALLING_SHAPES]
-        ranges += [_rounded(min(ratios), 2), _rounded(max(ratios), 2)]
-    return tuple(ranges)
-
 def _calibration_se_over_spread_by_d() -> tuple[str, ...]:
     """The pooled ratio over the row at the smallest and at the largest D: its range
     over the shapes in the standard window, then in the short window, first at the
@@ -426,6 +415,28 @@ def _calibration_se_over_spread_by_d() -> tuple[str, ...]:
                       for shape in DFREE_SHAPES]
             ranges += [_rounded(min(ratios), 2), _rounded(max(ratios), 2)]
     return tuple(ranges)
+
+
+def _falling_calibration_se_over_spread_ratios(window: str) -> list[Decimal]:
+    return [_pooled_calibration_se_over_spread(shape, window, variant=DFREE_FALLING)
+            for shape in DFREE_FALLING_SHAPES]
+
+
+def _falling_calibration_se_over_spread() -> tuple[str, ...]:
+    """The pooled ratio under the falling peak: its range over the shapes in the
+    standard window, then in the short window."""
+    ranges = []
+    for window in ("standard", "short"):
+        ratios = _falling_calibration_se_over_spread_ratios(window)
+        ranges += [_rounded(min(ratios), 2), _rounded(max(ratios), 2)]
+    return tuple(ranges)
+
+
+def _falling_calibration_se_over_spread_overall() -> tuple[str, ...]:
+    """The pooled ratio under the falling peak: its range over both windows."""
+    ratios = [ratio for window in ("standard", "short")
+              for ratio in _falling_calibration_se_over_spread_ratios(window)]
+    return _rounded(min(ratios), 2), _rounded(max(ratios), 2)
 
 
 def _calibrate_d_free_default(parameter: str) -> int:
@@ -821,6 +832,9 @@ CLAIMS = [
               f"{DFREE}/README.md": (
                   "is 0.89 to 0.91 per shape in the standard window and 0.80 to 0.85 in "
                   "the short window",)}),
+    Claim("calibration SE, times sqrt(calibration runs) over single-measurement spread, "
+          "under the falling peak, over both windows", _falling_calibration_se_over_spread_overall, {
+              "README.md": ("and 0.80 to 0.91 with a peak that also falls",)}),
     Claim("calibrate_d_free default runs per CNR_0 point", _default_calibration_runs, {
         "README.md": ("(400 by default)",)}),
     Claim("measurements the default calibration runs serve at 4N",

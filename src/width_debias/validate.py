@@ -91,7 +91,9 @@ def calibrate_d_free(cnr0_grid: np.ndarray, *, sigma0: float = 1.0,
     SE of D falls as 1/sqrt(n_runs). In the D-free validation
     (``experiments/dfree-calibration``) it is at most about the spread of D
     over single measurements divided by sqrt(n_runs): close to that at small
-    D, and lower where the width grows more over the measurement. It is
+    D when each frame falls at a calibrated CNR, and lower where the width
+    grows more over the measurement or a frame falls between calibrated CNRs,
+    which the lookup interpolates. It is
     shared by every measurement made with the lookup and does not average
     down, so for a mean of N measurements it is up to about sqrt(N / n_runs)
     times the statistical error of the mean. Choose ``n_runs`` well above the
