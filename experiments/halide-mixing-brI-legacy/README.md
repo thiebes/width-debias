@@ -16,8 +16,10 @@ stress test. The clean high-statistics Br-I bed is
   folder.
 - `br_halide_validation.py` -- Gaussian fit + `subtract` + floor cut; naive vs
   corrected vs particle truth across three Br fractions and a CNR0 sweep.
-- `rerun/` -- instructions and helpers for running and averaging multiple
-  simulation instances (`average_diffmaps.py`, `run_instances.sh`, `README.md`).
+- `rerun/` -- instructions and helpers for running, topping up, averaging and
+  collapsing multiple simulation instances (`run_instances.sh`,
+  `rerun_unique.sh`, `rerun_all_unique.sh`, `average_diffmaps.py`,
+  `collapse_diffmaps.py` and its check `collapse_check.txt`, `README.md`).
 
 ## Data
 
