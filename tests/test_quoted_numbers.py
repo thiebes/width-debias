@@ -38,6 +38,10 @@ COVERAGE = "experiments/coverage-interval"
 HALIDE = "experiments/halide-mixing-highn"
 DFREE_SHAPES = ("gaussian", "voigt", "genGauss_p1.5", "genGauss_p4")
 POC_SHAPES = ("gaussian", "voigt", "generalized_gaussian_p1.5", "generalized_gaussian_p4")
+# The D-free tables with a peak that also falls as the summed profile spreads,
+# calibrated with 5000 runs; their names carry the script's spec tags.
+DFREE_FALLING = "_spread1_cal5000"
+DFREE_FALLING_SHAPES = POC_SHAPES
 ANALYTICAL_SHAPES = ("gaussian", "voigt", "generalized_gaussian_p1.5",
                      "generalized_gaussian_p4")
 EFFICIENCY_SPECS = ("gaussian", "voigt", "generalized_gaussian:1.5", "generalized_gaussian:4")
@@ -125,26 +129,63 @@ def _first(pattern: str, text: str, source: str) -> Decimal:
 # --------------------------------------------------------------------------
 # Table readers, one per kind of claim
 # --------------------------------------------------------------------------
-def _dfree_arm(shape: str, window: str, arm: str) -> tuple[str, str]:
-    """One arm's section of a D-free validation table, and the table's path."""
+def _dfree_arm(shape: str, window: str, arm: str, variant: str = "") -> tuple[str, str]:
+    """One arm's section of a D-free validation table, and the table's path.
+
+    ``variant`` is the tag between the window and the shape: empty for the
+    decay-only tables, ``DFREE_FALLING`` for the falling-peak ones.
+    """
     stem = "validate_d_zero" if window == "standard" else "validate_d_zero_short"
-    path = f"{DFREE}/{stem}_{shape}.txt"
+    path = f"{DFREE}/{stem}{variant}_{shape}.txt"
     return _section(_read(path), f"--- {arm}\n", "--- ", path), path
 
 
-def _cells_beyond(window: str, arm: str) -> tuple[str, ...]:
+def _dfree_shapes(variant: str) -> tuple[str, ...]:
+    return DFREE_FALLING_SHAPES if variant else DFREE_SHAPES
+
+
+def _cells_beyond_by_shape(window: str, arm: str, variant: str = "") -> list[tuple[str, str]]:
+    """Each shape's cells beyond two combined SE, as (N, M) of "N of M"."""
+    return [_search(r"cells beyond 2 combined SE: (\d+) of (\d+)",
+                    *_dfree_arm(shape, window, arm, variant)).groups()
+            for shape in _dfree_shapes(variant)]
+
+
+def _cells_beyond(window: str, arm: str, variant: str = "") -> tuple[str, ...]:
     """Cells beyond two combined SE, summed over the four shapes, as N and M of "N of M"."""
-    counts = [_search(r"cells beyond 2 combined SE: (\d+) of (\d+)",
-                      *_dfree_arm(shape, window, arm)).groups() for shape in DFREE_SHAPES]
+    counts = _cells_beyond_by_shape(window, arm, variant)
     return str(sum(int(n) for n, _ in counts)), str(sum(int(m) for _, m in counts))
 
 
-def _dfree_pooled_bound() -> tuple[str, ...]:
+def _falling_row(arm: str) -> tuple[str, ...]:
+    """One arm's row of the falling-peak table in the set README: per window, the
+    four shapes' counts, then "N of M" summed over them."""
+    row = []
+    for window in ("standard", "short"):
+        row += [n for n, _ in _cells_beyond_by_shape(window, arm, DFREE_FALLING)]
+        row += _cells_beyond(window, arm, DFREE_FALLING)
+    return tuple(row)
+
+
+def _dfree_pooled_bound(windows: tuple[str, ...] = ("standard",),
+                        variant: str = "") -> tuple[str, ...]:
     """Largest |pooled z| of the corrected arm (CNR >= 1) over the four shapes."""
     z = max(abs(_first(r"all cells: .*; ([-+]?[\d.]+) combined SE",
-                       *_dfree_arm(shape, "standard", "corrected, CNR >= 1")))
-            for shape in DFREE_SHAPES)
+                       *_dfree_arm(shape, window, "corrected, CNR >= 1", variant)))
+            for window in windows for shape in _dfree_shapes(variant))
     return (_bound(z, 1),)
+
+
+def _dfree_per_d_bound(windows: tuple[str, ...], variant: str) -> tuple[str, ...]:
+    """Largest |pooled z| per D of the corrected arm (CNR >= 1) over the four shapes."""
+    z_values = []
+    for window in windows:
+        for shape in _dfree_shapes(variant):
+            section, path = _dfree_arm(shape, window, "corrected, CNR >= 1", variant)
+            found = re.findall(r"^  D [\d.]+: .*; ([-+]?[\d.]+) combined SE$", section, re.M)
+            assert found, f"{path}: no pooled line per D under 'corrected, CNR >= 1'"
+            z_values += [abs(Decimal(z)) for z in found]
+    return (_bound(max(z_values), 1),)
 
 
 def _dense_pooled_bound() -> tuple[str, ...]:
@@ -627,6 +668,34 @@ CLAIMS = [
         "README.md": ("within 0.4 combined standard errors",),
         "docs/DERIVATION.md": ("within 0.4 combined SE of zero",),
         "docs/REPO_MAP.md": ("pooled bias within 0.4 combined SE",)}),
+    *[Claim(f"dfree falling-peak cells beyond 2 SE, {arm}", lambda arm=arm: _falling_row(arm), {
+        f"{DFREE}/README.md": (row,)}) for arm, row in (
+            ("corrected, all frames",
+             "| corrected, all frames | 2, 2, 0, 2 (6 of 140) | 1, 0, 4, 2 (7 of 96) |"),
+            ("corrected, CNR >= 1",
+             "| corrected, CNR ≥ 1 | 2, 2, 0, 2 (6 of 140) | 1, 0, 4, 2 (7 of 96) |"),
+            ("naive, CNR >= 3",
+             "| naive, CNR ≥ 3 | 1, 3, 5, 3 (12 of 140) | 1, 3, 4, 2 (10 of 64) |"),
+            ("naive, CNR >= 2",
+             "| naive, CNR ≥ 2 | 4, 4, 6, 3 (17 of 140) | 5, 5, 8, 4 (22 of 80) |"),
+            ("naive, all frames",
+             "| naive, all frames | 9, 15, 17, 4 (45 of 140) | 10, 12, 13, 8 (43 of 96) |"))],
+    Claim("dfree falling-peak corrected cells, both windows",
+          lambda: (_cells_beyond("standard", "corrected, CNR >= 1", DFREE_FALLING)
+                   + _cells_beyond("short", "corrected, CNR >= 1", DFREE_FALLING)), {
+              "docs/REPO_MAP.md": ("corrected D 6 of 140 and 7 of 96",)}),
+    Claim("dfree falling-peak naive cells, both windows",
+          lambda: (_cells_beyond("standard", "naive, all frames", DFREE_FALLING)
+                   + _cells_beyond("short", "naive, all frames", DFREE_FALLING)), {
+              "docs/REPO_MAP.md": ("naive all frames 45 of 140 and 43 of 96",)}),
+    Claim("dfree falling-peak pooled corrected bias bound",
+          lambda: _dfree_pooled_bound(("standard", "short"), DFREE_FALLING), {
+              "docs/REPO_MAP.md": (
+                  "pooled bias within 0.8 combined SE on every shape, naive all frames 45",),
+              f"{DFREE}/README.md": ("in the short window, each within 0.8",)}),
+    Claim("dfree falling-peak pooled corrected bias bound per D",
+          lambda: _dfree_per_d_bound(("standard", "short"), DFREE_FALLING), {
+              f"{DFREE}/README.md": ("Pooled per D it is within 1.6 combined SE",)}),
     Claim("dense subtract pooled bias bound", _dense_pooled_bound, {
         "docs/DERIVATION.md": ("within 0.6 combined SE of zero on every shape",),
         "docs/REPO_MAP.md": ("dense sweep pooled bias within 0.6 combined SE",)}),

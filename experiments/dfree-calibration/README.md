@@ -9,8 +9,9 @@ back the corrected-bias curves.
 
 ## Contents
 
-- `validate_d_zero.py [--short-window] [profile_model ...]` -- D-independence
-  test: one calibration built at `D = 0`, applied across
+- `validate_d_zero.py [--short-window] [--spread-dims {1,2}] [--cal-runs N]
+  [profile_model ...]` -- D-independence test: one calibration built at
+  `D = 0`, applied across
   `D in {0.005, 0.01, 0.02, 0.05, 0.1}` on Gaussian / Voigt / generalized-Gaussian
   (`generalized_gaussian:1.5`, `generalized_gaussian:4`; the bare name is
   p = 2). Every cell is scored under five arms on the same realizations
@@ -20,7 +21,13 @@ back the corrected-bias curves.
   shape, the RMS error of one measurement and of the mean of 10 and 100, and
   the number of measurements averaged before the bias exceeds the error of
   their mean. `--short-window` runs a dim-sample geometry (window 0.5τ,
-  CNR₀ 2 to 12, D 0.02 to 0.2 σ₀²/τ).
+  CNR₀ 2 to 12, D 0.02 to 0.2 σ₀²/τ). `--spread-dims 1` (or 2) evaluates with
+  a peak that also falls as the profile spreads (a summed profile, or a cut
+  through the centre; the short window then adds CNR₀ 1.8, or 1.6, to its
+  calibration), and `--cal-runs N` sets the calibration runs per CNR₀
+  point apart from the evaluation runs. Each run saves its cell statistics and
+  its lookup as `.npz` files beside its report, and `--report NPZ ...`
+  rebuilds reports from saved statistics without rerunning.
 - `dense_calibration_and_test.py [MODEL ...]` -- dense (100 log-spaced CNR0)
   D-free calibration then a random log-distributed test, all four schemes
   (`ols`, `inverse_variance`, `subtract`, `mas`). The default runs the
@@ -67,12 +74,17 @@ with a note on stderr.
 ```bash
 .venv/Scripts/python.exe experiments/dfree-calibration/validate_d_zero.py
 .venv/Scripts/python.exe experiments/dfree-calibration/validate_d_zero.py --short-window
+.venv/Scripts/python.exe experiments/dfree-calibration/validate_d_zero.py --spread-dims 1 --cal-runs 5000
+.venv/Scripts/python.exe experiments/dfree-calibration/validate_d_zero.py --short-window --spread-dims 1 --cal-runs 5000
+.venv/Scripts/python.exe experiments/dfree-calibration/validate_d_zero.py --report experiments/dfree-calibration/validate_d_zero_spread1_cal5000_gaussian.npz
 .venv/Scripts/python.exe experiments/dfree-calibration/dense_calibration_and_test.py
 ```
 
 Set `WIDTH_DEBIAS_WORKERS=0` for `validate_d_zero.py` (about 20 min standard,
-1 h short window, on 4 workers). The dense run uses its own process pool.
+1 h short window, on 4 workers; the two falling-peak runs took about 30 min
+together on 16 workers). The dense run uses its own process pool.
 Outputs to repo-root `output/`; committed snapshots are in this folder.
+`--report` takes the cell statistics (`.npz`), not the `_lookup.npz` files.
 
 ## Key result + figure
 
@@ -156,6 +168,47 @@ corrected and naive all-frames fits have the same RMS error (ratio 1.00 to
 measurements. On p = 4 the corrected D reads low at CNR₀ 3 and 4 for
 D ≤ 0.05 σ₀²/τ (0.65 to 0.87, up to 2.4 combined SE).
 
+Falling peak (`--spread-dims 1 --cal-runs 5000`, both windows). In the runs
+above the peak falls with the decay alone. Here it also falls as the summed
+profile spreads, by σ₀/σ, so the late frames reach a lower per-frame CNR. The
+calibration stays at D = 0, where the profile does not spread, and has 5000
+runs per CNR₀ point; the evaluation cells, runs, and seeds are those above. In
+the short window the calibration grid gains CNR₀ 1.8, so that every frame lies
+inside the calibrated range (lowest frame 1.107 to 1.128 over the shapes,
+lowest calibrated 1.092). In the standard window the arms without a cut read
+the lookup's edge value for frames below per-frame CNR 0.249 (lowest frame
+0.197 to 0.206). Cells beyond 2 combined SE, per shape (Gaussian, Voigt,
+p = 1.5, p = 4) and in total:
+
+| Arm | Standard window | Short window |
+| ------- | ------- | ------- |
+| corrected, all frames | 2, 2, 0, 2 (6 of 140) | 1, 0, 4, 2 (7 of 96) |
+| corrected, CNR ≥ 1 | 2, 2, 0, 2 (6 of 140) | 1, 0, 4, 2 (7 of 96) |
+| naive, CNR ≥ 3 | 1, 3, 5, 3 (12 of 140) | 1, 3, 4, 2 (10 of 64) |
+| naive, CNR ≥ 2 | 4, 4, 6, 3 (17 of 140) | 5, 5, 8, 4 (22 of 80) |
+| naive, all frames | 9, 15, 17, 4 (45 of 140) | 10, 12, 13, 8 (43 of 96) |
+
+By chance about 6 cells are expected beyond 2 SE in the standard window and
+about 4 in the short window. The corrected counts are not a like-for-like
+comparison with those of the decay-alone runs above: their calibrations have
+300 (standard) and 2000 (short) runs per CNR₀ point against 5000 here, so here
+the combined SE is smaller and a cell of the same bias lies more SE from 1.
+The naive arms carry no calibration SE. The corrected (CNR ≥ 1)
+D/D_ref − 1, pooled over a shape's cells, is −0.0004 ± 0.0021 (Gaussian),
+−0.0017 ± 0.0026 (Voigt), +0.0021 ± 0.0029 (p = 1.5), and −0.0004 ± 0.0012
+(p = 4) in the standard window, and −0.0013 ± 0.0077, −0.0020 ± 0.0090,
++0.0068 ± 0.0101, and +0.0018 ± 0.0044 in the short window, each within 0.8
+combined SE. Pooled per D it is within 1.6 combined SE on every shape in both
+windows. The pooled biases are of the same order as with the decay alone (at
+most 0.0068 against 0.0053); their combined SE is smaller because the
+calibration has more runs. The naive all-frames fit pools to +0.0046 (2.5 SE),
++0.0054 (2.5 SE), +0.0100 (4.1 SE), and +0.0006 (0.5 SE) in the standard
+window, and +0.0165 (4.4 SE), +0.0247 (5.5 SE), +0.0344 (6.8 SE), and +0.0071
+(3.3 SE) in the short window. On p = 4 in the short window the corrected D
+again reads low at CNR₀ 3 and 4 for D ≤ 0.05 σ₀²/τ (0.59 to 0.92, up to 2.7
+combined SE). The D = 0 lookup, read at each frame's CNR, therefore corrects D
+under a falling peak as it does under the decay alone.
+
 `calibration_se_check` (`calibration_se_check.txt`; 16 calibration draws of
 1500 runs on a 48-point CNR₀ grid, library slope weights): the propagated
 calibration SE holds. The observed / predicted variance of the cell mean,
@@ -211,7 +264,11 @@ depending on the shape. `subtract` is the default. The overall mean
 0.049.
 
 Tables: `validate_d_zero_{gaussian,voigt,genGauss_p1.5,genGauss_p4}.txt`,
-`validate_d_zero_short_{gaussian,voigt,genGauss_p1.5,genGauss_p4}.txt`,
+`validate_d_zero_short_{gaussian,voigt,genGauss_p1.5,genGauss_p4}.txt`, the
+falling-peak tables
+`validate_d_zero{,_short}_spread1_cal5000_{gaussian,voigt,generalized_gaussian_p1.5,generalized_gaussian_p4}.txt`
+with their cell statistics (`.npz`) and lookups (`_lookup.npz`), computed on
+another machine and rebuilt from the statistics with `--report`,
 `dense_calibration_and_test_four_shapes.txt`, `calibration_se_check.txt`,
 `weights_check.txt`, `joint_weights_check.txt`, `slope_fit_check.txt`. `validate_d_zero_genGauss.txt` is a
 p = 2 draw kept for reference. `dense_calibration_and_test.txt` (Gaussian,

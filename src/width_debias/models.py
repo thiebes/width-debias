@@ -35,7 +35,7 @@ from scipy.special import gamma as _gamma
 from scipy.special import voigt_profile as _voigt
 
 from .fit import FrameFit, _unusable_frame, fit_variance as _fit_gaussian_variance
-from .simulate import Experiment, gaussian, noise_free_series as _gaussian_series
+from .simulate import Experiment, _require_psf_hwhm, gaussian, noise_free_series as _gaussian_series
 
 
 # --------------------------------------------------------------------------
@@ -90,6 +90,7 @@ class VoigtModel:
     name: str = "voigt"
 
     def noise_free_series(self, exp: Experiment) -> np.ndarray:
+        check_spreading_peak(exp, self)
         x = exp.x
         return np.array([
             _voigt_peaknorm(x, a, exp.mean, np.sqrt(v), self.gamma)
@@ -175,6 +176,7 @@ class GeneralizedGaussianModel:
         return np.sqrt(np.asarray(variance, float) / self.var_factor)
 
     def noise_free_series(self, exp: Experiment) -> np.ndarray:
+        check_spreading_peak(exp, self)
         x = exp.x
         scales = self._scale_for_variance(exp.true_variance)
         return np.array([
@@ -369,6 +371,33 @@ class UnboundedGaussianModel:
         # No wall: the precision passes smoothly through zero, so there is no
         # lower bound to be pinned against.
         return FrameFit(variance=var, amplitude=amp, at_wall=False, ok=ok)
+
+
+# --------------------------------------------------------------------------
+# The spreading peak's Lorentzian half-width
+# --------------------------------------------------------------------------
+def lorentzian_hwhm(model) -> float:
+    """Lorentzian half-width of the profile a model draws: a VoigtModel's ``gamma``, else 0.
+
+    The class decides, not an attribute name: another model may use ``gamma``
+    for something else, so a model that draws a Voigt profile is checked as one
+    only if it subclasses :class:`VoigtModel`.
+    """
+    return float(model.gamma) if isinstance(model, VoigtModel) else 0.0
+
+
+def check_spreading_peak(exp, model) -> None:
+    """Refuse a spreading peak computed for a profile other than the one ``model`` draws.
+
+    With ``exp.spread_dims`` set, the peak falls as the unit-area peak of the
+    profile, which for the Voigt profile depends on its Lorentzian half-width,
+    so ``exp.psf_hwhm`` must equal :func:`lorentzian_hwhm` of the model. The
+    models that draw a Voigt or generalized-Gaussian profile call this; the
+    Gaussian ones check through :func:`width_debias.simulate.noise_free_series`;
+    :func:`~width_debias.montecarlo.run_ensemble` and the Fisher bounds call it
+    for any model.
+    """
+    _require_psf_hwhm(exp, lorentzian_hwhm(model), getattr(model, "name", type(model).__name__))
 
 
 # Convenience registry for scripts that select a model by name.
