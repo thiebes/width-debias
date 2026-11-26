@@ -93,8 +93,8 @@ def calibrate_d_free(cnr0_grid: np.ndarray, *, sigma0: float = 1.0,
     over single measurements divided by sqrt(n_runs): close to that at small
     D when each frame falls at a calibrated CNR, and lower where the width
     grows more over the measurement or a frame falls between calibrated CNRs,
-    which the lookup interpolates. It is
-    shared by every measurement made with the lookup and does not average
+    which the lookup interpolates. It is shared by every measurement made
+    with the lookup and does not average
     down, so for a mean of N measurements it is up to about sqrt(N / n_runs)
     times the statistical error of the mean. Choose ``n_runs`` well above the
     number of measurements to be averaged.

@@ -118,8 +118,9 @@ calibration's geometry but does not check it against the data.
   as one over the square root of `n_runs`, the runs per initial-CNR point (400
   by default). In the validation it is at most about `s / sqrt(n_runs)`, with
   `s` the spread of D over single measurements: summed over the cells, their
-  ratio is 0.92 to 0.98 per shape and window with the peak falling by the decay
-  alone, and 0.80 to 0.91 with a peak that also falls as the profile spreads
+  ratio is 0.92 to 0.98 per shape and window where every frame is read at a
+  calibrated CNR, and 0.80 to 0.91 where the frames fall between calibrated
+  CNRs, as a measurement's frames almost always do
   (`experiments/dfree-calibration`). With `n_runs` equal to N the calibration
   SE can be as large as the statistical error of the mean, so choose `n_runs`
   well above the number of measurements to be averaged: at 4N the combined SE

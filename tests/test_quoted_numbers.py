@@ -834,7 +834,7 @@ CLAIMS = [
                   "the short window",)}),
     Claim("calibration SE, times sqrt(calibration runs) over single-measurement spread, "
           "under the falling peak, over both windows", _falling_calibration_se_over_spread_overall, {
-              "README.md": ("and 0.80 to 0.91 with a peak that also falls",)}),
+              "README.md": ("and 0.80 to 0.91 where the frames fall between calibrated",)}),
     Claim("calibrate_d_free default runs per CNR_0 point", _default_calibration_runs, {
         "README.md": ("(400 by default)",)}),
     Claim("measurements the default calibration runs serve at 4N",

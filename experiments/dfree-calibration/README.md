@@ -228,10 +228,11 @@ calibration runs, over the single-measurement spread, summed over the cells as
 above, is 0.89 to 0.91 per shape in the standard window and 0.80 to 0.85 in
 the short window: below 1, as with the decay alone, and read from tables that
 print both to five decimals. It is lower than with the decay alone even at the
-smallest D, where the width hardly grows, because the falling peak moves each
-frame between the CNRs at which the lookup was calibrated. These runs are thus
-the first of this set to read the lookup between its calibrated CNRs, and the
-corrected counts above hold there. The naive all-frames fit pools to +0.0046 (2.5 SE),
+smallest D, where the width hardly grows, because the falling peak moves every
+frame after t = 0 between the CNRs at which the lookup was calibrated. Unlike
+the decay-alone runs above, these runs read the lookup between its calibrated
+CNRs, as `calibration_se_check` and the dense sweep also do. The naive
+all-frames fit pools to +0.0046 (2.5 SE),
 +0.0054 (2.5 SE), +0.0100 (4.1 SE), and +0.0006 (0.5 SE) in the standard
 window, and +0.0165 (4.4 SE), +0.0247 (5.5 SE), +0.0344 (6.8 SE), and +0.0071
 (3.3 SE) in the short window. On p = 4 in the short window the corrected D
