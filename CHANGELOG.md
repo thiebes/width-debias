@@ -75,14 +75,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   moment, excess kurtosis and window-edge fraction; the extremes over all
   frames with their times; and, over the usable band at CNR0 15, the D/D_ref
   of each axis from the noise-free fit and from the binned moments, with the
-  fit checks. On the bin centres M/(V/2) is within 0.0123 of 1 on each axis
-  and M_x/M_y within 0.0143 of 1; walker sampling alone gives about 0.003, a
+  fit checks. With M the binned second moment of each projection about its
+  own centroid, on the bin centres, and V the walkers' 2-D moment, M/(V/2) is
+  within 0.0123 of 1 on each axis and M_x/M_y within 0.0143 of 1; walker sampling alone gives about 0.003, a
   lower bound, since the 16 disorder realizations add scatter the averaged
   files cannot show, so the table does not test isotropy. (M_x + M_y)/V
   departs from 1 by up to 0.0108, growing with time. The noise-free fit of
   `prof_y` gives D/D_ref 1.009, 0.992 and 0.984 against 0.992, 0.958 and 0.960
-  for `prof_x`; the binned moments account for 0.004, -0.001 and 0.012 of
-  that difference and the profile shape for the rest, and these files cannot
+  for `prof_x`; the binned moments, whose D is within 0.006 of D_ref on both
+  axes, account for 0.004, -0.001 and 0.012 of that difference and the
+  profile shape for the rest, and these files cannot
   tell whether it comes from the transport or from the finite set of
   realizations. The loader still reads `prof_x`, and no result of the
   experiment changes. Its docstrings had stated without a table that the axes

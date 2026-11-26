@@ -1084,7 +1084,8 @@ CLAIMS = [
               "docs/REPO_MAP.md": ("(walker sampling about 0.003, a lower bound)",)}),
     Claim("high-N axis check, centroid drift at 3 ns over its walker-only error",
           _axis_check_centroid_drift, {
-              f"{HALIDE}/README.md": ("centroid of each fraction lies 7 to 28 times",)}),
+              f"{HALIDE}/README.md": ("centroid of each fraction lies 7 to 28 times",),
+              f"{HALIDE}/axis_check.py": ("centroid of each fraction lies 7 to 28 times",)}),
     Claim("high-N axis check, largest |M/(V/2) - 1| over both axes",
           lambda: _axis_check_largest(3, 4), {
               f"{HALIDE}/br_highn_data.py": ("M/(V/2) is within 0.0123 of 1 on each axis",),
@@ -1101,13 +1102,19 @@ CLAIMS = [
     Claim("high-N axis check, prof_y's noise-free D above prof_x's, in D_ref",
           lambda: tuple(str(f(row[1] - row[0] for row in _axis_check_band_d()))
                         for f in (min, max)), {
-              f"{HALIDE}/br_highn_data.py": ("gives a D higher by 0.017 to 0.034",),
               f"{HALIDE}/README.md": ("shape gaps differ by 0.017 to 0.034 of D_ref",),
               "docs/REPO_MAP.md": ("differs between them by 0.017-0.034",)}),
+    Claim("high-N axis check, prof_y's noise-free D above prof_x's per fraction, in D_ref",
+          lambda: tuple(str(row[1] - row[0]) for row in _axis_check_band_d()), {
+              f"{HALIDE}/br_highn_data.py": ("by 0.017, 0.034 and 0.024 of D_ref",)}),
+    Claim("high-N axis check, binned-moment D / D_ref on both axes",
+          lambda: (_bound(max(abs(row[c] - 1) for row in _axis_check_band_d()
+                              for c in (2, 3)), 3),), {
+              f"{HALIDE}/README.md": ("is within 0.006 of D_ref on both projections",)}),
     Claim("high-N axis check, prof_y's binned-moment D above prof_x's, in D_ref",
           lambda: tuple(str(row[3] - row[2]) for row in _axis_check_band_d()), {
               f"{HALIDE}/br_highn_data.py": ("account for 0.004, -0.001 and 0.012",),
-              f"{HALIDE}/README.md": ("accounts for 0.004, -0.001 and 0.012 of that difference",)}),
+              f"{HALIDE}/README.md": ("accounts for 0.004, -0.001 and 0.012 of the fit difference",)}),
     Claim("high-N axis check, frame-0 binned second moments", _axis_check_frame0_range, {
         f"{HALIDE}/br_highn_data.py": ("622.1 to 625.4 nm^2 on the bin centres",)}),
     Claim("high-N axis check, bins per side and their spacing in bin widths",

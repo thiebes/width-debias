@@ -232,8 +232,10 @@ apparent subdiffusion is a short-window / narrow-box artifact, not real
 transport.)
 
 `axis_check.py` (`axis_check.txt`) compares the two projections with that
-reference, on the bin centres and over all frames. M/(V/2) is within 0.0123 of
-1 on each axis, and M_x/M_y is within 0.0143 of 1. Walker sampling alone gives
+reference, on the bin centres and over all frames, through the binned second
+moment M of each projection about its own centroid (M_x and M_y) and V, the
+walkers' 2-D moment (`variance.avg.dat`). M/(V/2) is within 0.0123 of 1 on
+each axis, and M_x/M_y is within 0.0143 of 1. Walker sampling alone gives
 about 0.003 for that ratio, but only as a lower bound: at 3 ns the larger
 centroid of each fraction lies 7 to 28 times its walker-only error from the
 centre, so the 16 realizations of the disorder set the scatter, and the table
@@ -246,8 +248,10 @@ Over the usable band at CNR0 15, the Gaussian fit of the noise-free `prof_y`
 gives D/D_ref 1.009, 0.992 and 0.984, against 0.992, 0.958 and 0.960 for
 `prof_x`, which the experiment reads, so the two projections' shape gaps
 differ by 0.017 to 0.034 of D_ref. The D of the binned moments, which carries
-no profile shape, accounts for 0.004, -0.001 and 0.012 of that difference
-(about half at x = 0.75); the profile shape accounts for the rest. These files
+no profile shape, is within 0.006 of D_ref on both projections (the
+moment-to-reference part of the gap), and its difference between the
+projections accounts for 0.004, -0.001 and 0.012 of the fit difference (about
+half at x = 0.75); the profile shape accounts for the rest. These files
 cannot tell whether the difference comes from the transport or from the finite
 set of realizations.
 

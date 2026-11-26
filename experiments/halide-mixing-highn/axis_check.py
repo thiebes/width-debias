@@ -41,9 +41,9 @@ fits and the largest fitted variance as a fraction of the fit's cap.
 
 Sampling scale: for N independent walkers, the binned variance along one axis
 has a relative SE of sqrt((2 + k) / N), with k the excess kurtosis, so M_x / M_y
-carries sqrt(2 (2 + k) / N). That is a lower bound. The centroids drift by many
-times their walker-only SE, sqrt(M / N), so the 16 realizations of the halide
-disorder set the scatter, and the averaged files cannot show how large it is:
+carries sqrt(2 (2 + k) / N). That is a lower bound. At 3 ns the larger
+centroid of each fraction lies 7 to 28 times its walker-only SE, sqrt(M / N),
+from the centre, so the 16 realizations of the halide disorder set the scatter, and the averaged files cannot show how large it is:
 the table does not test isotropy. (M_x + M_y) / V has no walker-sampling term
 if V and the maps come from the same runs, yet it departs from 1 and the
 departure grows with time. V is the mean of the instances' variance files (the

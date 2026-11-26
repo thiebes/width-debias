@@ -17,15 +17,19 @@ ns, initial 1-D sigma ~25 nm. The wide box leaves the spot well inside even the
 fastest fraction (last-frame +/-7.6 sigma at x=0.25), so the binned moment is not
 clipped -- unlike the legacy 150 nm maps in :mod:`br_data`.
 
-The carrier (transport) truth is the particle second moment in
+The carrier (transport) truth is the particle second moment V in
 ``variance.x_<frac>.avg.dat`` (the 2-D trace var_x + var_y, computed from the
 walkers' unwrapped positions and so free of any binning or box truncation);
 halving it gives the isotropic 1-D truth, the same convention as
-:mod:`br_data`. ``axis_check.py`` compares the profiles with both assumptions
-(``axis_check.txt``). On the bin centres, with Sheppard's bin-width term
-subtracted, M/(V/2) is within 0.0123 of 1 on each axis over all 601 frames,
-while (M_x + M_y)/V departs from 1 by up to 0.0108, growing with time, which
-walker sampling cannot produce. The files' x axis, which the fits use, spaces
+:mod:`br_data`. That rests on two assumptions: the second moments along the
+two axes are equal, so V/2 is the 1-D truth, and the collapsed 1-D profile
+carries the walkers' moment along its axis. ``axis_check.py`` compares the
+profiles with both (``axis_check.txt``). With M the binned second moment of
+each projection about its own centroid, on the bin centres and with
+Sheppard's bin-width term subtracted, M/(V/2) is within 0.0123 of 1 on each
+axis over all 601 frames. (M_x + M_y)/V, which needs no assumption about the
+axes, departs from 1 by up to 0.0108, growing with time, which walker sampling
+cannot produce. The files' x axis, which the fits use, spaces
 the bins by 600/599 of their 5 nm width, so every second moment on it is
 larger by a factor 1.0033.
 
@@ -111,11 +115,12 @@ def load_case(frac: str, tau_ns: float = DEFAULT_TAU_NS, n0: float = 1.0) -> BrC
     that of ``prof_y`` is within 0.0143 of 1. Walker sampling alone gives about
     0.003, a lower bound, since the 16 realizations of the disorder add scatter
     the averaged files cannot show. Over the usable band at CNR0 15, the
-    Gaussian fit of the noise-free ``prof_y`` gives a D higher by 0.017 to
-    0.034 of D_ref; the binned moments account for 0.004, -0.001 and 0.012 of
-    that, and these files cannot tell whether the difference comes from the
-    transport or from the finite set of realizations (``axis_check.txt``). The
-    truth is ``variance.avg.dat / 2``; both are keyed on the same frame times.
+    Gaussian fit of the noise-free ``prof_y`` gives a D higher than that of
+    ``prof_x`` by 0.017, 0.034 and 0.024 of D_ref (x = 0.25, 0.5, 0.75); the
+    binned moments account for 0.004, -0.001 and 0.012 of those, and these
+    files cannot tell whether the difference comes from the transport or from
+    the finite set of realizations (``axis_check.txt``). The truth is
+    ``variance.avg.dat / 2``; both are keyed on the same frame times.
     """
     folder = _case_dir(frac)
     d = np.load(folder / f"collapsed_1d.x_{frac}.npz")
