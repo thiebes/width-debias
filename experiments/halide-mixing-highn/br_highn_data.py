@@ -21,13 +21,13 @@ The carrier (transport) truth is the particle second moment in
 ``variance.x_<frac>.avg.dat`` (the 2-D trace var_x + var_y, computed from the
 walkers' unwrapped positions and so free of any binning or box truncation);
 halving it gives the isotropic 1-D truth, the same convention as
-:mod:`br_data`. ``axis_check.py`` tests both steps (``axis_check.txt``). On the
-bin centres, with Sheppard's bin-width term subtracted, the binned second
-moments of the two projections add to within 0.0108 of the 2-D moment, as a
-fraction of it, and each is within 0.0123 of the halved moment, over all 601
-frames. The files'
-x axis, which the fits use, spaces the bins by 600/599 of their 5 nm width, so
-every second moment on it is larger by a factor 1.0033.
+:mod:`br_data`. ``axis_check.py`` compares the profiles with both assumptions
+(``axis_check.txt``). On the bin centres, with Sheppard's bin-width term
+subtracted, M/(V/2) is within 0.0123 of 1 on each axis over all 601 frames,
+while (M_x + M_y)/V departs from 1 by up to 0.0108, growing with time, which
+walker sampling cannot produce. The files' x axis, which the fits use, spaces
+the bins by 600/599 of their 5 nm width, so every second moment on it is
+larger by a factor 1.0033.
 
 Two modelling points the validation depends on (shared with :mod:`br_data`):
 
@@ -112,9 +112,10 @@ def load_case(frac: str, tau_ns: float = DEFAULT_TAU_NS, n0: float = 1.0) -> BrC
     0.003, a lower bound, since the 16 realizations of the disorder add scatter
     the averaged files cannot show. Over the usable band at CNR0 15, the
     Gaussian fit of the noise-free ``prof_y`` gives a D higher by 0.017 to
-    0.034 of D_ref, so the shape gap read from one projection is uncertain by
-    that much (``axis_check.txt``). The truth is ``variance.avg.dat / 2``; both
-    are keyed on the same frame times.
+    0.034 of D_ref; the binned moments account for 0.004, -0.001 and 0.012 of
+    that, and these files cannot tell whether the difference comes from the
+    transport or from the finite set of realizations (``axis_check.txt``). The
+    truth is ``variance.avg.dat / 2``; both are keyed on the same frame times.
     """
     folder = _case_dir(frac)
     d = np.load(folder / f"collapsed_1d.x_{frac}.npz")

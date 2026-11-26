@@ -5,6 +5,9 @@ with Sheppard's bin-width terms subtracted (2.08 nm^2 from M). V: the walkers' 2
 second moment (variance.x_<frac>.avg.dat); V/2 is the experiment's reference.
 On the files' x axis, which the fits use, every M is larger by (600/599)^2 = 1.0033.
 Edge: the larger fraction of the profile in the outermost tenth of the window.
+Usable band: every 10th frame with per-frame CNR >= 1.3 at CNR0 15. Both D there fit MSD = 2 D t^alpha
+over the band, to the noise-free Gaussian fit's variance (capped at 90000 nm^2) or to M,
+each minus its frame-0 value. D_ref: the same fit to V/2 over the full strided record.
 ============================================================================
   t(ns)   cen_x    cen_y      M_x       M_y       V/2   Mx/My (Mx+My)/V Mx/(V/2) My/(V/2)  kurt_x  kurt_y   edge_x   edge_y
           (nm)     (nm)     (nm^2)    (nm^2)    (nm^2)
@@ -19,7 +22,7 @@ x = 0.25 (400000 walkers)
    3.00    -6.19    +8.75   38442.4   38557.6   38088.2  0.9970  1.0108  1.0093  1.0123  +0.004  +0.016  0.0e+00  0.0e+00
   all 601 frames: |M_x/M_y - 1| <= 0.0133 at 0.090 ns (walker sampling alone about 0.0032, a lower bound); |(M_x+M_y)/V - 1| <= 0.0108 at 2.995 ns
   all 601 frames: |M_x/(V/2) - 1| <= 0.0094 at 2.970 ns; |M_y/(V/2) - 1| <= 0.0123 at 3.000 ns; excess kurtosis -0.010 to +0.088; edge fraction <= 0.0e+00
-  usable band at CNR0 15 (20 frames, t <= 0.95 ns), D / D_ref: noise-free Gaussian fit prof_x 0.992, prof_y 1.009; binned moment prof_x 1.001, prof_y 1.005; 0 failed fits, largest fitted variance 0.14 of the cap
+  usable band at CNR0 15 (20 frames, t <= 0.95 ns), D / D_ref: noise-free Gaussian fit prof_x 0.992, prof_y 1.009; binned moment prof_x 1.001, prof_y 1.005; 0 of 40 fits failed, largest fitted variance 0.14 of the cap
 
 x = 0.5 (400000 walkers)
    0.00    -0.01    -0.03     625.2     624.5     624.9  1.0011  1.0000  1.0005  0.9995  -0.010  +0.005  0.0e+00  0.0e+00
@@ -31,7 +34,7 @@ x = 0.5 (400000 walkers)
    3.00    +1.37    -1.21   16432.0   16478.0   16410.9  0.9972  1.0027  1.0013  1.0041  +0.033  +0.012  0.0e+00  0.0e+00
   all 601 frames: |M_x/M_y - 1| <= 0.0078 at 0.015 ns (walker sampling alone about 0.0033, a lower bound); |(M_x+M_y)/V - 1| <= 0.0027 at 3.000 ns
   all 601 frames: |M_x/(V/2) - 1| <= 0.0048 at 0.020 ns; |M_y/(V/2) - 1| <= 0.0043 at 2.940 ns; excess kurtosis -0.012 to +0.140; edge fraction <= 0.0e+00
-  usable band at CNR0 15 (26 frames, t <= 1.25 ns), D / D_ref: noise-free Gaussian fit prof_x 0.958, prof_y 0.992; binned moment prof_x 1.000, prof_y 0.999; 0 failed fits, largest fitted variance 0.08 of the cap
+  usable band at CNR0 15 (26 frames, t <= 1.25 ns), D / D_ref: noise-free Gaussian fit prof_x 0.958, prof_y 0.992; binned moment prof_x 1.000, prof_y 0.999; 0 of 52 fits failed, largest fitted variance 0.08 of the cap
 
 x = 0.75 (400000 walkers)
    0.00    -0.02    +0.01     625.4     622.1     623.6  1.0053  1.0001  1.0028  0.9975  +0.001  -0.002  0.0e+00  0.0e+00
@@ -43,4 +46,4 @@ x = 0.75 (400000 walkers)
    3.00    +0.35    -3.03   14594.2   14739.6   14571.0  0.9901  1.0066  1.0016  1.0116  +0.038  +0.027  0.0e+00  0.0e+00
   all 601 frames: |M_x/M_y - 1| <= 0.0143 at 2.030 ns (walker sampling alone about 0.0032, a lower bound); |(M_x+M_y)/V - 1| <= 0.0066 at 2.995 ns
   all 601 frames: |M_x/(V/2) - 1| <= 0.0047 at 1.495 ns; |M_y/(V/2) - 1| <= 0.0119 at 2.830 ns; excess kurtosis -0.002 to +0.107; edge fraction <= 0.0e+00
-  usable band at CNR0 15 (28 frames, t <= 1.35 ns), D / D_ref: noise-free Gaussian fit prof_x 0.960, prof_y 0.984; binned moment prof_x 0.994, prof_y 1.006; 0 failed fits, largest fitted variance 0.08 of the cap
+  usable band at CNR0 15 (28 frames, t <= 1.35 ns), D / D_ref: noise-free Gaussian fit prof_x 0.960, prof_y 0.984; binned moment prof_x 0.994, prof_y 1.006; 0 of 56 fits failed, largest fitted variance 0.08 of the cap

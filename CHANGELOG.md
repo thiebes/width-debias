@@ -74,19 +74,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   fraction and at seven frames, each projection's centroid, binned second
   moment, excess kurtosis and window-edge fraction; the extremes over all
   frames with their times; and, over the usable band at CNR0 15, the D/D_ref
-  of each axis from the noise-free fit and from the binned moments. On the bin
-  centres the binned moments are within 0.0123 of the halved moment and their
-  ratio is within 0.0143 of 1; walker sampling alone gives about 0.003, a lower
-  bound, since the 16 disorder realizations add scatter the averaged files
-  cannot show, so the table does not test isotropy. The binned moments give
-  D/D_ref within 0.006 of 1 on both axes, but the noise-free fit of `prof_y`
-  gives 1.009, 0.992 and 0.984 against 0.992, 0.958 and 0.960 for `prof_x`, so
-  the shape gap read from one projection is uncertain by 0.017 to 0.034 of
-  D_ref. The loader still reads `prof_x`, and no result of the experiment
-  changes. The loader's docstrings, which stated without a table that the axes
-  agree to within one part in a hundred and gave the binned moment's offset
-  from the reference to bin width alone, now give the table's values. Part of
-  that offset is the files' x axis, whose spacing is 600/599 of the bin width.
+  of each axis from the noise-free fit and from the binned moments, with the
+  fit checks. On the bin centres M/(V/2) is within 0.0123 of 1 on each axis
+  and M_x/M_y within 0.0143 of 1; walker sampling alone gives about 0.003, a
+  lower bound, since the 16 disorder realizations add scatter the averaged
+  files cannot show, so the table does not test isotropy. (M_x + M_y)/V
+  departs from 1 by up to 0.0108, growing with time. The noise-free fit of
+  `prof_y` gives D/D_ref 1.009, 0.992 and 0.984 against 0.992, 0.958 and 0.960
+  for `prof_x`; the binned moments account for 0.004, -0.001 and 0.012 of
+  that difference and the profile shape for the rest, and these files cannot
+  tell whether it comes from the transport or from the finite set of
+  realizations. The loader still reads `prof_x`, and no result of the
+  experiment changes. Its docstrings had stated without a table that the axes
+  agree to within one part in a hundred: the projections differ by up to
+  0.0143, more than that, and the isotropy of the transport is not tested.
+  They had also given the binned moment's offset from the reference to bin
+  width alone; part of it is the files' x axis, whose spacing is 600/599 of
+  the bin width. Both now give the table's values.
 
 ### Changed
 

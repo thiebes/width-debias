@@ -566,7 +566,8 @@ def _axis_check_extremes() -> list[tuple[Decimal, ...]]:
     second = re.findall(
         r"all \d+ frames: \|M_x/\(V/2\) - 1\| <= ([\d.]+) at [\d.]+ ns; "
         r"\|M_y/\(V/2\) - 1\| <= ([\d.]+) at", text)
-    assert len(first) == len(second) == 3, f"{AXIS_CHECK}: summary lines are not 3 and 3"
+    assert len(first) == len(second) == 3, (
+        f"{AXIS_CHECK}: {len(first)} and {len(second)} summary lines, not 3 and 3")
     return [tuple(Decimal(v) for v in a + b) for a, b in zip(first, second)]
 
 
@@ -584,6 +585,31 @@ def _axis_check_band_d() -> list[tuple[Decimal, ...]]:
     assert len(rows) == 3, f"{AXIS_CHECK}: {len(rows)} usable-band lines, not 3"
     return rows
 
+
+
+def _axis_check_centroid_drift() -> tuple[str, ...]:
+    """At 3 ns, the larger centroid of each Br fraction over its walker-only SE,
+    sqrt(M / N): the smallest and largest of the three, to the nearest whole number."""
+    text = _read(AXIS_CHECK)
+    walkers = [Decimal(n) for n in re.findall(r"^x = [\d.]+ \((\d+) walkers\)", text, re.M)]
+    rows = [_numbers(line) for line in text.splitlines() if line.startswith("   3.00 ")]
+    assert len(walkers) == len(rows) == 3, f"{AXIS_CHECK}: {len(walkers)} fractions, {len(rows)} rows at 3 ns"
+    drifts = []
+    for n, row in zip(walkers, rows):
+        cen_x, cen_y, m_x, m_y = (Decimal(v) for v in row[1:5])
+        drifts.append(max(abs(cen_x) / (m_x / n).sqrt(), abs(cen_y) / (m_y / n).sqrt()))
+    return _rounded(min(drifts), 0), _rounded(max(drifts), 0)
+
+
+def _axis_check_grid() -> dict[str, str]:
+    """The bin width and the files' axis factor, as the table header prints them."""
+    text = _read(AXIS_CHECK)
+    widths = re.findall(r"bin width ([\d.]+) nm", text)
+    factors = re.findall(r"larger by \((\d+)/(\d+)\)\^2 = (\d+\.\d+)", text)
+    assert len(widths) == 1 and len(factors) == 1, (
+        f"{AXIS_CHECK}: {len(widths)} bin widths and {len(factors)} axis factors, not one each")
+    n_bins, n_minus_1, factor = factors[0]
+    return {"width": widths[0], "n_bins": n_bins, "n_minus_1": n_minus_1, "factor": factor}
 
 def _axis_check_frame0_range() -> tuple[str, ...]:
     """The smallest and largest frame-0 binned second moment, over both axes."""
@@ -921,23 +947,26 @@ CLAIMS = [
               f"{HALIDE}/README.md": ("(calibration SE up to 0.16)",)}),
     Claim("high-N axis check, largest |M_x/M_y - 1|", lambda: _axis_check_largest(0), {
         f"{HALIDE}/br_highn_data.py": ("is within 0.0143 of 1",),
-        f"{HALIDE}/README.md": ("their ratio M_x/M_y is within 0.0143 of 1",),
+        f"{HALIDE}/README.md": ("and M_x/M_y is within 0.0143 of 1",),
         "docs/REPO_MAP.md": ("binned-moment ratio is within 0.0143 of 1",)}),
     Claim("high-N axis check, walker-sampling scale of M_x/M_y",
           lambda: (_rounded(max(row[1] for row in _axis_check_extremes()), 3),), {
               f"{HALIDE}/br_highn_data.py": ("Walker sampling alone gives about 0.003",),
               f"{HALIDE}/README.md": ("Walker sampling alone gives about 0.003",),
               "docs/REPO_MAP.md": ("(walker sampling about 0.003, a lower bound)",)}),
+    Claim("high-N axis check, centroid drift at 3 ns over its walker-only error",
+          _axis_check_centroid_drift, {
+              f"{HALIDE}/README.md": ("centroid of each fraction lies 7 to 28 times",)}),
     Claim("high-N axis check, largest |M/(V/2) - 1| over both axes",
           lambda: _axis_check_largest(3, 4), {
-              f"{HALIDE}/br_highn_data.py": ("each is within 0.0123 of the halved moment",),
-              f"{HALIDE}/README.md": ("each is within 0.0123 of the halved moment",)}),
+              f"{HALIDE}/br_highn_data.py": ("M/(V/2) is within 0.0123 of 1 on each axis",),
+              f"{HALIDE}/README.md": ("M/(V/2) is within 0.0123 of 1 on each axis",)}),
     Claim("high-N axis check, largest |(M_x+M_y)/V - 1|", lambda: _axis_check_largest(2), {
-        f"{HALIDE}/br_highn_data.py": ("add to within 0.0108 of the 2-D moment",),
-        f"{HALIDE}/README.md": ("add to within 0.0108 of the 2-D moment",)}),
+        f"{HALIDE}/br_highn_data.py": ("departs from 1 by up to 0.0108",),
+        f"{HALIDE}/README.md": ("departs from 1 by up to 0.0108",)}),
     Claim("high-N axis check, noise-free fit D / D_ref of prof_y",
           lambda: tuple(str(row[1]) for row in _axis_check_band_d()), {
-              f"{HALIDE}/README.md": ("noise-free `prof_y` gives 1.009, 0.992 and 0.984",)}),
+              f"{HALIDE}/README.md": ("gives D/D_ref 1.009, 0.992 and 0.984",)}),
     Claim("high-N axis check, noise-free fit D / D_ref of prof_x",
           lambda: tuple(str(row[0]) for row in _axis_check_band_d()), {
               f"{HALIDE}/README.md": ("against 0.992, 0.958 and 0.960 for `prof_x`",)}),
@@ -945,18 +974,25 @@ CLAIMS = [
           lambda: tuple(str(f(row[1] - row[0] for row in _axis_check_band_d()))
                         for f in (min, max)), {
               f"{HALIDE}/br_highn_data.py": ("gives a D higher by 0.017 to 0.034",),
-              f"{HALIDE}/README.md": ("thus differ by 0.017 to 0.034 of D_ref",),
+              f"{HALIDE}/README.md": ("shape gaps differ by 0.017 to 0.034 of D_ref",),
               "docs/REPO_MAP.md": ("differs between them by 0.017-0.034",)}),
-    Claim("high-N axis check, binned-moment D / D_ref on both axes",
-          lambda: (_bound(max(abs(row[c] - 1) for row in _axis_check_band_d()
-                              for c in (2, 3)), 3),), {
-              f"{HALIDE}/README.md": ("gives D/D_ref within 0.006 of 1 on both projections",)}),
+    Claim("high-N axis check, prof_y's binned-moment D above prof_x's, in D_ref",
+          lambda: tuple(str(row[3] - row[2]) for row in _axis_check_band_d()), {
+              f"{HALIDE}/br_highn_data.py": ("account for 0.004, -0.001 and 0.012",),
+              f"{HALIDE}/README.md": ("accounts for 0.004, -0.001 and 0.012 of that difference",)}),
     Claim("high-N axis check, frame-0 binned second moments", _axis_check_frame0_range, {
         f"{HALIDE}/br_highn_data.py": ("622.1 to 625.4 nm^2 on the bin centres",)}),
+    Claim("high-N axis check, bins per side and their spacing in bin widths",
+          lambda: (_axis_check_grid()["n_bins"], _axis_check_grid()["n_minus_1"]), {
+              f"{HALIDE}/br_highn_data.py": ("spaces the bins by 600/599",)}),
+    Claim("high-N axis check, bin width", lambda: (_axis_check_grid()["width"],), {
+        f"{HALIDE}/br_highn_data.py": ("of their 5 nm width",)}),
     Claim("high-N axis check, second moments on the files' x axis",
-          lambda: tuple(re.findall(r"larger by \(600/599\)\^2 = (\d+\.\d+)", _read(AXIS_CHECK))), {
+          lambda: (_axis_check_grid()["factor"],), {
               f"{HALIDE}/br_highn_data.py": ("larger by a factor 1.0033",),
-              f"{HALIDE}/axis_check.py": ("(n/(n - 1))^2 = 1.0033 for n = 600",)}),
+              f"{HALIDE}/axis_check.py": ("(n/(n - 1))^2 = 1.0033",)}),
+    Claim("high-N axis check, bins per side", lambda: (_axis_check_grid()["n_bins"],), {
+        f"{HALIDE}/axis_check.py": ("for n = 600",)}),
     Claim("unbounded comparison, OLS at CNR_0 34",
           lambda: (_rounded(_unbounded_d_row(34)[0], 2),), {
               "README.md": ("an unweighted fit returns 1.20 times the reference D",)}),
@@ -1064,6 +1100,7 @@ def _carries(snippet_numbers: tuple[str, ...], value: tuple[str, ...]) -> bool:
 def test_quoted_number_matches_its_table(claim: Claim, path: str, snippet: str) -> None:
     """The copy is in its document and carries the value its table gives now."""
     value = claim.compute()
+    assert value, f"{claim.name}: the table gave no value"
     assert _contains(_read(path), snippet), (
         f"{path} no longer contains {snippet!r} for {claim.name!r}: update the document "
         "and this snippet together")

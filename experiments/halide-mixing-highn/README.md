@@ -232,19 +232,24 @@ apparent subdiffusion is a short-window / narrow-box artifact, not real
 transport.)
 
 `axis_check.py` (`axis_check.txt`) compares the two projections with that
-reference. On the bin centres, over all frames, the binned second moments of
-the two projections add to within 0.0108 of the 2-D moment, as a fraction of
-it, each is within 0.0123 of the halved moment, and their ratio M_x/M_y is
-within 0.0143 of 1. Walker sampling alone gives about 0.003 for that ratio,
-but only as a lower bound: the centroids drift by many times their walker-only
-error, so the 16 realizations of the disorder set the scatter, and the table
-does not test isotropy. Over the usable band at CNR0 15, the power-law fit of
-the binned moments gives D/D_ref within 0.006 of 1 on both projections, while
-the Gaussian fit of the noise-free `prof_y` gives 1.009, 0.992 and 0.984,
-against 0.992, 0.958 and 0.960 for `prof_x`, which the experiment reads. The
-shape gaps of the two projections thus differ by 0.017 to 0.034 of D_ref,
-mostly through the profiles' shape, and these files cannot tell whether that
-comes from the transport or from the finite set of realizations.
+reference, on the bin centres and over all frames. M/(V/2) is within 0.0123 of
+1 on each axis, and M_x/M_y is within 0.0143 of 1. Walker sampling alone gives
+about 0.003 for that ratio, but only as a lower bound: at 3 ns the larger
+centroid of each fraction lies 7 to 28 times its walker-only error from the
+centre, so the 16 realizations of the disorder set the scatter, and the table
+does not test isotropy. (M_x + M_y)/V departs from 1 by up to 0.0108, growing
+with time, which walker sampling cannot produce. V is the mean of the
+instances' variance files; if each is taken about its own instance's centroid,
+the pooled maps also carry the spread of the instance centroids.
+
+Over the usable band at CNR0 15, the Gaussian fit of the noise-free `prof_y`
+gives D/D_ref 1.009, 0.992 and 0.984, against 0.992, 0.958 and 0.960 for
+`prof_x`, which the experiment reads, so the two projections' shape gaps
+differ by 0.017 to 0.034 of D_ref. The D of the binned moments, which carries
+no profile shape, accounts for 0.004, -0.001 and 0.012 of that difference
+(about half at x = 0.75); the profile shape accounts for the rest. These files
+cannot tell whether the difference comes from the transport or from the finite
+set of realizations.
 
 Over the 3 ns window the peak drops ~147x, so most late frames fall below CNR 1
 and are excluded by the floor; the correction is tested on the usable band (a
