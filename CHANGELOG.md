@@ -5,7 +5,7 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.5.0] - 2026-11-26
+## [0.5.0] - 2026-11-27
 
 One opt-in addition to the package, the spreading peak
 (`Experiment.spread_dims`). With default settings every output of the package
@@ -129,12 +129,27 @@ concern the experiment scripts, their tables and the documentation.
   `.github/build-constraints.txt`; 84.0.0 carried an advisory for its legacy
   egg install on Windows, a path this build does not use. CI and the publish
   workflow use setup-uv v10.3.3.
-- The source distribution carries four more test modules, which check the
+- The source distribution carries five more test modules, which check the
   repository's experiment scripts, tables and documents; outside a full
   checkout they skip, and the package's own tests run.
 
 ### Fixed
 
+- `experiments/halide-mixing-brI-legacy/rerun/run_instances.sh` starts instance k
+  after k times a gap (2 s by default, an optional fifth argument), because the
+  simulator seeds from the wall clock at one-second resolution. Its random 0 to
+  4 s stagger gave at most five distinct realisations when the instances
+  started together. When the instances are done, it lists one instance per
+  distinct complete variance file, by hash, in `unique_instances.txt`, as the
+  top-up scripts do, and names the incomplete ones. When fewer than asked are
+  distinct it prints the `rerun_unique.sh` command first, and it prints the
+  averaging command only for distinct instances; its closing hint averaged
+  every instance, copies included. It also exports the walker count to the
+  instances, which it did not: each instance's parameter file got an `N` line
+  with no value unless the caller had exported it. It refuses a folder that
+  already holds `inst_*` folders, a gap that is not a whole number of seconds,
+  and a parameter file that does not give both tmax and tsamp.
+  `tests/test_run_instances.py` runs it with a stub simulator.
 - `experiments/halide-mixing-highn/br_halide_highn_validation.py`, the test of
   the 1-D D-free lookup on the high-N halide bed, caps the fitted width at 12
   sigma_0 = 300 nm in the calibration and in the application, as the rest of

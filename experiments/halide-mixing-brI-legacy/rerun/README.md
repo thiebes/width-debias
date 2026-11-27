@@ -102,12 +102,18 @@ window.
    so each finishes in seconds. If `diff` reports the files are identical, the
    binary uses a fixed seed and averaging adds no statistics. If they differ,
    restore `N` and `tmax` and continue.
-4. Run the instances with `run_instances.sh` (see its header for arguments).
-   The simulator seeds its random number generator from the wall clock at
-   one-second resolution, and this script staggers the starts by 0 to 4 s, so
-   instances that start in the same second are identical. When all instances
-   start together (no more instances than parallel slots), at most five
-   distinct realisations result.
+4. Run the instances with `run_instances.sh` (see its header for arguments)
+   in a fraction folder that holds no `inst_*` folders yet; the script refuses
+   to reuse them. The simulator seeds its random number generator from the wall
+   clock at one-second resolution, so instances that start in the same second
+   are identical. The script therefore starts instance k after k times the gap
+   (2 s by default), so in any wave each instance starts at least one gap after
+   the one before it; only the time each takes to copy its files and start can
+   still put two in one second. When all are done, the script keeps one
+   instance per distinct complete variance file (compared by hash), writes
+   them to `unique_instances.txt`, and reports how many there are and which
+   instances are incomplete. If all are distinct, go to step 6; if not, it
+   prints the `rerun_unique.sh` command for step 5.
 5. Top up to the number of distinct realisations wanted with
    `rerun_all_unique.sh` (all three fractions in one pool of workers) or
    `rerun_unique.sh` (one fraction). Each starts every new instance in its own
@@ -144,16 +150,23 @@ The files that `experiments/halide-mixing-highn/` reads were made with the
 steps above, with the parameter files changed to a 600 x 600 diffmap over a
 3000 nm window (5 nm/bin) and 25,000 walkers per instance. A driver script,
 `run_all_fractions.sh`, made those changes, set up the fraction folders, ran
-step 4 for the three fractions, and averaged all 16 instances of each fraction,
-duplicates included, with `average_diffmaps.py`. It reads its inputs from a
-fixed location of the group's storage and is not included here.
+`run_instances.sh` for the three fractions, and averaged all 16 instances of
+each fraction, duplicates included, with `average_diffmaps.py`. The driver
+reads its inputs from a fixed location of the group's storage and is not
+included here. The `run_instances.sh` it ran staggered the starts by a random
+0 to 4 s and listed no distinct instances. The copy kept with the run's files
+differs from the repository's version of that time in one message and in
+exporting the walker count to the instances, which the repository's version
+did not do: run as committed, unless the caller had exported the walker count,
+it wrote an `N` line with no value into each instance's parameter file. The first run's instances carry N = 25,000.
 `rerun_all_unique.sh` is included unchanged, and `rerun_unique.sh` with one
-comment reworded.
+comment reworded; the headers of both describe that earlier `run_instances.sh`.
 
-1. A first run of 16 instances per fraction gave only 5 distinct realisations
-   per fraction (step 4); each other instance was an exact copy of one of the
-   five. Its averaged maps are therefore duplication-weighted averages over 5
-   realisations.
+1. A first run of 16 instances per fraction, all started together, gave only 5
+   distinct realisations per fraction: with a random 0 to 4 s stagger the
+   instances started in at most five different seconds, and each other instance
+   was an exact copy of one of the five. Its averaged maps are therefore
+   duplication-weighted averages over 5 realisations.
 2. A top-up (step 5) added 11 instances per fraction, giving 16 distinct
    realisations of 25,000 walkers (400,000 walkers per fraction). These were
    averaged (step 6) and collapsed to 1-D by a script that is not kept. Either
@@ -208,8 +221,9 @@ files with the kept realisations' variance files.
 
 - **Seed / randomisation** (step 3) determines whether averaging is valid.
   Step 3 detects a fixed seed but not two instances that started in the same
-  second; check that all instances are distinct (the top-up scripts compare
-  the hashes of their variance files).
+  second; check that all instances are distinct (`run_instances.sh` and the
+  top-up scripts compare the hashes of their variance files and list the
+  distinct ones in `unique_instances.txt`).
 - **Frame count:** the diffmap can hold a few more frame blocks than
   `variance.dat` has rows (605 vs 601 in the shared file). Take the frame count
   from `tmax / tsamp + 1` and check whether the diffmap carries a header or

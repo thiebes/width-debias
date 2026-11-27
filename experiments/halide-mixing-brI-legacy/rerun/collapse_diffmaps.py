@@ -39,8 +39,9 @@ Reads (from <dir>, default the current directory):
     parameters.x_<frac>.dat    -- diffmap window and bins, sampling and simulated
                                   time, Br fraction
     unique_instances.txt       -- the averaged instance directories, one per line,
-                                  as rerun_unique.sh and rerun_all_unique.sh write
-                                  it; each holds its parameter and variance files
+                                  as run_instances.sh, rerun_unique.sh and
+                                  rerun_all_unique.sh write it; each holds its
+                                  parameter and variance files
 Writes (in the current directory):
     collapsed_1d.x_<frac>.npz  -- x (nm), t (ns), prof_x and prof_y (frames x bins),
                                   and box_nm, n_bins, n_frames, n_unique,
