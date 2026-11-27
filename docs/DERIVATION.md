@@ -264,7 +264,8 @@ the summed profile spreads (`Experiment.spread_dims`), so that the late frames
 reach a lower per-frame CNR, and a 5000-run calibration, the corrected counts
 are 6 of 140 and 7 of 96 and the uncorrected ones 45 of 140 and 43 of 96: the
 D = 0 lookup, read at each frame's CNR, holds under a peak that falls with
-spreading as well. One
+spreading as well. The corrected counts are not like for like with those
+above, whose calibrations have 300 and 2000 runs, so a larger combined SE. One
 calibration serves all cells of a shape, so these counts are indicative, not a
 test against a binomial null. The small-D, low-CNR cells
 have large combined SE and so constrain the bias only loosely. `D = 0.005` has
@@ -384,12 +385,15 @@ Carlo noise.
 ### Design recommendation that follows
 
 A measurement is bias-correctable end-to-end if **every frame's
-per-profile CNR exceeds the working floor**. Equivalently, the deepest
-frame's CNR — `CNR₀ · exp(−t_max/τ)` — must satisfy
+per-profile CNR exceeds the working floor**. For a peak that falls with the
+decay alone, the deepest frame's CNR — `CNR₀ · exp(−t_max/τ)` — must then
+satisfy
 
     CNR₀ · exp(−t_max/τ)  ≳  1.
 
-For the typical `t_max = 3 τ` this means `CNR₀ ≳ exp(3) ≈ 20`. If
+For the typical `t_max = 3 τ` this means `CNR₀ ≳ exp(3) ≈ 20`; a peak that
+also falls as the profile spreads needs a higher CNR₀, the more so at larger
+D. If
 experimental constraints prevent that, the late frames must be discarded
 or replaced with denser early-time sampling so the slope fit is
 dominated by frames inside the working regime.
@@ -432,13 +436,14 @@ lookup of Section 8; both are experimental.
   `var_bias(per-frame CNR)`, so it depends on the per-frame CNR, not on how the
   population decays. `experiments/multiexp-decay/multiexp_decay.py` (the `MultiExpExperiment` bed)
   confirms the per-frame residual collapses across single- and bi-exponential
-  decay for per-frame CNR ≥ 1 (across-law spread ≤ 0.012 σ₀²) and corrected D
+  decay for per-frame CNR ≥ 1 (across-law spread ≤ 0.012 σ_0²) and corrected D
   stays within 0.93 to 1.06 of D_ref over CNR₀ 8 to 90 for three decay laws.
   Thresholds quoted in the *initial* CNR₀ (the §9 design
-  rule `CNR₀ ≳ exp(t_max/τ)`) are single-exponential-specific; the invariant
-  form is the per-frame `CNR ≳ 1` of §9.
-- **Wall pile-up at CNR ≈ 1.** The Voigt and generalized-Gaussian p = 1.5 fits
-  pile up at the lower bound in 0.05 to 0.06 of fits at CNR ≈ 1; a small
+  rule `CNR₀ ≳ exp(t_max/τ)`) are specific to a single-exponential decay and
+  to a peak that falls with the decay alone; the invariant form is the
+  per-frame `CNR ≳ 1` of §9.
+- **Pile-up at the bound at CNR ≈ 1.** The Voigt and generalized-Gaussian
+  p = 1.5 fits show a small pile-up at the lower bound at CNR ≈ 1; a small
   censored term on top of the noise-bias correction may be needed for the
   deepest-noise frames.
 - **Not tested:** heterogeneous transport with site-dependent mobility (an

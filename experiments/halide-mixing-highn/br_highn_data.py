@@ -113,13 +113,13 @@ def load_case(frac: str, tau_ns: float = DEFAULT_TAU_NS, n0: float = 1.0) -> BrC
 
     Uses the ``prof_x`` projection. The ratio of its binned second moment to
     that of ``prof_y`` is within 0.0143 of 1. Walker sampling alone gives about
-    0.003, a lower bound, since the 16 realizations of the disorder add scatter
+    0.003, a lower bound, since the 16 realisations of the disorder add scatter
     the averaged files cannot show. Over the usable band at CNR0 15, the
     Gaussian fit of the noise-free ``prof_y`` gives a D higher than that of
     ``prof_x`` by 0.017, 0.034 and 0.024 of D_ref (x = 0.25, 0.5, 0.75); the
     binned moments account for 0.004, -0.001 and 0.012 of those, and these
     files cannot tell whether the difference comes from the transport or from
-    the finite set of realizations (``axis_check.txt``). The truth is
+    the finite set of realisations (``axis_check.txt``). The truth is
     ``variance.avg.dat / 2``; both are keyed on the same frame times.
     """
     folder = _case_dir(frac)

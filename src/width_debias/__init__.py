@@ -12,8 +12,7 @@ The package subtracts a calibrated bias ``var_bias(CNR)`` from each frame's
 fitted variance, then weights by inverse variance; the MSD and D corrections
 follow from the corrected widths. ``docs/DERIVATION.md`` derives the additive
 form from the scatter of the fitted width (its estimation variance). The
-per-frame CNR (from
-the ``fft-cnr`` package) is the input.
+per-frame CNR (from the ``fft-cnr`` package) is the input.
 
 Typical use::
 

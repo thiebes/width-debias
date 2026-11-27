@@ -120,7 +120,9 @@ window.
    clock second, counts an instance as distinct by the hash of its variance
    file, and writes the distinct instance directories to
    `unique_instances.txt`. Both reuse the fraction folder's parameter file and
-   keep the instances already there. Neither stops when an instance or the
+   keep the instances already there. Kept unchanged as the run's record, they
+   do not check that the parameter file gives both tmax and tsamp, as
+   `run_instances.sh` does; without tmax their expected row count is 1. Neither stops when an instance or the
    averaging fails, and `rerun_all_unique.sh` prints "TOP-UP COMPLETE" even
    then. Before step 7, check the last `x_<frac>: <n> unique` line of each
    fraction, the "averaged <n> instances" line of step 6 (and any "skip" line

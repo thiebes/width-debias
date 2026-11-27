@@ -9,8 +9,9 @@ tests pin what the rerun README relies on:
 - incomplete instances (no file, or a file short of tmax / tsamp + 1 rows) are
   left out and named;
 - copies of one realisation are listed once;
-- a folder that already holds inst_* folders, a gap that is not a whole number
-  of seconds, and a parameter file without both tmax and tsamp are refused.
+- a folder that already holds inst_* folders, a walker count or a gap that is
+  not a positive whole number, and a parameter file without both tmax and
+  tsamp are refused.
 """
 import shutil
 import subprocess
@@ -137,6 +138,16 @@ def test_refuses_a_folder_that_already_holds_instances(tmp_path, existing):
     result = _run(folder, "3", "3", "1")
     assert result.returncode == 1
     assert f"{existing} already exists" in result.stdout
+    assert not (folder / "inst_001").exists()
+
+
+@pytest.mark.parametrize("n_per_instance", ["20,000", "0", "2e4"])
+def test_refuses_a_walker_count_that_is_not_a_positive_whole_number(tmp_path, n_per_instance):
+    folder = _folder(tmp_path, FIXED_STUB)
+    result = subprocess.run([BASH, "run_instances.sh", FRAC, n_per_instance, "3", "3", "1"],
+                            cwd=folder, capture_output=True, text=True, timeout=120)
+    assert result.returncode == 1
+    assert "N_per_instance must be a positive whole number" in result.stdout
     assert not (folder / "inst_001").exists()
 
 

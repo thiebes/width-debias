@@ -9,11 +9,13 @@ This is the fitting hierarchy that the weighting scheme acts on:
 A width fitted to a noisy profile scatters about the true width, so its
 square, the fitted variance, exceeds the true variance on average by the
 width's estimation variance. Carried through the MSD slope, that bias inflates
-D. The variance is bounded below (about one pixel squared), but above a
-per-frame CNR of about 1.5 the bounded and unbounded fits agree, and the bound
-carries negligible mass above about 1, so above per-frame CNR 1.5 it plays no
-part in the bias; below per-frame CNR 1, noise can throw a fit to a broad
-profile and the fitted variance becomes right-skewed.
+D. The variance is bounded below (about one pixel squared). Above a per-frame
+CNR of about 1.5 the bounded and unbounded fits agree, so the bound plays no
+part in the bias. Between about 1 and 1.5 the two fits begin to differ,
+although the bound still carries negligible mass (see
+:class:`~width_debias.models.UnboundedGaussianModel`); below a per-frame CNR
+of about 1, noise can throw a fit to a broad profile and the fitted variance
+becomes right-skewed.
 
 The fitting here mirrors the validated DICE engine (Thiebes & Grumstrup, JCP
 2024): the variance is fit directly with a wide lower-to-upper bound, and a

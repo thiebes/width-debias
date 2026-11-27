@@ -4,10 +4,10 @@ A population of excited states is modelled as a 1-D Gaussian that broadens by
 Fickian diffusion and decays by a single exponential lifetime.  By default the
 peak follows the decay alone, an approximation for small diffusion; with
 ``Experiment.spread_dims`` set it also falls as the profile spreads, so the
-population changes only by the decay.  White noise is
-added at the level of the raw spatial profile -- the only level at which it can
-be added correctly, because the fitting hierarchy reshapes the error
-distribution downstream (Thiebes & Grumstrup, JCP 2024).
+population changes only by the decay.  White noise is added at the level of
+the raw spatial profile -- the only level at which it can be added correctly,
+because the fitting hierarchy reshapes the error distribution downstream
+(Thiebes & Grumstrup, JCP 2024).
 """
 from __future__ import annotations
 
@@ -45,7 +45,9 @@ def _require_psf_hwhm(exp, lorentzian_hwhm: float, profile: str) -> None:
     if getattr(exp, "spread_dims", None) is not None and exp.psf_hwhm != lorentzian_hwhm:
         raise ValueError(
             f"the spreading peak uses psf_hwhm={exp.psf_hwhm}, but the {profile} profile "
-            f"has a Lorentzian half-width of {lorentzian_hwhm}; set Experiment.psf_hwhm to match")
+            f"has a Lorentzian half-width of {lorentzian_hwhm}; set Experiment.psf_hwhm to "
+            "match (a model that draws a Voigt profile counts as one only if it subclasses "
+            "VoigtModel)")
 
 
 @dataclass(frozen=True)
@@ -83,7 +85,9 @@ class Experiment:
     Gaussian at a fixed shape exponent. For the Voigt profile it depends on the
     Lorentzian half-width ``psf_hwhm``, which must equal the ``gamma`` of the
     :class:`~width_debias.models.VoigtModel` that draws the profiles, and 0 for
-    every other model. Every built-in model's ``noise_free_series``,
+    every other model; ``psf_hwhm`` is provisional, expected to change when each
+    model supplies its own peak (issue #27). Every built-in model's
+    ``noise_free_series``,
     :func:`~width_debias.montecarlo.run_ensemble` (for any model) and the
     Fisher bounds check this (:func:`~width_debias.models.check_spreading_peak`).
     The factor is 1 at t = 0, so ``amplitude0`` and the initial CNR keep their
@@ -109,7 +113,7 @@ class Experiment:
     spread_dims: int | None = field(default=None, kw_only=True)
     # diffusion coefficient along y for spread_dims = 2; None means D
     D_y: float | None = field(default=None, kw_only=True)
-    # Lorentzian half-width of a Voigt profile, for the spreading peak
+    # Lorentzian half-width of a Voigt profile, for the spreading peak; provisional (#27)
     psf_hwhm: float = field(default=0.0, kw_only=True)
 
     def __post_init__(self) -> None:
@@ -296,7 +300,9 @@ def cnr_per_frame(exp: Experiment, noise_sigma: float) -> np.ndarray:
     hold the peak as they spread (see :func:`noise_free_series`), and this
     returns instead the CNR of a Gaussian profile summed over the other axis,
     whose peak falls also as ``sigma0 / sigma(t)``: the CNR of the frames that
-    ``spread_dims=1`` would simulate, not of the frames ``exp`` simulates.
+    ``spread_dims=1`` would simulate, not of the frames ``exp`` simulates. An
+    object without ``spread_dims`` takes this default branch and needs only
+    ``amplitude``, ``sigma0`` and ``true_variance``.
     """
     if getattr(exp, "spread_dims", None) is not None:
         return exp.amplitude / noise_sigma

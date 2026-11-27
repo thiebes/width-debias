@@ -252,6 +252,13 @@ def test_compare_variance_finds_a_duplication_weighted_mean(tmp_path):
     assert result.z_max is not None and result.n_frames_z == 3
 
 
+def test_compare_variance_refuses_more_kept_instances_than_the_file_records(tmp_path):
+    kept = [_variance(idx)[:, 1] for idx in (1, 2, 3)]
+    src, geom = _variance_bed(tmp_path, np.mean(kept, axis=0))
+    with pytest.raises(ValueError, match="3 complete kept instances, more than the 2"):
+        cd.compare_variance(FRAC, src, geom, n_total=2)
+
+
 def test_compare_variance_rules_out_weighting_for_a_mean_of_distinct_realisations(tmp_path):
     realisations = [_variance(idx)[:, 1] for idx in (1, 2, 3, 7, 8, 9)]
     src, geom = _variance_bed(tmp_path, np.mean(realisations, axis=0))

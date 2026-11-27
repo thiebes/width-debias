@@ -27,7 +27,7 @@ noise-wander. The bound must be **identical** in the calibration and the
 application fit, or the subtraction is mismatched.
 
 With the bound, the residual noise bias is modest. The figure
-(`br_halide_highn_perframe.png`, CNR0 = 15, 800 realizations; table
+(`br_halide_highn_perframe.png`, CNR0 = 15, 800 realisations; table
 `br_halide_highn_perframe.txt`) plots each frame's mean fitted variance minus
 the Gaussian fit of the noise-free profile, which isolates the noise bias. The
 short-window D over the usable band, divided by the D of the noise-free fit
@@ -39,7 +39,7 @@ short-window D over the usable band, divided by the D of the noise-free fit
 | 0.5 | 1.049 | 1.013 | 0.370 | 1.010 | 0.971 |
 | 0.75 | 1.060 | 1.025 | 0.349 | 1.023 | 0.984 |
 
-The SE over the 800 realizations is 0.004 to 0.007 in every column. Each
+The SE over the 800 realisations is 0.004 to 0.007 in every column. Each
 corrected arm also carries a calibration SE, the spread of D over 200 draws of
 its lookup's own Monte Carlo error, which every measurement shares: 0.001 for
 the joint grid, 0.024 to 0.034 for the σ₀ Fisher calibration, and 0.003 to
@@ -238,7 +238,7 @@ walkers' 2-D moment (`variance.avg.dat`). M/(V/2) is within 0.0123 of 1 on
 each axis, and M_x/M_y is within 0.0143 of 1. Walker sampling alone gives
 about 0.003 for that ratio, but only as a lower bound: at 3 ns the larger
 centroid of each fraction lies 7 to 28 times its walker-only error from the
-centre, so the 16 realizations of the disorder set the scatter, and the table
+centre, so the 16 realisations of the disorder set the scatter, and the table
 does not test isotropy. (M_x + M_y)/V departs from 1 by up to 0.0108, growing
 with time, which walker sampling cannot produce. V is the mean of the
 instances' variance files; if each is taken about its own instance's centroid,
@@ -253,7 +253,7 @@ moment-to-reference part of the gap), and its difference between the
 projections accounts for 0.004, -0.001 and 0.012 of the fit difference (about
 half at x = 0.75); the profile shape accounts for the rest. These files
 cannot tell whether the difference comes from the transport or from the finite
-set of realizations.
+set of realisations.
 
 Over the 3 ns window the peak drops ~147x, so most late frames fall below CNR 1
 and are excluded by the floor; the correction is tested on the usable band (a
@@ -278,7 +278,7 @@ shorter effective window, which is the fair test).
   calibrated at σ₀ and at 75 nm. `HIGHN_KEY` selects the key: `perseed`,
   `smoothed`, or `iterated`.
 - `render_perframe_figure.py` -- renders the figure and writes
-  `br_halide_highn_perframe.txt` (CNR0 = 15, iterated key, 800 realizations;
+  `br_halide_highn_perframe.txt` (CNR0 = 15, iterated key, 800 realisations;
   the joint grid, which the figure shows, and both Fisher width-table arms, each
   with its calibration SE).
 - `key_sensitivity.py` -- the key-sensitivity comparison (`key_sensitivity.txt`).

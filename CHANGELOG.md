@@ -8,11 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.5.0] - 2026-11-27
 
 One opt-in addition to the package, the spreading peak
-(`Experiment.spread_dims`). With default settings every output of the package
-is byte-identical to 0.4.1: a probe of 877 outputs across the
+(`Experiment.spread_dims`). With default settings every numeric output of the
+package is byte-identical to 0.4.1: a probe of 877 outputs across the
 calibration, the Monte Carlo, the four correction schemes, the D fit and the
-Fisher bounds gives the same bytes under both versions. The other entries
-concern the experiment scripts, their tables and the documentation.
+Fisher bounds, kept outside the package, gives the same bytes under both
+versions, and `tests/test_basic.py` pins the recommended path's outputs to the
+0.4.0 values. `Experiment`'s repr, fields and `asdict` gain the three new
+fields. The other entries concern the experiment scripts, their tables and
+the documentation.
 
 ### Added
 
@@ -24,8 +27,8 @@ concern the experiment scripts, their tables and the documentation.
   every other model); every built-in model's `noise_free_series`,
   `run_ensemble` and the Fisher bounds refuse a mismatch
   (`models.check_spreading_peak`, with `models.lorentzian_hwhm` giving a
-  model's Lorentzian half-width; both provisional, expected to change with
-  issue #27). The three fields are keyword-only, so the positional fields of
+  model's Lorentzian half-width; these two and `psf_hwhm` are provisional,
+  expected to change with issue #27). The three fields are keyword-only, so the positional fields of
   `AnomalousExperiment` and `MultiExpExperiment` keep their order, and
   settings the peak cannot honour (`spread_dims=True`, a negative, NaN or
   infinite `D_y` or `psf_hwhm`, `D_y` without a centre cut, `psf_hwhm`
@@ -277,8 +280,8 @@ concern the experiment scripts, their tables and the documentation.
   "4 of 140"; and the `UnboundedGaussianModel` docstring gives the unbounded
   fit's mean and spread at per-frame CNR 0.52 as the regenerated tables give
   them.
-- The experiment tables and figures name the corrected arm `subtract`, the
-  scheme's name, instead of "folded-normal". Regenerated with the current
+- The regenerated experiment tables and figures name the corrected arm
+  `subtract`, the scheme's name, instead of "folded-normal". Regenerated with the current
   library, their numbers are unchanged except in the unbounded-fit comparison
   and the noise-law tables.
 - The unbounded-fit comparison and the noise-law tables use the per-frame slope
@@ -296,7 +299,9 @@ concern the experiment scripts, their tables and the documentation.
   coverage tests those per-frame variances, not the interval's form. The
   narrowness is pooled as a plain mean over the cells whose every frame has
   per-frame CNR >= 1 (0.967 of the realised spread), beside the coverage
-  measured in those cells (0.942).
+  measured in those cells (0.942). `narrowness_attribution.py`, with its table,
+  compares each frame's measured variance of the fitted width with the
+  lookup's and attributes the narrowness to the width's growth.
 - The method comparison commits its table (`method_comparison.txt`), and its
   figure keeps the legacy D-aware calibration, which its caption states. Its
   script prints both corrected schemes' mean |bias - 1| and their largest
@@ -309,7 +314,7 @@ concern the experiment scripts, their tables and the documentation.
 - The Mn-trapping bed names its reference as the emission-weighted PL second
   moment, not the carrier moment, and its generalized-Gaussian arm as p = 2.
   Where every frame has per-frame CNR >= 1.8, the raw and corrected widths lie
-  within 0.0053 square micrometres of the noiseless fit, so the bed bounds the
+  within 0.0054 square micrometres of the noiseless fit, so the bed bounds the
   correction's error rather than resolving it.
 - The p = 2 proof-of-concept figure and table from 2026-06 are removed: a
   Gaussian profile under the generalized-Gaussian fitter's tighter
@@ -323,10 +328,10 @@ concern the experiment scripts, their tables and the documentation.
   docstrings say in words where an estimated CNR can key the lookup; the
   initial-CNR thresholds they gave are removed. The README's headline gives
   the corrected fit as 1.01 times the reference, as the regenerated tables do.
-- The `calibration_D_se` docstring quotes `calibration_se_check.txt`: observed
-  over predicted variance of the cell mean 0.89 over 16 independent
-  calibrations, and a weight term of at most 0.04 of the prediction from
-  initial CNR 5 up and 0.22 at initial CNR 3. The `fit_D` docstring gives the
+- The `calibration_D_se` docstring quotes `slope_fit_check.txt` for the
+  observed over predicted variance of the cell mean, 0.89 over 16 independent
+  calibrations, and `calibration_se_check.txt` for the weight term, at most
+  0.04 of the prediction from initial CNR 5 up and 0.22 at initial CNR 3. The `fit_D` docstring gives the
   interval's coverage as 0.93 to 0.96 for D <= 0.02 sigma_0^2/tau and 0.89 to
   0.95 at D = 0.1, as `slope_fit_check.txt` gives it.
 - The package docstring and the repository map describe the derivation by

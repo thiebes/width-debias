@@ -390,6 +390,16 @@ def test_cnr_per_frame_is_the_simulated_cnr_with_a_summed_spreading_peak():
     assert np.all(held[1:] > ens.cnr_frame[1:])
 
 
+def test_cnr_per_frame_accepts_a_stand_in_without_spread_dims():
+    """An object with only the fields the default branch reads works, as it did before
+    spread_dims existed, and gives the same CNR as the Experiment it copies."""
+    from types import SimpleNamespace
+    exp = Experiment(D=0.1)
+    stand_in = SimpleNamespace(amplitude=exp.amplitude, sigma0=exp.sigma0,
+                               true_variance=exp.true_variance)
+    assert np.array_equal(cnr_per_frame(stand_in, 0.1), cnr_per_frame(exp, 0.1))
+
+
 def test_spreading_peak_refuses_a_peak_computed_for_another_profile():
     """A peak computed for another profile's Lorentzian would be silently wrong.
 
@@ -426,9 +436,10 @@ def test_spreading_peak_refuses_a_peak_computed_for_another_profile():
     (dict(spread_dims=2, D_y=float("nan")), "D_y"),
     (dict(spread_dims=2, D_y=float("inf")), "D_y"),
     (dict(spread_dims=1, psf_hwhm=float("nan")), "psf_hwhm"),
+    (dict(spread_dims=1, psf_hwhm=float("inf")), "psf_hwhm"),
     (dict(spread_dims=1, psf_hwhm=None), "psf_hwhm"),
 ], ids=["spread_3", "spread_bool", "negative_psf", "psf_without_spread", "d_y_summed",
-        "negative_d_y", "nan_d_y", "inf_d_y", "nan_psf", "none_psf"])
+        "negative_d_y", "nan_d_y", "inf_d_y", "nan_psf", "inf_psf", "none_psf"])
 def test_experiment_refuses_spreading_settings_it_cannot_honour(settings, field):
     """Settings the peak would ignore or misread raise instead of passing silently.
 

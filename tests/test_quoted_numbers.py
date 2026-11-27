@@ -486,6 +486,24 @@ def _unbounded_row_at_cnr_0_52() -> list[Decimal]:
     return [bnd_mean, bnd_sd, unb_mean, unb_sd]
 
 
+def _slope_fit_coverage(d_values: tuple[str, ...]) -> tuple[str, ...]:
+    """Smallest and largest [current] fit_D interval coverage at the given D rows,
+    over the four shapes of slope_fit_check.txt."""
+    path = f"{DFREE}/slope_fit_check.txt"
+    lines = _read(path).splitlines()
+    starts = [i for i, line in enumerate(lines)
+              if line.startswith("[current] fit_D") and "coverage" in line]
+    assert len(starts) == 4, f"{path}: {len(starts)} [current] coverage blocks, not 4"
+    values = []
+    for i in starts:
+        for row in lines[i + 2:i + 5]:
+            d_true, *cells = row.split()
+            if d_true in d_values:
+                values += [Decimal(cell) for cell in cells]
+    assert values, f"{path}: no [current] coverage rows at D {d_values}"
+    return str(min(values)), str(max(values))
+
+
 def _poc_gaussian_cnr0_5() -> tuple[str, ...]:
     """The Gaussian ``subtract`` mean and combined SE at CNR_0 5."""
     path = "experiments/poc-bias-correction/poc_demo_gaussian.txt"
@@ -1154,6 +1172,11 @@ CLAIMS = [
     Claim("unbounded fit, SD of the fitted variance at per-frame CNR 0.52",
           lambda: tuple(_rounded(_unbounded_row_at_cnr_0_52()[i], 2) for i in (3, 1)), {
               "src/width_debias/models.py": ("(SD 5.97 against 10.06 sigma_0^2 at CNR 0.52)",)}),
+    Claim("fit_D interval coverage, D <= 0.02",
+          lambda: _slope_fit_coverage(("0.005", "0.020")), {
+              "src/width_debias/fit.py": ("covered 0.93 to 0.96 of runs",)}),
+    Claim("fit_D interval coverage, D = 0.1", lambda: _slope_fit_coverage(("0.100",)), {
+        "src/width_debias/fit.py": ("and 0.89 to 0.95 at D = 0.1",)}),
     Claim("unbounded comparison, OLS at CNR_0 34",
           lambda: (_rounded(_unbounded_d_row(34)[0], 2),), {
               "README.md": ("an unweighted fit returns 1.20 times the reference D",)}),
@@ -1239,6 +1262,8 @@ RETIRED = {
     "26 to 61": HISTORY_DOCUMENTS,
     "64-fold": HISTORY_DOCUMENTS,
     "~64x": HISTORY_DOCUMENTS,
+    "0.7 to 1.5": HISTORY_DOCUMENTS,
+    "0.94-0.95 at every CNR0": HISTORY_DOCUMENTS,
 }
 
 

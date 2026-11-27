@@ -167,7 +167,9 @@ calibration's geometry but does not check it against the data.
   summed profile spreads (`Experiment.spread_dims`), so that the late frames
   reach a lower per-frame CNR, and a 5000-run calibration, 6 of 140 cells lie
   beyond two combined standard errors and the uncorrected fit has 45 of 140:
-  the D = 0 lookup, read at each frame's CNR, still corrects D.
+  the D = 0 lookup, read at each frame's CNR, still corrects D. The corrected
+  counts are not like for like with the 4 of 140 above, whose 300-run
+  calibration gives a larger combined SE.
 - The correction holds above a per-frame CNR of about 1 (the per-profile floor,
   0.89 to 1.51 depending on shape: walking down from high per-profile CNR, the
   deepest CNR reached while every
