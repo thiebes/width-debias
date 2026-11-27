@@ -3,7 +3,7 @@
 # Launch K independent instances of Marc's Br-I simulator in parallel, so their
 # diffmaps can be averaged into a clean, high-statistics map. Run under WSL2 /
 # Linux from a fraction folder holding the binary and inputs (see README.md),
-# with no inst_001 .. inst_K folders yet; to add instances to an existing set, use
+# with no inst_* folders yet; to add instances to an existing set, use
 # rerun_unique.sh. Verify randomisation (README step 3) first.
 #
 # landscapeBD.diffmap seeds its random number generator from the wall clock at
@@ -43,14 +43,15 @@ for f in "$BIN" "basis_BrI.dat" "vectors_BrI.dat" "$BASE"; do
 done
 
 # A complete variance file has tmax / tsamp + 1 rows; equal files mean one seed.
-EXPROWS=$(awk '$1=="tmax"{t=$2} $1=="tsamp"{s=$2} END{if(s>0)printf "%d", t/s+1; else print 0}' "$BASE")
-[ "$EXPROWS" -gt 0 ] || { echo "$BASE gives no tmax and tsamp, so a complete variance file cannot be recognised"; exit 1; }
+EXPROWS=$(awk '$1=="tmax"{t=$2; ht=1} $1=="tsamp"{s=$2; hs=1} END{if(ht && hs && s>0) printf "%d", t/s+1; else print 0}' "$BASE")
+[ "$EXPROWS" -gt 0 ] || { echo "$BASE does not give both tmax and tsamp, so a complete variance file cannot be recognised"; exit 1; }
 
 # Refuse to reuse instance folders: a variance file left by an earlier run would
-# be counted as this run's realisation.
-for d in $(printf 'inst_%03d\n' $(seq 1 "$K")); do
-    [ ! -e "$d" ] || { echo "$d already exists; run in a fraction folder without inst_001 .. inst_$(printf '%03d' "$K"), or add instances with rerun_unique.sh"; exit 1; }
-done
+# be counted as this run's realisation, or by a later top-up.
+if compgen -G 'inst_*' > /dev/null; then
+    echo "$(compgen -G 'inst_*' | sort | head -1) already exists; run in a fraction folder without inst_* folders, or add instances with rerun_unique.sh"
+    exit 1
+fi
 chmod +x "$BIN"
 
 run_one () {
