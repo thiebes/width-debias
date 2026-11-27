@@ -91,7 +91,7 @@ by git). `scripts/collaborator_data.py` holds the folder layout.
 | mn-trapping | Marc Meléndez's Mn diffmaps, in the set's local `data/` copy |
 | saha-reaction-diffusion | none: an in-repo port of Marc Meléndez's Saha model |
 | halide-mixing-brI-legacy | data root, `halide_mixing/` (Marc Meléndez's maps) |
-| halide-mixing-highn | data root, `halide_mixing_highn/` (collapsed 1-D; made by the `halide-mixing-brI-legacy/rerun/` chain) |
+| halide-mixing-highn | data root, `halide_mixing_highn/` (collapsed 1-D; made by the re-run described in `halide-mixing-brI-legacy/rerun/README.md`) |
 | wse2-strobescat | data root, `stroboscat_scans/` (Enrique Arévalo Rodríguez's scans; outputs in the set's untracked `diagnostics/`) |
 | cspbbr-strobescat | data root, `cspbbr_sample_1/` (Upasana's scans) |
 | zhang-qd-control | published-paper data (committed CSVs) |

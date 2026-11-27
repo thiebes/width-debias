@@ -71,8 +71,9 @@ the documentation.
   profile file, to collapse a map whose frame count is not tmax / tsamp + 1,
   and to record instance counts that the map does not hold (missing instances,
   copies of one realisation, or a variance file that is not their mean). With
-  `--check` it compares chosen frames with an existing profile file, and the
-  averaged variance file with the kept instances' variance files. The script
+  `--check` it compares chosen frames with an existing profile file and the
+  averaged variance file with the kept instances' variance files; it refuses
+  more complete kept instances than the `n_unique` the profile file records. The script
   that made the profile files is not kept, and `collapse_check.txt` shows that
   the averaged maps that are kept, from a first run with only 5 distinct
   realisations per fraction, do not reproduce them, so the script's profiles
@@ -131,7 +132,8 @@ the documentation.
 - The build backend is setuptools 84.2.1, pinned with hashes in
   `.github/build-constraints.txt`; 84.0.0 carried an advisory for its legacy
   egg install on Windows, a path this build does not use. CI and the publish
-  workflow use setup-uv v10.3.3.
+  workflow use setup-uv v10.3.3 and check uv 0.13.0 against its SHA-256,
+  pinned in the workflow files.
 - The source distribution carries five more test modules, which check the
   repository's experiment scripts, tables and documents; outside a full
   checkout they skip, and the package's own tests run.
@@ -150,8 +152,9 @@ the documentation.
   every instance, copies included. It also exports the walker count to the
   instances, which it did not: each instance's parameter file got an `N` line
   with no value unless the caller had exported it. It refuses a folder that
-  already holds `inst_*` folders, a gap that is not a whole number of seconds,
-  and a parameter file that does not give both tmax and tsamp.
+  already holds `inst_*` folders, a walker count or a gap that is not a
+  positive whole number, and a parameter file that does not give both tmax and
+  tsamp.
   `tests/test_run_instances.py` runs it with a stub simulator.
 - `experiments/halide-mixing-highn/br_halide_highn_validation.py`, the test of
   the 1-D D-free lookup on the high-N halide bed, caps the fitted width at 12
@@ -280,10 +283,10 @@ the documentation.
   "4 of 140"; and the `UnboundedGaussianModel` docstring gives the unbounded
   fit's mean and spread at per-frame CNR 0.52 as the regenerated tables give
   them.
-- The regenerated experiment tables and figures name the corrected arm
-  `subtract`, the scheme's name, instead of "folded-normal". Regenerated with the current
-  library, their numbers are unchanged except in the unbounded-fit comparison
-  and the noise-law tables.
+- The experiment tables and figures, regenerated with the current library,
+  name the corrected arm `subtract`, the scheme's name, instead of
+  "folded-normal". Their numbers are unchanged except in the unbounded-fit
+  comparison and the noise-law tables.
 - The unbounded-fit comparison and the noise-law tables use the per-frame slope
   weights in their corrected arms: half the former spread at initial CNR 34 in
   the unbounded-fit comparison, and under shot noise with a matched
@@ -337,9 +340,9 @@ the documentation.
 - The package docstring and the repository map describe the derivation by
   the scatter of the fitted width, as `docs/DERIVATION.md` does. The README
   and `docs/DERIVATION.md` give the falling-peak result beside the decay-alone
-  one, call the floor values per-profile, give the run budget of the
-  short-window counts, and say that the design rule of an initial CNR of
-  about 20 holds for a peak that falls with the decay alone.
+  one, call the floor values per-profile, and say that the design rule of an
+  initial CNR of about 20 holds for a peak that falls with the decay alone;
+  `docs/DERIVATION.md` also gives the run budget of the short-window counts.
 
 ## [0.4.1] - 2026-11-11
 

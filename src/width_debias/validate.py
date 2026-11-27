@@ -96,8 +96,8 @@ def calibrate_d_free(cnr0_grid: np.ndarray, *, sigma0: float = 1.0,
     which the lookup interpolates. It is shared by every measurement made
     with the lookup and does not average down, so for a mean of N
     measurements it is up to about sqrt(N / n_runs) times the statistical
-    error of the mean. Choose ``n_runs`` well above the
-    number of measurements to be averaged.
+    error of the mean. Choose ``n_runs`` well above the number of measurements
+    to be averaged.
 
     All parameters except ``cnr0_grid``, ``n_runs`` and ``seed`` describe the
     experiment: its geometry (pixel grid, frame count, lifetime), profile

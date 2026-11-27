@@ -61,7 +61,7 @@ reference|.
   `min CNR` column is at least 1.8: 0.51% and 0.81% Mn at CNR₀ 100 and 200,
   4.04% Mn from CNR₀ 20), the raw and corrected widths lie 0.0001 to
   0.0053 μm² from the noiseless fit, and the correction changes that distance
-  by at most 0.00051 μm². The raw widths are already that close, so the noise
+  by at most 0.00052 μm². The raw widths are already that close, so the noise
   bias the correction removes there is no larger than the distance itself, and
   the bed bounds the correction's error rather than resolving it. At 4.04% Mn
   and CNR₀ 10 every frame is still above CNR 1 (1.44 to 10), but raw and

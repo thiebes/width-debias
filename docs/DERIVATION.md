@@ -243,7 +243,8 @@ t = 0 shift cancels into the intercept, and frame 0's own error enters through
 `c₀` because frame 0 is weighted). Checked against 16 independent calibration
 draws applied to one fixed evaluation set: observed / predicted variance of the
 cell mean 0.89 with the per-frame slope weights
-(`experiments/dfree-calibration/calibration_se_check.txt`). At equal runs the
+(`experiments/dfree-calibration/slope_fit_check.txt`, its current row). At
+equal runs the
 calibration term is at most about the evaluation term, and it does not shrink
 with more evaluation runs. It is shared by every measurement made
 with the calibration, so the mean of N measurements carries all of it; the
@@ -265,7 +266,8 @@ reach a lower per-frame CNR, and a 5000-run calibration, the corrected counts
 are 6 of 140 and 7 of 96 and the uncorrected ones 45 of 140 and 43 of 96: the
 D = 0 lookup, read at each frame's CNR, holds under a peak that falls with
 spreading as well. The corrected counts are not like for like with those
-above, whose calibrations have 300 and 2000 runs, so a larger combined SE. One
+above, whose calibrations have 300 and 2000 runs and so give a larger
+combined SE. One
 calibration serves all cells of a shape, so these counts are indicative, not a
 test against a binomial null. The small-D, low-CNR cells
 have large combined SE and so constrain the bias only loosely. `D = 0.005` has
