@@ -97,13 +97,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   4 s stagger gave at most five distinct realisations when the instances
   started together. When the instances are done, it lists one instance per
   distinct complete variance file, by hash, in `unique_instances.txt`, as the
-  top-up scripts do, names the incomplete ones, and prints the averaging
-  command for those, or the `rerun_unique.sh` command when fewer than asked are
-  distinct; it averaged every instance, copies included. It also exports the
-  walker count to the instances, which it did not: each instance's parameter
-  file got an `N` line with no value unless the caller had exported it. It
-  refuses a folder that already holds its instance folders, a gap that is not
-  a whole number of seconds, and a parameter file without tmax and tsamp.
+  top-up scripts do, and names the incomplete ones. When fewer than asked are
+  distinct it prints the `rerun_unique.sh` command first, and it prints the
+  averaging command only for distinct instances; its closing hint averaged
+  every instance, copies included. It also exports the walker count to the
+  instances, which it did not: each instance's parameter file got an `N` line
+  with no value unless the caller had exported it. It refuses a folder that
+  already holds `inst_*` folders, a gap that is not a whole number of seconds,
+  and a parameter file that does not give both tmax and tsamp.
   `tests/test_run_instances.py` runs it with a stub simulator.
 - `experiments/halide-mixing-highn/br_halide_highn_validation.py`, the test of
   the 1-D D-free lookup on the high-N halide bed, caps the fitted width at 12

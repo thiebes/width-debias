@@ -157,8 +157,8 @@ included here. The `run_instances.sh` it ran staggered the starts by a random
 0 to 4 s and listed no distinct instances. The copy kept with the run's files
 differs from the repository's version of that time in one message and in
 exporting the walker count to the instances, which the repository's version
-did not do: run as committed, it wrote an `N` line with no value into each
-instance's parameter file. The first run's instances carry N = 25,000.
+did not do: run as committed, unless the caller had exported the walker count,
+it wrote an `N` line with no value into each instance's parameter file. The first run's instances carry N = 25,000.
 `rerun_all_unique.sh` is included unchanged, and `rerun_unique.sh` with one
 comment reworded; the headers of both describe that earlier `run_instances.sh`.
 
