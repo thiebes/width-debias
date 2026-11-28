@@ -30,11 +30,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import numpy as np
-from scipy.optimize import curve_fit
 from scipy.special import gamma as _gamma
 from scipy.special import voigt_profile as _voigt
 
-from .fit import FrameFit, _unusable_frame, fit_variance as _fit_gaussian_variance
+from .fit import (FrameFit, _curve_fit_unit_peak, _unusable_frame,
+                  fit_variance as _fit_gaussian_variance)
 from .simulate import Experiment, _require_psf_hwhm, gaussian, noise_free_series as _gaussian_series
 
 
@@ -123,7 +123,8 @@ class VoigtModel:
             hi = [2 * amp0, x[-1], sg_max]
 
         try:
-            popt, _ = curve_fit(model, x, y, p0=p0, bounds=(lo, hi), maxfev=10000)
+            popt = _curve_fit_unit_peak(model, x, y, p0, lo, hi, amp_index=0,
+                                        maxfev=10000)
             sigma_g = float(popt[2])
             amp = float(popt[0])
             ok = True
@@ -200,11 +201,9 @@ class GeneralizedGaussianModel:
             return _gen_gaussian(xx, amp, mean, scale, self.shape)
 
         try:
-            popt, _ = curve_fit(
-                model, x, y, p0=[amp0, mean0, s0],
-                bounds=([0.0, x[0], s_min], [2 * amp0, x[-1], s_max]),
-                maxfev=10000,
-            )
+            popt = _curve_fit_unit_peak(
+                model, x, y, [amp0, mean0, s0], [0.0, x[0], s_min],
+                [2 * amp0, x[-1], s_max], amp_index=0, maxfev=10000)
             scale = float(popt[2])
             amp = float(popt[0])
             ok = True
@@ -359,8 +358,8 @@ class UnboundedGaussianModel:
         lower = [x[0] + margin, -b_max, 0.0]
         upper = [x[-1] - margin, b_max, 2.0 * amp_max]
         try:
-            popt, _ = curve_fit(_gaussian_precision, x, y, p0=p0,
-                                bounds=(lower, upper), maxfev=5000)
+            popt = _curve_fit_unit_peak(_gaussian_precision, x, y, p0, lower,
+                                        upper, amp_index=2, maxfev=5000)
             b, amp = float(popt[1]), float(popt[2])
             ok = True
             var = float(np.clip(1.0 / b, -var_max, var_max)) if b != 0.0 \

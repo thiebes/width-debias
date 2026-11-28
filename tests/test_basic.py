@@ -107,6 +107,48 @@ def test_models_recover_noise_free_variance(model):
         assert ff.variance == pytest.approx(exp.true_variance[f], rel=5e-3)
 
 
+# Peak heights from 1e-6 to 1e3, and lengths written in micrometres, nanometres
+# and pixels (sigma0 = 1, 1000 and 20 in the axis's own units).
+SCALE_PEAKS = 10.0 ** np.arange(-6, 4)
+
+
+@pytest.mark.filterwarnings("error::width_debias.FitStalledWarning")
+@pytest.mark.parametrize("unit", [1.0, 1e3, 20.0], ids=["micrometres", "nanometres", "pixels"])
+@pytest.mark.parametrize("model", [
+    GaussianModel(),
+    UnboundedGaussianModel(),
+    VoigtModel(gamma=0.3),
+    GeneralizedGaussianModel(shape=1.5),
+    GeneralizedGaussianModel(shape=4.0),
+], ids=["gaussian", "unbounded", "voigt", "gengauss_1.5", "gengauss_4"])
+def test_fitted_width_does_not_depend_on_the_data_scale(model, unit):
+    """A noise-free profile gives its true width at any peak height and in any
+    length unit. Unscaled, the solver's absolute tolerances stopped the fit near
+    its start below a peak of about 1e-4 (variance 5.5 for a true 1 at 3e-5)."""
+    if isinstance(model, VoigtModel):
+        model = VoigtModel(gamma=0.3 * unit)
+    exp = Experiment(D=0.0, n_frames=1, sigma0=unit)
+    clean = model.noise_free_series(exp)[0]
+    for peak in SCALE_PEAKS:
+        ff = model.fit_variance(exp.x, peak * clean / np.max(clean))
+        assert ff.ok
+        assert ff.variance == pytest.approx(exp.true_variance[0], rel=1e-6), peak
+        assert ff.amplitude == pytest.approx(peak, rel=1e-6), peak
+
+
+def test_a_fit_that_stops_at_its_start_warns():
+    """A fit that takes its start as converged warns. Started on the exact
+    answer of a noise-free profile, the solver stops after one evaluation."""
+    from width_debias.fit import FitStalledWarning, _curve_fit_unit_peak, _gaussian_var
+    x = np.linspace(-6.0, 6.0, 241)
+    y = 1e-4 * np.exp(-0.5 * x ** 2)
+    with pytest.warns(FitStalledWarning, match="stopped after 1 evaluations"):
+        popt = _curve_fit_unit_peak(_gaussian_var, x, y, [0.0, 1.0, 1e-4],
+                                    [-2.0, 0.01, 0.0], [2.0, 100.0, 2e-4],
+                                    amp_index=2, maxfev=100)
+    assert popt == pytest.approx([0.0, 1.0, 1e-4])
+
+
 @pytest.mark.parametrize("model", [
     VoigtModel(gamma=0.3),
     GeneralizedGaussianModel(shape=1.5),

@@ -43,7 +43,7 @@ from .noise import ShotNoise, WhiteNoise
 from .models import (GaussianModel, GeneralizedGaussianModel, MODELS,
                      MomentModel, UnboundedGaussianModel, VoigtModel,
                      model_from_spec, spec_tag)
-from .fit import DFit, fit_D
+from .fit import DFit, FitStalledWarning, fit_D
 from .montecarlo import Ensemble, run_ensemble
 from .bias_lookup import FrameStats, BiasLookup, frame_stats
 from .weights import (SCHEMES, CalibrationRangeWarning, calibration_D_se,
@@ -66,7 +66,7 @@ __all__ = [
     "Ensemble", "run_ensemble", "fit_D", "DFit", "per_frame_cnr",
     "FrameStats", "BiasLookup", "frame_stats",
     "SCHEMES", "msd_and_weights", "corrected_variance", "calibration_D_se",
-    "CalibrationRangeWarning",
+    "CalibrationRangeWarning", "FitStalledWarning",
     "SchemeResult", "calibrate", "calibrate_d_free", "calibrate_fisher",
     "evaluate", "sweep_stats",
     "FrameDiagnostic", "per_frame_diagnostic",

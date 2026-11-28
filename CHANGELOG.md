@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `FitStalledWarning`: a width fit warns when the solver stops after at most
+  one step from its start. Ordinary fits of a profile scaled to a unit peak
+  do not, even at per-frame CNR 0.3 where some end at the lower bound.
+
+### Changed
+
+- At the package's own simulation scales, the width-fit fix under Fixed (#35)
+  moves results only through single low-CNR fits that now stop at slightly
+  different points. The
+  recommended path, whose frames all lie above per-frame CNR 1.8, still
+  matches the 0.4.0 values to the pinned 1e-6 relative. Over the 877 outputs
+  of the release probe against 0.5.0, the lookups' values from per-frame CNR
+  1 up move by at most 0.006 relative, and fitted D by at most 0.0043
+  relative. Below CNR 1, the Gaussian fit with its default upper bound, the
+  whole window, now runs further toward broad widths: at per-frame CNR 0.33
+  its variance bias rises from 1.12 to 3.03 sigma_0^2. The Voigt and
+  generalized-Gaussian lookups, whose upper bound is tighter, move by at most
+  0.003 there. Tables committed before this release were made with the
+  former fit.
+
+### Fixed
+
+- The width fits (`fit_variance`, and the Gaussian, unbounded Gaussian, Voigt
+  and generalized-Gaussian models) fit the profile scaled to a unit peak and
+  scale the amplitude back, so the width no longer depends on the units of
+  the data (#35). The solver stops on absolute tolerances, so on a profile
+  with small values it stopped near its start, and reported success. A
+  noise-free Gaussian of variance 1 gave 1.0043 at peaks of 2e-4 and 1e-4,
+  5.50 at 3e-5, and its starting width, 9.0, at 1e-5. The Voigt and p = 1.5
+  fits were off by 0.04 and 0.03 at 1e-4, and those two and p = 4 sat at
+  their starting width from 1e-5. Fitted widths now match the true width to
+  within about 2e-10 relative at peaks from 1e-6 to 1e3, with lengths in
+  micrometres, nanometres or pixels.
 ### Documentation
 
 - `CITATION.cff` and the README give the concept DOI, 10.5281/zenodo.24617596, which
