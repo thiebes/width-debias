@@ -5,7 +5,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.5.0] - 2026-11-27
+## [Unreleased]
+
+### Documentation
+
+- `CITATION.cff` and the README give the concept DOI, 10.5281/zenodo.24617596, which
+  resolves to the latest release on Zenodo; the README adds a citation
+  section. `CITATION.cff` and this changelog date 0.5.0 2026-11-28, the day
+  it was released.
+
+## [0.5.0] - 2026-11-28
 
 One opt-in addition to the package, the spreading peak
 (`Experiment.spread_dims`). With default settings every numeric output of the

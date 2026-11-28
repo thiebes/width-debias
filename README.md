@@ -1,5 +1,7 @@
 # width-debias
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24617596.svg)](https://doi.org/10.5281/zenodo.24617596)
+
 **Correction of the noise bias in fitted profile widths, for
 mean-squared-displacement (MSD) diffusion measurements.**
 
@@ -241,6 +243,32 @@ is updated.
   Grumstrup, *J. Chem. Phys.* 2024).
 - **fft-cnr**: single-profile CNR estimation
   ([PyPI](https://pypi.org/project/fft-cnr/)).
+
+## Citation
+
+If you use width-debias in published work, please cite it with the concept DOI
+below, which always resolves to the latest release, and report the version you
+used (`pip install width-debias==0.5.0`).
+
+> Joseph J. Thiebes. width-debias: correction of the noise bias in fitted
+> profile widths for MSD diffusion measurements. Zenodo.
+> https://doi.org/10.5281/zenodo.24617596
+
+```bibtex
+@software{thiebes_width_debias,
+  author    = {Thiebes, Joseph J.},
+  title     = {width-debias: correction of the noise bias in fitted profile widths for MSD diffusion measurements},
+  version   = {0.5.0},
+  year      = {2026},
+  publisher = {Zenodo},
+  doi       = {10.5281/zenodo.24617596},
+  url       = {https://doi.org/10.5281/zenodo.24617596}
+}
+```
+
+Citation metadata is in
+[CITATION.cff](https://github.com/thiebes/width-debias/blob/master/CITATION.cff);
+GitHub's "Cite this repository" button generates APA and BibTeX from it.
 
 ## License
 
