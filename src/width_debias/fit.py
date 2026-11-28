@@ -25,6 +25,7 @@ carries the bias.
 """
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass
 
 import numpy as np
@@ -56,6 +57,48 @@ def _unusable_frame(x: np.ndarray, y: np.ndarray) -> FrameFit | None:
     return FrameFit(variance=np.nan, amplitude=np.nan, at_wall=False, ok=False)
 
 
+class FitStalledWarning(UserWarning):
+    """A width fit stopped after at most one step from its start.
+
+    The solver took its start, or a single step from it, as converged. On a
+    profile scaled to a unit peak this does not happen in ordinary fits, not
+    even at per-frame CNR 0.3 where some fits end at the lower bound, so a fit
+    that stalls is unlikely to have found the best width. It is how unscaled
+    profiles with small values failed: a noise-free Gaussian of variance 1 at
+    peak 3e-5 stopped after two evaluations at variance 5.5.
+    """
+
+
+def _curve_fit_unit_peak(f, x: np.ndarray, y: np.ndarray, p0: list[float],
+                         lower: list[float], upper: list[float], amp_index: int,
+                         maxfev: int) -> np.ndarray:
+    """``curve_fit`` of ``f`` to the profile scaled to a unit peak; returns the
+    parameters with the amplitude scaled back to the profile's units.
+
+    ``curve_fit`` stops on absolute tolerances, so a profile whose values are
+    small in its own units (a differential signal of 1e-4, say) ends near its
+    start. Dividing the profile, the starting amplitude and the amplitude bounds
+    by the largest absolute value makes the fit the same whatever the units;
+    the centre and width parameters do not depend on the scale. A fit that
+    stops after at most one step warns with :class:`FitStalledWarning`. Errors
+    from ``curve_fit`` propagate to the caller, which falls back to its start.
+    """
+    scale = float(np.max(np.abs(y))) or 1.0
+    p0, lower, upper = list(p0), list(lower), list(upper)
+    for bounds_or_start in (p0, lower, upper):
+        bounds_or_start[amp_index] /= scale
+    popt, _, info, _, _ = curve_fit(f, x, y / scale, p0=p0, bounds=(lower, upper),
+                                    maxfev=maxfev, full_output=True)
+    if info["nfev"] <= 2:
+        warnings.warn(FitStalledWarning(
+            f"the width fit stopped after {info['nfev']} evaluations, at most one "
+            "step from its start; its width is unlikely to be the best fit"),
+            stacklevel=3)
+    popt = np.array(popt, float)
+    popt[amp_index] *= scale
+    return popt
+
+
 def fit_variance(x: np.ndarray, y: np.ndarray,
                  max_var: float | None = None) -> FrameFit:
     """Fit a single noisy profile with a Gaussian; return its variance.
@@ -75,6 +118,10 @@ def fit_variance(x: np.ndarray, y: np.ndarray,
     wandering near the real width. The bound must be **identical** in the
     calibration and the application fit, or the ``var_bias`` subtraction is
     mismatched.
+
+    The profile is scaled to a unit peak for the fit
+    (:func:`_curve_fit_unit_peak`), so the width does not depend on the units
+    of the data.
 
     A profile with a non-finite pixel returns NaN (see :func:`_unusable_frame`).
     """
@@ -106,8 +153,8 @@ def fit_variance(x: np.ndarray, y: np.ndarray,
     lower = [x[0] + margin, var_min, 0.0]
     upper = [x[-1] - margin, var_max, 2.0 * amp_max]
     try:
-        popt, _ = curve_fit(_gaussian_var, x, y, p0=p0,
-                            bounds=(lower, upper), maxfev=5000)
+        popt = _curve_fit_unit_peak(_gaussian_var, x, y, p0, lower, upper,
+                                    amp_index=2, maxfev=5000)
         var, amp = float(popt[1]), float(popt[2])
         ok = True
     except (RuntimeError, ValueError):
