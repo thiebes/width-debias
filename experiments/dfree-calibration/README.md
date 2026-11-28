@@ -243,8 +243,8 @@ under a falling peak as it does under the decay alone.
 `calibration_se_check` (`calibration_se_check.txt`; 16 calibration draws of
 1500 runs on a 48-point CNR₀ grid, library slope weights): the propagated
 calibration SE holds. The observed / predicted variance of the cell mean,
-averaged over D, is 0.57 to 1.27 per CNR₀ (about ±0.37 expected per cell) and
-0.89 overall; per-point `var_bias` variance matches to 0.91 to 1.07; the weight
+averaged over D, is 0.57 to 1.27 per CNR₀ (about ±0.37 expected per cell),
+and 0.89 overall in `slope_fit_check.txt` (its current row); per-point `var_bias` variance matches to 0.91 to 1.07; the weight
 term is at most 0.04 of the prediction from CNR₀ 5 up (0.07 and 0.22 at CNR₀ 2
 and 3). Over the 560 three-draw subsets the mean ratio has median 0.90 and a
 5th to 95th percentile range of 0.49 to 1.31, so a calibration error estimated

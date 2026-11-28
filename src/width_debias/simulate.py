@@ -4,10 +4,10 @@ A population of excited states is modelled as a 1-D Gaussian that broadens by
 Fickian diffusion and decays by a single exponential lifetime.  By default the
 peak follows the decay alone, an approximation for small diffusion; with
 ``Experiment.spread_dims`` set it also falls as the profile spreads, so the
-population changes only by the decay.  White noise is
-added at the level of the raw spatial profile -- the only level at which it can
-be added correctly, because the fitting hierarchy reshapes the error
-distribution downstream (Thiebes & Grumstrup, JCP 2024).
+population changes only by the decay.  White noise is added at the level of
+the raw spatial profile -- the only level at which it can be added correctly,
+because the fitting hierarchy reshapes the error distribution downstream
+(Thiebes & Grumstrup, JCP 2024).
 """
 from __future__ import annotations
 
@@ -45,7 +45,9 @@ def _require_psf_hwhm(exp, lorentzian_hwhm: float, profile: str) -> None:
     if getattr(exp, "spread_dims", None) is not None and exp.psf_hwhm != lorentzian_hwhm:
         raise ValueError(
             f"the spreading peak uses psf_hwhm={exp.psf_hwhm}, but the {profile} profile "
-            f"has a Lorentzian half-width of {lorentzian_hwhm}; set Experiment.psf_hwhm to match")
+            f"has a Lorentzian half-width of {lorentzian_hwhm}; set Experiment.psf_hwhm to "
+            "match (a model that draws a Voigt profile counts as one only if it subclasses "
+            "VoigtModel)")
 
 
 @dataclass(frozen=True)
@@ -60,8 +62,8 @@ class Experiment:
     By default (``spread_dims=None``) the peak follows the decay law alone: the
     simulated profiles hold it as they spread, so the integral of a profile
     grows with its width, an approximation for small diffusion.
-    ``spread_dims`` selects a peak that also falls as the profile spreads, at a
-    population that changes only by the decay::
+    ``spread_dims`` selects the spreading peak, which also falls as the profile
+    spreads, at a population that changes only by the decay::
 
         amplitude(t) = decay_amplitude(t) * h(sigma_x(t)) / h(sigma0)
                        * [h(sigma_y(t)) / h(sigma0)] ** (spread_dims - 1)
@@ -85,14 +87,18 @@ class Experiment:
     :class:`~width_debias.models.VoigtModel` that draws the profiles, and 0 for
     every other model. Every built-in model's ``noise_free_series``,
     :func:`~width_debias.montecarlo.run_ensemble` (for any model) and the
-    Fisher bounds check this (:func:`~width_debias.models.check_spreading_peak`).
-    The factor is 1
-    at t = 0, so ``amplitude0`` and the initial CNR keep their meaning, and 1
-    at every t when D = 0, so a D = 0 calibration is the same under either
-    peak.
+    Fisher bounds check that the two agree
+    (:func:`~width_debias.models.check_spreading_peak`). ``psf_hwhm`` is
+    provisional, expected to change when each model supplies its own peak
+    (issue #27).
+    The factor is 1 at t = 0, so ``amplitude0`` and the initial CNR keep their
+    meaning, and 1 at every t when D = 0, so a D = 0 calibration is the same
+    under either peak.
 
-    The three spreading fields are keyword-only, so the positional order of the
-    fields, and of the subclasses' own fields after them, is unchanged.
+    The three spreading fields are keyword-only, so they never shift the
+    positional fields of ``Experiment`` or of a subclass. A subclass with its
+    own decay law overrides ``decay_amplitude``, not ``amplitude``, so that
+    ``spread_dims`` applies to it.
     """
 
     sigma0: float = 1.0          # initial Gaussian width (sets the length scale)
@@ -108,7 +114,7 @@ class Experiment:
     spread_dims: int | None = field(default=None, kw_only=True)
     # diffusion coefficient along y for spread_dims = 2; None means D
     D_y: float | None = field(default=None, kw_only=True)
-    # Lorentzian half-width of a Voigt profile, for the spreading peak
+    # Lorentzian half-width of a Voigt profile, for the spreading peak; provisional (#27)
     psf_hwhm: float = field(default=0.0, kw_only=True)
 
     def __post_init__(self) -> None:
@@ -120,10 +126,12 @@ class Experiment:
             if self.spread_dims != 2:
                 raise ValueError("D_y sets the spreading along y of a centre cut; "
                                  f"it needs spread_dims=2, not {self.spread_dims!r}")
-            if self.D_y < 0:
-                raise ValueError(f"D_y must be >= 0, not {self.D_y}")
-        if self.psf_hwhm < 0:
-            raise ValueError(f"psf_hwhm must be >= 0, not {self.psf_hwhm}")
+            # NaN compares False with everything, so it needs its own test.
+            if not np.isfinite(self.D_y) or self.D_y < 0:
+                raise ValueError(f"D_y must be a finite number >= 0, not {self.D_y!r}")
+        if self.psf_hwhm is None or not np.isfinite(self.psf_hwhm) or self.psf_hwhm < 0:
+            raise ValueError("psf_hwhm must be a finite number >= 0 (0 for every profile but "
+                             f"Voigt), not {self.psf_hwhm!r}")
         if self.psf_hwhm > 0 and self.spread_dims is None:
             raise ValueError("psf_hwhm sets the spreading peak of a Voigt profile; "
                              "it needs spread_dims")
@@ -293,9 +301,11 @@ def cnr_per_frame(exp: Experiment, noise_sigma: float) -> np.ndarray:
     hold the peak as they spread (see :func:`noise_free_series`), and this
     returns instead the CNR of a Gaussian profile summed over the other axis,
     whose peak falls also as ``sigma0 / sigma(t)``: the CNR of the frames that
-    ``spread_dims=1`` would simulate, not of the frames ``exp`` simulates.
+    ``spread_dims=1`` would simulate, not of the frames ``exp`` simulates. An
+    object without ``spread_dims`` takes this default branch and needs only
+    ``amplitude``, ``sigma0`` and ``true_variance``.
     """
-    if exp.spread_dims is not None:
+    if getattr(exp, "spread_dims", None) is not None:
         return exp.amplitude / noise_sigma
     peak = exp.amplitude * (exp.sigma0 / np.sqrt(exp.true_variance))
     return peak / noise_sigma

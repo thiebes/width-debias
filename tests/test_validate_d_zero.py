@@ -21,6 +21,11 @@ import pytest
 from width_debias import BiasLookup, model_from_spec
 
 ROOT = Path(__file__).resolve().parents[1]
+# The source distribution carries the package and its tests, but not the
+# repository's experiment scripts and tables that this module checks; skip it there.
+if not (ROOT / "experiments").is_dir():
+    pytest.skip("needs a full checkout of the repository (experiments/ is absent)",
+                allow_module_level=True)
 DFREE = ROOT / "experiments" / "dfree-calibration"
 
 

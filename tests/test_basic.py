@@ -250,7 +250,7 @@ def test_default_peak_follows_each_bed_decay_alone(bed, decay):
 
 
 def test_spreading_fields_leave_the_positional_fields_in_place():
-    """The spreading fields are keyword-only, so positional construction is as before them."""
+    """The spreading fields are keyword-only, so they never shift the positional fields."""
     from dataclasses import fields
 
     def positional(cls):
@@ -390,6 +390,16 @@ def test_cnr_per_frame_is_the_simulated_cnr_with_a_summed_spreading_peak():
     assert np.all(held[1:] > ens.cnr_frame[1:])
 
 
+def test_cnr_per_frame_accepts_a_stand_in_without_spread_dims():
+    """An object with only the fields the default branch reads works, as it did before
+    spread_dims existed, and gives the same CNR as the Experiment it copies."""
+    from types import SimpleNamespace
+    exp = Experiment(D=0.1)
+    stand_in = SimpleNamespace(amplitude=exp.amplitude, sigma0=exp.sigma0,
+                               true_variance=exp.true_variance)
+    assert np.array_equal(cnr_per_frame(stand_in, 0.1), cnr_per_frame(exp, 0.1))
+
+
 def test_spreading_peak_refuses_a_peak_computed_for_another_profile():
     """A peak computed for another profile's Lorentzian would be silently wrong.
 
@@ -423,12 +433,87 @@ def test_spreading_peak_refuses_a_peak_computed_for_another_profile():
     (dict(psf_hwhm=0.3), "psf_hwhm"),
     (dict(spread_dims=1, D_y=0.01), "D_y"),
     (dict(spread_dims=2, D_y=-0.01), "D_y"),
+    (dict(spread_dims=2, D_y=float("nan")), "D_y"),
+    (dict(spread_dims=2, D_y=float("inf")), "D_y"),
+    (dict(spread_dims=1, psf_hwhm=float("nan")), "psf_hwhm"),
+    (dict(spread_dims=1, psf_hwhm=float("inf")), "psf_hwhm"),
+    (dict(spread_dims=1, psf_hwhm=None), "psf_hwhm"),
 ], ids=["spread_3", "spread_bool", "negative_psf", "psf_without_spread", "d_y_summed",
-        "negative_d_y"])
+        "negative_d_y", "nan_d_y", "inf_d_y", "nan_psf", "inf_psf", "none_psf"])
 def test_experiment_refuses_spreading_settings_it_cannot_honour(settings, field):
-    """Settings the peak would ignore or misread raise instead of passing silently."""
+    """Settings the peak would ignore or misread raise instead of passing silently.
+
+    A NaN would otherwise pass every comparison and make every frame NaN.
+    """
     with pytest.raises(ValueError, match=field):
         Experiment(**settings)
+
+
+def test_subclass_checks_the_spreading_settings_too():
+    """MultiExpExperiment runs the base class's checks before its own."""
+    with pytest.raises(ValueError, match="D_y"):
+        MultiExpExperiment(fractions=(1.0,), taus=(1.0,), spread_dims=1, D_y=0.01)
+
+
+def test_centre_cut_with_no_spreading_along_y_falls_as_the_summed_profile():
+    """An explicit D_y = 0 leaves the y factor at 1, so the centre cut equals spread_dims=1."""
+    centre = Experiment(D=0.05, spread_dims=2, D_y=0.0).amplitude
+    np.testing.assert_allclose(centre, Experiment(D=0.05, spread_dims=1).amplitude, rtol=1e-15)
+
+
+def test_voigt_centre_cut_falls_as_the_product_of_unit_area_voigt_peaks():
+    """Along both axes the factor is the closed-form unit-area Voigt peak ratio."""
+    from scipy.special import erfcx
+
+    def unit_area_peak(sigma):
+        return erfcx(0.3 / (sigma * np.sqrt(2.0))) / sigma
+
+    exp = Experiment(D=0.1, spread_dims=2, D_y=0.04, psf_hwhm=0.3)
+    t = exp.times
+    sigma_x, sigma_y = np.sqrt(1.0 + 0.2 * t), np.sqrt(1.0 + 0.08 * t)
+    expected = (np.exp(-t) * unit_area_peak(sigma_x) / unit_area_peak(1.0)
+                * unit_area_peak(sigma_y) / unit_area_peak(1.0))
+    np.testing.assert_allclose(exp.amplitude, expected, rtol=1e-12)
+
+
+def test_anomalous_centre_cut_spreads_along_y_by_the_bed_law():
+    """The y width follows the bed's own t^alpha law, scaled by D_y / D."""
+    exp = AnomalousExperiment(D=0.05, alpha=0.7, spread_dims=2, D_y=0.02)
+    t = exp.times
+    expected = np.exp(-t) / np.sqrt(1 + 2 * 0.05 * t ** 0.7) / np.sqrt(1 + 2 * 0.02 * t ** 0.7)
+    np.testing.assert_allclose(exp.amplitude, expected, rtol=1e-13)
+
+
+def test_run_ensemble_checks_the_spreading_peak_for_any_model():
+    """A user model whose noise-free series does not check is still checked."""
+    class Unchecked:
+        name = "unchecked"
+
+        def noise_free_series(self, exp):
+            return np.array([a * np.exp(-0.5 * (exp.x - exp.mean) ** 2 / v)
+                             for a, v in zip(exp.amplitude, exp.true_variance)])
+
+        def fit_variance(self, x, y):
+            return fit_variance(x, y)
+
+    with pytest.raises(ValueError, match="psf_hwhm"):
+        run_ensemble(Experiment(D=0.1, spread_dims=1, psf_hwhm=0.3), 8.0, n_runs=1,
+                     model=Unchecked())
+
+
+def test_lorentzian_half_width_goes_by_class_not_attribute():
+    """Only a VoigtModel or a subclass has a Lorentzian; a gamma elsewhere is not one."""
+    from width_debias.models import lorentzian_hwhm
+
+    class SharperVoigt(VoigtModel):
+        pass
+
+    class OtherGamma:
+        gamma = 0.3
+
+    assert lorentzian_hwhm(SharperVoigt(gamma=0.2)) == 0.2
+    assert lorentzian_hwhm(OtherGamma()) == 0.0
+    assert lorentzian_hwhm(GaussianModel()) == 0.0
 
 
 def test_generalized_gaussian_variance_factor():

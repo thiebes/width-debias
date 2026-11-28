@@ -261,11 +261,10 @@ def calibration_D_se(times: np.ndarray, msd: np.ndarray, weights: np.ndarray,
     and is approximate. The weights' own dependence on the calibration is
     second order and not included. Sixteen independent calibrations on a
     48-point CNR_0 grid confirm the prediction: observed / predicted variance
-    of the cell mean 0.89 over the 16 draws, and 0.93 with two external
-    calibrations on the same grid added
-    (``experiments/dfree-calibration/calibration_se_check.py`` and
-    ``slope_fit_check.py``); the weight term is at most 0.04 of it from CNR_0 5
-    up and 0.22 of it at CNR_0 3. Returns NaN when the model has no SE.
+    of the cell mean 0.89 over the 16 draws
+    (``experiments/dfree-calibration/slope_fit_check.txt``); the weight term is
+    at most 0.04 of it from CNR_0 5 up and 0.22 of it at CNR_0 3
+    (``calibration_se_check.txt``). Returns NaN when the model has no SE.
 
     A smoothed model (:meth:`~width_debias.bias_lookup.BiasLookup.from_cells`)
     correlates the biases of neighbouring frames, so the sum uses the full

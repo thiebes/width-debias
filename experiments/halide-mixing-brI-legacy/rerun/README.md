@@ -120,8 +120,14 @@ window.
    clock second, counts an instance as distinct by the hash of its variance
    file, and writes the distinct instance directories to
    `unique_instances.txt`. Both reuse the fraction folder's parameter file and
-   keep the instances already there. Neither stops when an instance or the
-   averaging fails, and `rerun_all_unique.sh` prints "TOP-UP COMPLETE" even
+   keep the instances already there. Their logic is kept as run, so they do
+   not check the walker count or the parameter file as `run_instances.sh`
+   does. A walker count written as "20,000" goes into each instance's
+   parameter file as given. Without tmax their expected row count is 1;
+   without tsamp it is 0, so no instance ever counts as complete:
+   `rerun_unique.sh` relaunches the full target for up to six waves, and
+   `rerun_all_unique.sh` writes an empty `unique_instances.txt`. Neither
+   stops when an instance or the averaging fails, and `rerun_all_unique.sh` prints "TOP-UP COMPLETE" even
    then. Before step 7, check the last `x_<frac>: <n> unique` line of each
    fraction, the "averaged <n> instances" line of step 6 (and any "skip" line
    before it), and that every listed instance's `variance.x_<frac>.dat` has

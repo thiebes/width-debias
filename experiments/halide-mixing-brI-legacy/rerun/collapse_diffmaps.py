@@ -248,12 +248,17 @@ def compare_variance(frac: str, src: Path, geom: Geometry, n_total: int) -> Vari
       correlated, and a duplication-weighted mean can also give a small |z|, so
       this reading is a consistency check; the weighting search is what
       separates the two.
-    Returns None when fewer than two complete instances are kept.
+    Returns None when fewer than two complete instances are kept, and raises
+    ValueError when more complete instances are kept than the ``n_total`` the
+    profile file records, since those files cannot all be in its average.
     """
     files = sorted(src.glob(f"inst_*/variance.x_{frac}.dat"))
     pairs = [(f.parent.name, np.loadtxt(f)[:, 1]) for f in files]
     pairs = [(name, v) for name, v in pairs if v.shape[0] == geom.n_frames]
-    if len(pairs) < 2 or len(pairs) > n_total:
+    if len(pairs) > n_total:
+        raise ValueError(f"x = {frac}: {len(pairs)} complete kept instances, more than the "
+                         f"{n_total} distinct realisations the profile file records")
+    if len(pairs) < 2:
         return None
     names = tuple(name for name, _ in pairs)
     kept_variances = np.array([v for _, v in pairs])

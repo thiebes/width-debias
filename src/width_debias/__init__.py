@@ -11,8 +11,8 @@ bias from a slope fit.
 The package subtracts a calibrated bias ``var_bias(CNR)`` from each frame's
 fitted variance, then weights by inverse variance; the MSD and D corrections
 follow from the corrected widths. ``docs/DERIVATION.md`` derives the additive
-form from a folded-normal model of the fitted width. The per-frame CNR (from
-the ``fft-cnr`` package) is the input.
+form from the scatter of the fitted width (its estimation variance). The
+per-frame CNR (from the ``fft-cnr`` package) is the input.
 
 Typical use::
 
@@ -56,7 +56,7 @@ from .calibration import (CalibrationCells, CalibrationGrid, calibrate_cells,
 from .fisher import LeadingOrderTerms, leading_order_terms
 from .cnr import per_frame_cnr
 
-__version__ = "0.4.1"
+__version__ = "0.5.0"
 
 __all__ = [
     "Experiment", "AnomalousExperiment", "MultiExpExperiment",

@@ -315,7 +315,7 @@ class UnboundedGaussianModel:
     variance 1.038, 1.016, 1.010 sigma_0^2 at CNR 1.52, 2.0, 2.6, against 1.0),
     which the correction removes: there the wall question is moot, the
     correction is not. In the bias-prone band (per-frame CNR < ~1.5)
-    removing the wall only *partly* debiases the mean (at CNR 0.52 the mean
+    removing the bound only *partly* debiases the mean (at CNR 0.52 the mean
     fitted variance falls from 2.64 to 1.76 sigma_0^2, still well above the true
     1.0), and its spread, though smaller than the bounded fit's, stays large
     (SD 5.97 against 10.06 sigma_0^2 at CNR 0.52), because even without a
@@ -381,7 +381,8 @@ def lorentzian_hwhm(model) -> float:
 
     The class decides, not an attribute name: another model may use ``gamma``
     for something else, so a model that draws a Voigt profile is checked as one
-    only if it subclasses :class:`VoigtModel`.
+    only if it subclasses :class:`VoigtModel`. Provisional: expected to change
+    when each model supplies its own peak (issue #27).
     """
     return float(model.gamma) if isinstance(model, VoigtModel) else 0.0
 
@@ -395,7 +396,8 @@ def check_spreading_peak(exp, model) -> None:
     models that draw a Voigt or generalized-Gaussian profile call this; the
     Gaussian ones check through :func:`width_debias.simulate.noise_free_series`;
     :func:`~width_debias.montecarlo.run_ensemble` and the Fisher bounds call it
-    for any model.
+    for any model. Provisional: expected to change when each model supplies its
+    own peak (issue #27); callers need not call it themselves.
     """
     _require_psf_hwhm(exp, lorentzian_hwhm(model), getattr(model, "name", type(model).__name__))
 

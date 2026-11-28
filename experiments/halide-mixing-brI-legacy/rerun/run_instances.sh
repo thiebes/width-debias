@@ -35,6 +35,7 @@ JOBS="${4:-$(nproc)}"
 GAP="${5:-2}"
 
 [[ "$GAP" =~ ^[1-9][0-9]*$ ]] || { echo "gap_seconds must be a whole number of seconds, 1 or more (got '$GAP')"; exit 1; }
+[[ "$NINST" =~ ^[1-9][0-9]*$ ]] || { echo "N_per_instance must be a positive whole number of walkers, written without separators (got '$NINST')"; exit 1; }
 
 BIN="landscapeBD.diffmap"
 BASE="parameters.x_${FRAC}.dat"

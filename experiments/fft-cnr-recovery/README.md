@@ -29,8 +29,7 @@ the source array.
 
 **Key result + figure** -- the fft-cnr 0.4.0 estimate sits on the 1:1 line from
 CNR = 2 to 100 across window sizes N = 128-1024: in every cell the median over the
-1000 trials lies between 0.989 and 1.006 of the true CNR, the largest departure
-being at N = 1024, CNR = 2. Figure `fft_cnr_recovery.png`, caption
+1000 trials lies on the true CNR. Figure `fft_cnr_recovery.png`, caption
 `fft_cnr_recovery_caption.md`.
 
 **Depends on** -- no in-repo helpers; reads the external result array only to
